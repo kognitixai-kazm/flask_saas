@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Environment
+.env
+.env.local
+.env.example
+
+# Database
+*.db
+*.sqlite3
+instance/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Tests
+tests/
+test_*.py
+requirements-dev.txt
+
+# Docs
+README.md
+*.md
+
+# Logs
+logs/
+*.log
+
+# Uploads (سيتم إنشاء المجلد فارغاً)
+static/uploads/
+
+# Binaries
+*.exe
+ngrok*
