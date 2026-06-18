@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}شحن الرصيد — {{ tenant.business_name }}{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+{% include 'tenant/_sidebar.html' ignore missing %}
+
+<main class="flex-1 p-6 md:p-8">
+<div class="max-w-2xl mx-auto">
+
+<a href="{{ url_for('tenant_usage.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع</a>
+<h1 class="text-2xl font-bold mb-1">💳 شحن الرصيد</h1>
+<p class="text-sm text-gray-500 mb-6">رصيدك الحالي: <strong>{{ "%.2f"|format(wallet.balance) }} ر.س</strong></p>
+
+<form method="POST" action="{{ url_for('tenant_usage.topup_request') }}" class="bg-white rounded-xl p-6 shadow-sm">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <h3 class="font-bold mb-3">اختر مبلغ الشحن</h3>
+
+  <div class="grid grid-cols-3 gap-3 mb-4">
+    <label class="border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50">
+      <input type="radio" name="amount" value="50" class="sr-only" onchange="document.getElementById('custom_amount').value=50">
+      <div class="text-xl font-bold">50</div>
+      <div class="text-xs text-gray-500">ر.س</div>
+    </label>
+    <label class="border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50">
+      <input type="radio" name="amount" value="200" class="sr-only" onchange="document.getElementById('custom_amount').value=200">
+      <div class="text-xl font-bold">200</div>
+      <div class="text-xs text-gray-500">ر.س</div>
+    </label>
+    <label class="border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50">
+      <input type="radio" name="amount" value="500" class="sr-only" onchange="document.getElementById('custom_amount').value=500">
+      <div class="text-xl font-bold">500</div>
+      <div class="text-xs text-gray-500">ر.س</div>
+    </label>
+  </div>
+
+  <div class="mb-4">
+    <label class="block text-sm font-bold mb-2">أو أدخل المبلغ يدوياً</label>
+    <div class="flex items-center gap-2">
+      <input type="number" id="custom_amount" name="amount" min="10" step="1" placeholder="100"
+        class="flex-1 border rounded-lg px-4 py-3 text-lg font-bold">
+      <span class="text-gray-500">ر.س</span>
+    </div>
+    <p class="text-xs text-gray-400 mt-1">الحد الأدنى: 10 ر.س</p>
+  </div>
+
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700 mb-4">
+    💡 سيتم تحويلك لبوابة الدفع. بعد إتمام الدفع، سيُضاف الرصيد لمحفظتك تلقائياً.
+  </div>
+
+  <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">
+    💳 المتابعة للدفع
+  </button>
+</form>
+
+</div>
+</main>
+</div>
+{% endblock %}

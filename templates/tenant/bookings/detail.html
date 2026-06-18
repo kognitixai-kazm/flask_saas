@@ -1,0 +1,147 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}حجز #{{ booking.booking_number }}{% endblock %}
+{% block panel_content %}
+<div class="flex items-center gap-3 mb-6 flex-wrap">
+  <a href="{{ url_for('tenant_bookings.list_bookings') }}" class="text-gray-400 hover:text-blue-600">← الحجوزات</a>
+  <h1 class="text-2xl font-bold">📅 حجز #{{ booking.booking_number }}</h1>
+  <span class="text-sm px-3 py-1 rounded-full
+    {% if booking.status == 'new' %}bg-orange-100 text-orange-700
+    {% elif booking.status == 'confirmed' %}bg-green-100 text-green-700
+    {% elif booking.status == 'completed' %}bg-blue-100 text-blue-700
+    {% elif booking.status == 'cancelled' %}bg-red-100 text-red-700
+    {% elif booking.status == 'no_show' %}bg-yellow-100 text-yellow-700
+    {% endif %}">{{ booking.status_label }}</span>
+</div>
+
+<div class="grid md:grid-cols-3 gap-6">
+  <!-- تفاصيل الحجز -->
+  <div class="md:col-span-2 space-y-4">
+
+    <!-- بيانات العميل -->
+    <div class="bg-white rounded-xl p-6 shadow-sm">
+      <h3 class="font-bold text-sm text-gray-500 mb-3">👤 بيانات العميل</h3>
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div><span class="text-gray-400">الاسم:</span> <strong>{{ booking.customer_name }}</strong></div>
+        <div><span class="text-gray-400">الجوال:</span> <span dir="ltr">{{ booking.customer_phone or '—' }}</span></div>
+        <div><span class="text-gray-400">البريد:</span> <span dir="ltr">{{ booking.customer_email or '—' }}</span></div>
+        <div><span class="text-gray-400">عدد الضيوف:</span> {{ booking.guests_count }}</div>
+      </div>
+    </div>
+
+    <!-- تفاصيل الحجز -->
+    <div class="bg-white rounded-xl p-6 shadow-sm">
+      <h3 class="font-bold text-sm text-gray-500 mb-3">📋 تفاصيل الحجز</h3>
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div><span class="text-gray-400">النوع:</span> {{ booking.type_label }}</div>
+        <div><span class="text-gray-400">المصدر:</span> {{ booking.source }}</div>
+
+        {% if booking.booking_type == 'hotel_room' %}
+        <div><span class="text-gray-400">تاريخ الدخول:</span> {{ booking.checkin_date or '—' }}</div>
+        <div><span class="text-gray-400">تاريخ الخروج:</span> {{ booking.checkout_date or '—' }}</div>
+        <div><span class="text-gray-400">عدد الليالي:</span> {{ booking.duration_nights }}</div>
+        <div><span class="text-gray-400">نوع الوحدة:</span> {{ booking.requested_unit_type or '—' }}</div>
+        {% if booking.unit %}
+        <div><span class="text-gray-400">الوحدة:</span> {{ booking.unit.type_label }} #{{ booking.unit.unit_number }}</div>
+        {% endif %}
+        {% else %}
+        <div><span class="text-gray-400">التاريخ:</span> {{ booking.reservation_date or '—' }}</div>
+        <div><span class="text-gray-400">الوقت:</span> {{ booking.reservation_time or '—' }}</div>
+        {% endif %}
+
+        {% if booking.branch %}
+        <div><span class="text-gray-400">الفرع:</span> {{ booking.branch.name }}</div>
+        {% endif %}
+
+        {% if booking.total_amount and booking.total_amount > 0 %}
+        <div><span class="text-gray-400">المبلغ:</span> <strong class="text-green-600">{{ booking.total_amount }} {{ booking.currency }}</strong></div>
+        <div><span class="text-gray-400">الدفع:</span> {{ 'تم ✅' if booking.is_paid else 'لم يتم ❌' }}</div>
+        {% endif %}
+      </div>
+
+      {% if booking.notes %}
+      <div class="mt-4 pt-4 border-t">
+        <span class="text-gray-400 text-sm">ملاحظات العميل:</span>
+        <p class="text-sm mt-1">{{ booking.notes }}</p>
+      </div>
+      {% endif %}
+
+      {% if booking.admin_notes %}
+      <div class="mt-4 pt-4 border-t">
+        <span class="text-gray-400 text-sm">ملاحظات الإدارة:</span>
+        <p class="text-sm mt-1">{{ booking.admin_notes }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    {% if booking.status == 'new' %}
+    <div class="bg-white rounded-xl p-6 shadow-sm space-y-4">
+      <h3 class="font-bold text-sm text-gray-500 mb-3">⚡ إجراء</h3>
+
+      <div><label class="block text-xs text-gray-500 mb-1">ملاحظات (اختياري)</label>
+      <textarea id="admin_notes" rows="2" class="w-full border rounded-lg px-4 py-2 text-sm" placeholder="ملاحظة للعميل..."></textarea></div>
+
+      <div><label class="block text-xs text-gray-500 mb-1">الفرع</label>
+      <select id="branch_id" class="w-full border rounded-lg px-4 py-2 text-sm">
+        <option value="">اختر الفرع...</option>
+        {% for br in branches %}
+        <option value="{{ br.id }}" {{ 'selected' if booking.branch_id == br.id }}>{{ br.name }}</option>
+        {% endfor %}
+      </select></div>
+
+      <div class="flex gap-3">
+        <form method="POST" action="{{ url_for('tenant_bookings.confirm', id=booking.id) }}" class="flex-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="admin_notes" class="notes-input">
+          <input type="hidden" name="branch_id" class="branch-input">
+          <button type="submit" class="w-full bg-green-600 text-white py-2.5 rounded-lg text-sm hover:bg-green-700 font-bold">✅ تأكيد الحجز</button>
+        </form>
+        <form method="POST" action="{{ url_for('tenant_bookings.cancel', id=booking.id) }}" class="flex-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="admin_notes" class="notes-input">
+          <button type="submit" class="w-full bg-red-100 text-red-600 py-2.5 rounded-lg text-sm hover:bg-red-200 font-bold" onclick="return confirm('إلغاء الحجز؟')">❌ إلغاء</button>
+        </form>
+      </div>
+    </div>
+    {% elif booking.status == 'confirmed' %}
+    <div class="flex gap-3">
+      <form method="POST" action="{{ url_for('tenant_bookings.complete', id=booking.id) }}" class="flex-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm hover:bg-blue-700">✔️ العميل حضر (إنهاء)</button>
+      </form>
+      <form method="POST" action="{{ url_for('tenant_bookings.no_show', id=booking.id) }}" class="flex-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="w-full bg-yellow-100 text-yellow-700 py-2.5 rounded-lg text-sm hover:bg-yellow-200">⚠️ لم يحضر</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- الجانب -->
+  <div class="space-y-4">
+    <div class="bg-white rounded-xl p-5 shadow-sm text-sm space-y-3">
+      <h3 class="font-bold text-gray-500">⏱️ التواريخ</h3>
+      <div><span class="text-gray-400">الإنشاء:</span><br>{{ booking.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+      {% if booking.confirmed_at %}
+      <div><span class="text-gray-400">التأكيد:</span><br>{{ booking.confirmed_at.strftime('%Y-%m-%d %H:%M') }}</div>
+      <div><span class="text-gray-400">بواسطة:</span> {{ booking.confirmed_by }}</div>
+      {% endif %}
+      {% if booking.cancelled_at %}
+      <div><span class="text-gray-400">الإلغاء:</span><br>{{ booking.cancelled_at.strftime('%Y-%m-%d %H:%M') }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+// نقل الملاحظات والفرع للفورمز
+document.querySelectorAll('form').forEach(form => {
+  form.addEventListener('submit', () => {
+    const notes = document.getElementById('admin_notes');
+    const branch = document.getElementById('branch_id');
+    if(notes) form.querySelectorAll('.notes-input').forEach(i => i.value = notes.value);
+    if(branch) form.querySelectorAll('.branch-input').forEach(i => i.value = branch.value);
+  });
+});
+</script>
+{% endblock %}

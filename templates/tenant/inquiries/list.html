@@ -1,0 +1,54 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}الاستفسارات{% endblock %}
+{% block panel_content %}
+<div class="flex flex-col gap-4 mb-6">
+  <div class="flex justify-between items-center flex-wrap gap-3">
+    <h1 class="text-2xl font-bold">📩 الاستفسارات والشكاوى</h1>
+    <div class="flex gap-2 text-sm flex-wrap">
+      <a href="{{ url_for('tenant_inquiries.list_inquiries', status=status_filter or none, kind=none) }}" class="px-3 py-1 rounded-full {{ 'bg-slate-700 text-white' if not kind_filter else 'bg-gray-100' }}">الكل</a>
+      <a href="{{ url_for('tenant_inquiries.list_inquiries', status=status_filter or none, kind='general') }}" class="px-3 py-1 rounded-full {{ 'bg-blue-600 text-white' if kind_filter=='general' else 'bg-gray-100' }}">استفسارات</a>
+      <a href="{{ url_for('tenant_inquiries.list_inquiries', status=status_filter or none, kind='complaint') }}" class="px-3 py-1 rounded-full {{ 'bg-amber-700 text-white' if kind_filter=='complaint' else 'bg-gray-100' }}">شكاوى ({{ counts.complaints }})</a>
+    </div>
+  </div>
+  <div class="flex gap-2 text-sm flex-wrap">
+    <a href="{{ url_for('tenant_inquiries.list_inquiries', kind=kind_filter or none) }}" class="px-3 py-1 rounded-full {{ 'bg-blue-600 text-white' if not status_filter else 'bg-gray-100' }}">حالة: الكل</a>
+    <a href="{{ url_for('tenant_inquiries.list_inquiries', status='new', kind=kind_filter or none) }}" class="px-3 py-1 rounded-full {{ 'bg-red-600 text-white' if status_filter=='new' else 'bg-gray-100' }}">جديد ({{ counts.new }})</a>
+    <a href="{{ url_for('tenant_inquiries.list_inquiries', status='pending', kind=kind_filter or none) }}" class="px-3 py-1 rounded-full {{ 'bg-yellow-600 text-white' if status_filter=='pending' else 'bg-gray-100' }}">بانتظار ({{ counts.pending }})</a>
+    <a href="{{ url_for('tenant_inquiries.list_inquiries', status='answered', kind=kind_filter or none) }}" class="px-3 py-1 rounded-full {{ 'bg-green-600 text-white' if status_filter=='answered' else 'bg-gray-100' }}">تم الرد ({{ counts.answered }})</a>
+  </div>
+</div>
+{% if inquiries %}
+<div class="space-y-3">
+  {% for inq in inquiries %}
+  <a href="{{ url_for('tenant_inquiries.detail', id=inq.id) }}" class="block bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition">
+    <div class="flex justify-between items-start">
+      <div class="flex-1">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs
+            {% if inq.status == 'new' %}bg-red-100 text-red-700
+            {% elif inq.status == 'pending' %}bg-yellow-100 text-yellow-700
+            {% elif inq.status == 'answered' %}bg-green-100 text-green-700
+            {% else %}bg-gray-100 text-gray-700{% endif %}">{{ inq.status_label }}</span>
+          {% if inq.inquiry_kind == 'complaint' %}
+          <span class="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-900">شكوى</span>
+          {% if inq.complaint_category_label_ar %}
+          <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">{{ inq.complaint_category_label_ar }}</span>
+          {% endif %}
+          {% endif %}
+          {% if inq.branch %}<span class="text-xs text-gray-400">{{ inq.branch.name }}</span>{% endif %}
+        </div>
+        <p class="text-xs text-gray-500 mt-1">{{ inq.visitor_name or '—' }}{% if inq.visitor_phone %} · {{ inq.visitor_phone }}{% endif %}</p>
+        <p class="text-sm font-medium text-gray-800">{{ inq.question[:120] }}{% if inq.question|length > 120 %}...{% endif %}</p>
+        {% if inq.answer %}
+        <p class="text-xs text-green-600 mt-1">✓ {{ inq.answer[:80] }}{% if inq.answer|length > 80 %}…{% endif %}</p>
+        {% endif %}
+      </div>
+      <div class="text-xs text-gray-400 mr-4 whitespace-nowrap">{{ inq.created_at.strftime('%m/%d %H:%M') }}</div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400"><div class="text-4xl mb-3">📩</div><p>لا توجد استفسارات حالياً.</p></div>
+{% endif %}
+{% endblock %}

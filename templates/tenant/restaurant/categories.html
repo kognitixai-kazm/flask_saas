@@ -1,0 +1,25 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}تصنيفات المنيو{% endblock %}
+{% block panel_content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">📂 تصنيفات المنيو</h1>
+  <a href="{{ url_for('tenant_restaurant.category_form') }}" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm">+ تصنيف جديد</a>
+</div>
+{% if categories %}
+<div class="space-y-3">
+  {% for c in categories %}
+  <div class="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center">
+    <div><span class="text-lg ml-2">{{ c.icon or '📋' }}</span><strong>{{ c.name }}</strong>
+    <span class="text-xs text-gray-400 mr-2">({{ c.items.count() }} صنف)</span>
+    {% if not c.is_active %}<span class="text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">معطّل</span>{% endif %}</div>
+    <div class="flex gap-2">
+      <a href="{{ url_for('tenant_restaurant.category_form', id=c.id) }}" class="text-blue-600 text-sm">تعديل</a>
+      <form method="POST" action="{{ url_for('tenant_restaurant.category_delete', id=c.id) }}" onsubmit="return confirm('حذف التصنيف وكل أصنافه؟')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-red-500 text-sm">حذف</button></form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400"><div class="text-4xl mb-3">📂</div><p>لا توجد تصنيفات. أضف تصنيفك الأول (مثل: مشروبات ساخنة، وجبات رئيسية...)</p></div>
+{% endif %}
+{% endblock %}

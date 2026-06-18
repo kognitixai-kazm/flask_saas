@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}تسجيل الدخول — KOGNITIX{% endblock %}
+{% block body %}
+<div class="min-h-screen flex items-center justify-center gradient-soft py-12 px-4">
+    <div class="bg-white rounded-3xl card-shadow p-7 md:p-9 w-full max-w-sm border border-blue-100/40">
+        <div class="flex justify-center mb-6">
+            {% with size='lg', tagline=True %}{% include "_brand.html" %}{% endwith %}
+        </div>
+
+        <h1 class="text-2xl font-extrabold text-center text-blue-900 mb-1">تسجيل الدخول</h1>
+        <p class="text-gray-500 text-center text-sm mb-7">لوحة تحكم نشاطك التجاري</p>
+
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+                <label class="block text-sm font-bold mb-1.5 text-gray-700">اسم المستخدم أو البريد</label>
+                <input type="text" name="username" required dir="ltr" autofocus
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-gray-50 focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block text-sm font-bold mb-1.5 text-gray-700">كلمة المرور</label>
+                <input type="password" name="password" required
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-gray-50 focus:bg-white transition">
+            </div>
+            <button type="submit" class="w-full gradient-brand text-white py-3 rounded-xl font-extrabold hover:opacity-95 transition shadow-md">دخول</button>
+        </form>
+
+        <p class="text-center text-sm mt-5">
+            <a href="{{ url_for('tenant.forgot_password') }}" class="text-blue-700 font-bold hover:underline">نسيت كلمة المرور؟</a>
+        </p>
+
+        <p class="text-center text-xs text-gray-500 mt-6">
+            ليس لديك حساب؟ <a href="{{ url_for('registration.step1') }}" class="text-blue-700 font-bold hover:underline">اطلب وصول الآن</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

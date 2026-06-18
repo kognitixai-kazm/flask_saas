@@ -1,0 +1,57 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}التكاملات — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">🔗 تكاملات نشاطك</h1>
+    <p class="text-gray-500 mt-1 text-sm">اضبط مفاتيحك ومزودي الخدمة بنفسك — كل شيء معزول وآمن لنشاطك فقط.</p>
+</div>
+
+{% set boxes = [
+    ('whatsapp',   '💬 واتساب (Meta Cloud)', 'استقبل وأجِب على عملائك في واتساب تلقائياً.', 'tenant_integrations.whatsapp', 'from-emerald-500 to-teal-600'),
+    ('sms',        '📱 رسائل نصية (SMS)',      'أرسل رسائل نصية قصيرة لعملائك (Taqnyat/Twilio).', 'tenant_integrations.sms_settings', 'from-indigo-500 to-blue-600'),
+    ('payment',    '💳 بوابة الدفع',           'استقبل المدفوعات بأمان (Moyasar/Tap/Stripe).', 'tenant_integrations.payment',  'from-blue-600 to-indigo-700'),
+    ('accounting', '🧾 النظام المحاسبي',      'تكامل مع قيود/دفترة/Xero لإصدار الفواتير.',     'tenant_integrations.accounting','from-amber-500 to-orange-600'),
+    ('contracts',  '📄 العقود الإلكترونية',  'وقّع العقود وأرسلها للعملاء عبر واتساب.',       'tenant_integrations.contracts', 'from-fuchsia-600 to-purple-700'),
+    ('social',     '📱 التواصل الاجتماعي',  'اربط فيسبوك وانستغرام وتيك توك بالذكاء الاصطناعي.', 'tenant_social_media_integrations.social_media', 'from-pink-500 to-rose-600'),
+    ('srm',        '📦 إدارة الموردين (SRM)',  'اربط متجرك مع نظام الموردين الخاص بك.',       'tenant_integrations.srm',       'from-purple-500 to-indigo-600'),
+    ('booking_com','🏨 Booking.com',         'اربط فندقك أو شققك مع Booking.com.',        'tenant_integrations.booking_com','from-blue-500 to-cyan-600'),
+] %}
+
+<div class="grid md:grid-cols-2 gap-4">
+{% for key, title, desc, ep, grad in boxes %}
+    {% set cfg = items[key] %}
+    <a href="{{ url_for(ep) }}"
+       class="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
+        <div class="p-5">
+            <div class="flex items-start justify-between mb-2">
+                <div class="font-bold text-gray-900">{{ title }}</div>
+                {% if cfg %}
+                    {% if cfg.is_active and cfg.is_verified %}
+                        <span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">✅ مفعّل</span>
+                    {% elif cfg.is_active %}
+                        <span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">⚠️ غير متحقق</span>
+                    {% else %}
+                        <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">⏸️ معطّل</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">— لم يُعد بعد</span>
+                {% endif %}
+            </div>
+            <p class="text-sm text-gray-500">{{ desc }}</p>
+        </div>
+        <div class="bg-gradient-to-l {{ grad }} text-white text-xs font-bold px-5 py-2 flex justify-between">
+            <span>اضبط الإعدادات</span>
+            <span>›</span>
+        </div>
+    </a>
+{% endfor %}
+</div>
+
+<div class="mt-6 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-900">
+    🔐 <strong>خصوصيتك أولاً:</strong>
+    مفاتيحك تُحفظ مرتبطة بحسابك فقط، ولا يطّلع عليها أي تاجر آخر.
+    عند التفعيل نقوم بفحص خفيف للمفتاح للتأكد من صحته قبل الاستخدام.
+</div>
+
+{% endblock %}

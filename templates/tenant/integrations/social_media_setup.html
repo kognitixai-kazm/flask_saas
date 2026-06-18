@@ -1,0 +1,231 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}إعداد {{ service_name }} — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<div class="mb-6">
+    <a href="{{ url_for('tenant_social_media_integrations.social_media') }}" class="text-blue-600 hover:text-blue-700 text-sm mb-3 inline-flex items-center gap-1">
+        <span>›</span>
+        <span>العودة</span>
+    </a>
+    <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">{{ service_icon }} إعداد {{ service_name }}</h1>
+    <p class="text-gray-500 mt-1 text-sm">أدخل بيانات الاتصال الخاصة بحسابك في {{ service_name }} لتفعيل التكامل.</p>
+</div>
+
+{% if error %}
+<div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
+    ⚠️ {{ error }}
+</div>
+{% endif %}
+
+{% if success %}
+<div class="mb-6 bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-700">
+    ✅ {{ success }}
+</div>
+{% endif %}
+
+<form method="POST" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 max-w-2xl">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <!-- معلومات عامة -->
+    <div class="mb-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">معلومات الاتصال</h2>
+        
+        {% if service_type == 'facebook' or service_type == 'instagram' %}
+            <!-- فيسبوك وانستغرام -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    رمز الوصول (Access Token)
+                </label>
+                <input type="password" name="access_token" placeholder="رمز الوصول من Meta" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.access_token if integration else '' }}" required>
+                <p class="text-xs text-gray-500 mt-1">
+                    احصل على رمز الوصول من <a href="https://developers.facebook.com" target="_blank" class="text-blue-600 hover:underline">Facebook Developers</a>
+                </p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    معرّف الصفحة (Page ID)
+                </label>
+                <input type="text" name="page_id" placeholder="معرّف صفحتك" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.extra_config.get('page_id', '') if integration else '' }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    رمز التحقق من Webhook
+                </label>
+                <input type="text" name="webhook_verify_token" placeholder="رمز التحقق" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.webhook_verify_token if integration else '' }}">
+                <p class="text-xs text-gray-500 mt-1">
+                    رمز عشوائي لتأمين الـ webhook
+                </p>
+            </div>
+
+        {% elif service_type == 'tiktok' %}
+            <!-- تيك توك -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    مفتاح الـ API (API Key)
+                </label>
+                <input type="password" name="api_key" placeholder="مفتاح API من TikTok" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.api_key if integration else '' }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    رمز الوصول (Access Token)
+                </label>
+                <input type="password" name="access_token" placeholder="رمز الوصول من TikTok" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.access_token if integration else '' }}" required>
+            </div>
+
+        {% elif service_type == 'snapchat' %}
+            <!-- سناب شات -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    مفتاح الـ API (API Key)
+                </label>
+                <input type="password" name="api_key" placeholder="مفتاح API من Snapchat" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.api_key if integration else '' }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    رمز الوصول (Access Token)
+                </label>
+                <input type="password" name="access_token" placeholder="رمز الوصول من Snapchat" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.access_token if integration else '' }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    معرّف حساب الإعلانات (Ad Account ID)
+                </label>
+                <input type="text" name="ad_account_id" placeholder="معرّف حساب الإعلانات" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.extra_config.get('ad_account_id', '') if integration else '' }}">
+            </div>
+
+        {% elif service_type == 'linkedin' %}
+            <!-- لينكدإن -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    رمز الوصول (Access Token)
+                </label>
+                <input type="password" name="access_token" placeholder="رمز الوصول من LinkedIn" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.access_token if integration else '' }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    معرّف المنظمة (Organization ID)
+                </label>
+                <input type="text" name="organization_id" placeholder="معرّف منظمتك على LinkedIn" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.extra_config.get('organization_id', '') if integration else '' }}" required>
+            </div>
+
+        {% elif service_type == 'google_maps' %}
+            <!-- خرائط جوجل -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    رمز الوصول (Access Token)
+                </label>
+                <input type="password" name="access_token" placeholder="رمز الوصول من Google" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.access_token if integration else '' }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    معرّف موقع النشاط (Location ID)
+                </label>
+                <input type="text" name="business_location_id" placeholder="معرّف موقعك على Google My Business" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       value="{{ integration.extra_config.get('business_location_id', '') if integration else '' }}" required>
+            </div>
+
+        {% endif %}
+    </div>
+
+    <!-- إعدادات الذكاء الاصطناعي -->
+    <div class="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <h2 class="text-lg font-bold text-purple-900 mb-3">⚙️ إعدادات الذكاء الاصطناعي</h2>
+        
+        <div class="mb-4">
+            <label class="flex items-center gap-2">
+                <input type="checkbox" name="enable_ai_responses" value="true" 
+                       {% if integration and integration.extra_config.get('enable_ai_responses') %}checked{% endif %}
+                       class="rounded border-gray-300">
+                <span class="text-sm font-medium text-purple-900">تفعيل الردود التلقائية بالذكاء الاصطناعي</span>
+            </label>
+            <p class="text-xs text-purple-700 mt-2">
+                عند التفعيل، سيتم الرد التلقائي على الرسائل والتعليقات والتقييمات باستخدام الذكاء الاصطناعي.
+            </p>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-purple-900 mb-1">
+                نبرة الرد المفضلة
+            </label>
+            <select name="ai_tone" class="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <option value="professional" {% if integration and integration.extra_config.get('ai_tone') == 'professional' %}selected{% endif %}>احترافي ورسمي</option>
+                <option value="friendly" {% if integration and integration.extra_config.get('ai_tone') == 'friendly' %}selected{% endif %}>ودود وودود</option>
+                <option value="brief" {% if integration and integration.extra_config.get('ai_tone') == 'brief' %}selected{% endif %}>موجز وسريع</option>
+                <option value="detailed" {% if integration and integration.extra_config.get('ai_tone') == 'detailed' %}selected{% endif %}>مفصل وشامل</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-purple-900 mb-1">
+                تعليمات مخصصة للذكاء الاصطناعي (اختياري)
+            </label>
+            <textarea name="ai_instructions" placeholder="مثال: تذكر أن تركز على الخدمات المميزة..." 
+                      rows="3"
+                      class="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">{{ integration.extra_config.get('ai_instructions', '') if integration else '' }}</textarea>
+            <p class="text-xs text-purple-700 mt-1">
+                أضف تعليمات خاصة للذكاء الاصطناعي لتخصيص الردود حسب احتياجاتك.
+            </p>
+        </div>
+    </div>
+
+    <!-- الأزرار -->
+    <div class="flex gap-3">
+        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
+            💾 حفظ وتفعيل
+        </button>
+        {% if integration and integration.is_active %}
+        <button type="button" onclick="if(confirm('هل تريد تعطيل هذا التكامل؟')) document.getElementById('deactivate-form').submit();" 
+                class="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition">
+            🛑 تعطيل التكامل
+        </button>
+        {% endif %}
+    </div>
+</form>
+
+<!-- نموذج تعطيل التكامل (مخفي) -->
+{% if integration and integration.is_active %}
+<form id="deactivate-form" method="POST" action="{{ url_for('tenant_social_media_integrations.social_media_deactivate', service_type=service_type) }}" style="display: none;"></form>
+{% endif %}
+
+<!-- معلومات إضافية -->
+<div class="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-900">
+    <strong>كيفية الحصول على بيانات الاتصال:</strong>
+    <ol class="list-decimal list-inside mt-2 space-y-2">
+        <li>توجه إلى إعدادات التطبيق في {{ service_name }}</li>
+        <li>ابحث عن قسم "Developers" أو "API"</li>
+        <li>أنشئ تطبيقاً جديداً وانسخ مفاتيح الـ API</li>
+        <li>الصقها هنا وحفظ الإعدادات</li>
+    </ol>
+</div>
+
+{% endblock %}

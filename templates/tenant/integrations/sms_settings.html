@@ -1,0 +1,55 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}الرسائل النصية SMS — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<a href="{{ url_for('tenant_integrations.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع للتكاملات</a>
+<h1 class="text-2xl font-extrabold mb-1">📱 رسائل نصية (SMS)</h1>
+<p class="text-gray-500 text-sm mb-6">أدخل بيانات مزود خدمة الـ SMS الخاص بك (مثل Twilio, Taqnyat) — كل المفاتيح محفوظة لنشاطك فقط لضمان الخصوصية والأمان.</p>
+
+<form method="POST" class="bg-white rounded-2xl p-6 shadow-sm space-y-4 border border-gray-100">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+        <label class="block text-sm font-bold mb-1">مزود الخدمة (Provider)</label>
+        <select name="provider_name" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+            <option value="twilio" {% if config and config.provider_name == 'twilio' %}selected{% endif %}>Twilio</option>
+            <option value="taqnyat" {% if config and config.provider_name == 'taqnyat' %}selected{% endif %}>تقنيات (Taqnyat)</option>
+            <option value="unifonic" {% if config and config.provider_name == 'unifonic' %}selected{% endif %}>يونيفونيك (Unifonic)</option>
+            <option value="custom" {% if config and config.provider_name == 'custom' %}selected{% endif %}>مخصص (Custom)</option>
+        </select>
+        <p class="text-xs text-gray-500 mt-1">اختر مزود الخدمة الذي تملك حساباً لديه.</p>
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">مفتاح الربط (API Key / Auth Token)</label>
+        <input type="password" name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono" placeholder="أدخل مفتاح الـ API الخاص بك هنا">
+        <p class="text-xs text-gray-500 mt-1">يمكنك الحصول على هذا المفتاح من لوحة تحكم مزود الخدمة الخاص بك.</p>
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">اسم المرسل (Sender ID)</label>
+        <input name="sender_id" value="{{ config.sender_id if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="Kognitix">
+        <p class="text-xs text-gray-500 mt-1">اسم المرسل المعتمد لديك في منصة مزود الخدمة (يجب أن يكون مسجلاً ومقبولاً لديهم).</p>
+    </div>
+
+    <label class="flex items-center gap-2 mt-4">
+        <input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}>
+        <span class="text-sm font-bold text-green-700">تفعيل خدمة الـ SMS لنشاطي</span>
+    </label>
+
+    <div class="mt-6 pt-4 border-t border-gray-100 flex gap-3">
+        <button type="submit" class="bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-800 transition">
+            💾 حفظ الإعدادات
+        </button>
+    </div>
+</form>
+
+{% if config and config.is_active %}
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6 text-sm text-blue-900">
+    💡 <strong>معلومة:</strong> الإعدادات الخاصة بك محفوظة ومعزولة بالكامل. سيتم استخدام هذه الإعدادات عند إرسال أي رسالة نصية قصيرة لعملائك أو مستأجري وحداتك.
+</div>
+{% endif %}
+
+{% endblock %}

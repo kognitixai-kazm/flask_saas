@@ -1,0 +1,73 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}{% if inquiry.inquiry_kind == 'complaint' %}شكوى{% else %}استفسار{% endif %} #{{ inquiry.id }}{% endblock %}
+{% block panel_content %}
+<div class="flex items-center gap-3 mb-6 flex-wrap">
+  <a href="{{ url_for('tenant_inquiries.list_inquiries') }}" class="text-gray-400 hover:text-blue-600">← رجوع</a>
+  <h1 class="text-2xl font-bold">{% if inquiry.inquiry_kind == 'complaint' %}⚠️ شكوى{% else %}📩 استفسار{% endif %} #{{ inquiry.id }}</h1>
+  <span class="px-2 py-0.5 rounded-full text-xs
+    {% if inquiry.status == 'new' %}bg-red-100 text-red-700
+    {% elif inquiry.status == 'pending' %}bg-yellow-100 text-yellow-700
+    {% elif inquiry.status == 'answered' %}bg-green-100 text-green-700
+    {% else %}bg-gray-100 text-gray-700{% endif %}">{{ inquiry.status_label }}</span>
+  {% if inquiry.inquiry_kind == 'complaint' and inquiry.complaint_category_label_ar %}
+  <span class="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-900">{{ inquiry.complaint_category_label_ar }}</span>
+  {% endif %}
+</div>
+
+<div class="grid md:grid-cols-3 gap-6">
+  <!-- السؤال -->
+  <div class="md:col-span-2 space-y-4">
+    <div class="bg-white rounded-xl p-6 shadow-sm">
+      <h3 class="font-bold text-sm text-gray-500 mb-2">سؤال الزائر:</h3>
+      <p class="text-gray-800 leading-relaxed">{{ inquiry.question }}</p>
+      <div class="text-xs text-gray-400 mt-3">{{ inquiry.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+
+    {% if inquiry.answer %}
+    <div class="bg-green-50 border border-green-200 rounded-xl p-6">
+      <h3 class="font-bold text-sm text-green-700 mb-2">✓ الرد:</h3>
+      <p class="text-gray-800 leading-relaxed">{{ inquiry.answer }}</p>
+      <div class="text-xs text-gray-400 mt-3">{{ inquiry.answered_by }} — {{ inquiry.answered_at.strftime('%Y-%m-%d %H:%M') if inquiry.answered_at else '' }}</div>
+    </div>
+    {% endif %}
+
+    {% if inquiry.status != 'closed' %}
+    <form method="POST" class="bg-white rounded-xl p-6 shadow-sm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h3 class="font-bold text-sm mb-3">{{ 'تعديل الرد' if inquiry.answer else 'اكتب الرد' }}:</h3>
+      <p class="text-xs text-gray-500 mb-2">يُرسل هذا الرد للزائر في الشات وعلى البريد/واتساب إن وُجدت بيانات تواصل.</p>
+      <textarea name="answer" rows="5" required class="w-full border rounded-lg px-4 py-3 text-sm mb-3" placeholder="{% if inquiry.inquiry_kind == 'complaint' %}اعتذر باختصار، اذكر ماذا ستفعلون، وادعُه للتواصل إن احتجتم تفاصيل إضافية…{% else %}اكتب ردك بصياغة واضحة وودّية…{% endif %}">{{ inquiry.answer or '' }}</textarea>
+      <div class="flex gap-3">
+        <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm">إرسال الرد</button>
+        {% if inquiry.status == 'answered' %}
+        <a href="{{ url_for('tenant_inquiries.close', id=inquiry.id) }}" onclick="event.preventDefault();this.closest('div').querySelector('form.close-form').submit()" class="bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm">إغلاق</a>
+        {% endif %}
+      </div>
+    </form>
+    {% if inquiry.status == 'answered' %}
+    <form method="POST" action="{{ url_for('tenant_inquiries.close', id=inquiry.id) }}" class="close-form hidden">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    </form>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- معلومات جانبية -->
+  <div class="space-y-4">
+    <div class="bg-white rounded-xl p-5 shadow-sm text-sm space-y-2">
+      <h3 class="font-bold text-gray-500 mb-3">{% if inquiry.inquiry_kind == 'complaint' %}بيانات المشتكي{% else %}بيانات الزائر{% endif %}</h3>
+      <div><span class="text-gray-400">الاسم:</span> {{ inquiry.visitor_name or '—' }}</div>
+      <div><span class="text-gray-400">الجوال:</span> {{ inquiry.visitor_phone or '—' }}</div>
+      <div><span class="text-gray-400">البريد:</span> {{ inquiry.visitor_email or '—' }}</div>
+      <div><span class="text-gray-400">معرّف الزائر:</span> <span class="font-mono text-xs break-all">{{ inquiry.visitor_id or '—' }}</span></div>
+      {% if conversation %}
+      <div><span class="text-gray-400">القناة:</span> {% if conversation.channel == 'whatsapp' %}واتساب{% else %}الويب{% endif %}</div>
+      <div><span class="text-gray-400">محادثة:</span> #{{ conversation.id }}</div>
+      {% endif %}
+      <div><span class="text-gray-400">الفرع:</span> {{ inquiry.branch.name if inquiry.branch else '—' }}</div>
+      {% if inquiry.email_sent %}<div><span class="text-gray-400">تنبيه الفريق:</span> ✓ أُرسل إلى {{ inquiry.email_sent_to }}</div>{% endif %}
+      {% if inquiry.visitor_notified %}<div class="text-green-700 text-xs">✓ تم إيصال آخر رد للزائر (شات/بريد/واتساب حسب التوفر)</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

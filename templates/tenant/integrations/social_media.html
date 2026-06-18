@@ -1,0 +1,271 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}تكاملات التواصل الاجتماعي — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">📱 التواصل الاجتماعي والتسويق</h1>
+        <p class="text-gray-500 mt-1 text-sm">إدارة حساباتك والتسويق لخدماتك المدعوم بالذكاء الاصطناعي.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('tenant_social_media_integrations.ai_studio') }}" class="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md shadow-purple-500/30 transition transform hover:-translate-y-0.5">
+            <span class="text-xl">✨</span>
+            <span>ستوديو الذكاء الاصطناعي</span>
+        </a>
+    </div>
+</div>
+
+<!-- معلومات الذكاء الاصطناعي للتسويق -->
+<div class="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-2xl p-5 shadow-sm">
+    <div class="flex items-start gap-4">
+        <div class="bg-white p-3 rounded-xl shadow-sm text-2xl">✨</div>
+        <div>
+            <h3 class="font-bold text-gray-900 text-lg mb-1">صمم منشوراتك بذكاء</h3>
+            <p class="text-gray-600 text-sm mb-3">
+                استخدم أداة الذكاء الاصطناعي لكتابة أوصاف تسويقية جذابة وتصميم صور احترافية لمنتجاتك وخدماتك بضغطة زر.
+            </p>
+            <a href="{{ url_for('tenant_social_media_integrations.ai_studio') }}" class="text-purple-700 text-sm font-bold hover:text-purple-800 flex items-center gap-1">
+                جرب الستوديو الآن
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transform rotate-180"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+        </div>
+    </div>
+</div>
+<div class="mb-8">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">Meta (فيسبوك وانستغرام)</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+        <!-- فيسبوك -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="font-bold text-gray-900">👍 فيسبوك</div>
+                    {% set cfg = social_integrations.get('facebook') %}
+                    {% if cfg %}
+                        {% if cfg.is_active and cfg.is_verified %}
+                            <span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">✅ مفعّل</span>
+                        {% elif cfg.is_active %}
+                            <span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">⚠️ غير متحقق</span>
+                        {% else %}
+                            <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">⏸️ معطّل</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">— لم يُعد بعد</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                    <strong>الإمكانيات:</strong>
+                    <ul class="list-disc list-inside text-xs mt-2 space-y-1">
+                        <li>الرد التلقائي على رسائل الصفحة</li>
+                        <li>الرد على التعليقات في المنشورات</li>
+                        <li>جمع بيانات العملاء المحتملين من الإعلانات</li>
+                    </ul>
+                </p>
+            </div>
+            <a href="{{ url_for('tenant_social_media_integrations.social_media_setup', service_type='facebook') }}"
+               class="bg-gradient-to-l from-blue-500 to-blue-600 text-white text-xs font-bold px-5 py-2 flex justify-between hover:from-blue-600 hover:to-blue-700 transition">
+                <span>اضبط الإعدادات</span>
+                <span>›</span>
+            </a>
+        </div>
+
+        <!-- انستغرام -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="font-bold text-gray-900">📸 انستغرام</div>
+                    {% set cfg = social_integrations.get('instagram') %}
+                    {% if cfg %}
+                        {% if cfg.is_active and cfg.is_verified %}
+                            <span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">✅ مفعّل</span>
+                        {% elif cfg.is_active %}
+                            <span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">⚠️ غير متحقق</span>
+                        {% else %}
+                            <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">⏸️ معطّل</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">— لم يُعد بعد</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                    <strong>الإمكانيات:</strong>
+                    <ul class="list-disc list-inside text-xs mt-2 space-y-1">
+                        <li>الرد التلقائي على الرسائل المباشرة</li>
+                        <li>الرد على التعليقات والقصص</li>
+                        <li>زيادة التفاعل مع العملاء</li>
+                    </ul>
+                </p>
+            </div>
+            <a href="{{ url_for('tenant_social_media_integrations.social_media_setup', service_type='instagram') }}"
+               class="bg-gradient-to-l from-pink-500 to-pink-600 text-white text-xs font-bold px-5 py-2 flex justify-between hover:from-pink-600 hover:to-pink-700 transition">
+                <span>اضبط الإعدادات</span>
+                <span>›</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- تيك توك -->
+<div class="mb-8">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">منصات أخرى</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+        <!-- تيك توك -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="font-bold text-gray-900">🎵 تيك توك</div>
+                    {% set cfg = social_integrations.get('tiktok') %}
+                    {% if cfg %}
+                        {% if cfg.is_active and cfg.is_verified %}
+                            <span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">✅ مفعّل</span>
+                        {% elif cfg.is_active %}
+                            <span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">⚠️ غير متحقق</span>
+                        {% else %}
+                            <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">⏸️ معطّل</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">— لم يُعد بعد</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                    <strong>الإمكانيات:</strong>
+                    <ul class="list-disc list-inside text-xs mt-2 space-y-1">
+                        <li>الرد التلقائي على التعليقات</li>
+                        <li>إدارة الإعلانات وتتبع الأداء</li>
+                        <li>توجيه العملاء للقنوات الأخرى</li>
+                    </ul>
+                </p>
+            </div>
+            <a href="{{ url_for('tenant_social_media_integrations.social_media_setup', service_type='tiktok') }}"
+               class="bg-gradient-to-l from-black to-gray-800 text-white text-xs font-bold px-5 py-2 flex justify-between hover:from-gray-900 hover:to-black transition">
+                <span>اضبط الإعدادات</span>
+                <span>›</span>
+            </a>
+        </div>
+
+        <!-- سناب شات -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="font-bold text-gray-900">👻 سناب شات</div>
+                    {% set cfg = social_integrations.get('snapchat') %}
+                    {% if cfg %}
+                        {% if cfg.is_active and cfg.is_verified %}
+                            <span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">✅ مفعّل</span>
+                        {% elif cfg.is_active %}
+                            <span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">⚠️ غير متحقق</span>
+                        {% else %}
+                            <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">⏸️ معطّل</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">— لم يُعد بعد</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                    <strong>الإمكانيات:</strong>
+                    <ul class="list-disc list-inside text-xs mt-2 space-y-1">
+                        <li>إدارة الإعلانات والحملات</li>
+                        <li>تتبع التحويلات والمبيعات</li>
+                        <li>توجيه العملاء للواتساب</li>
+                    </ul>
+                </p>
+            </div>
+            <a href="{{ url_for('tenant_social_media_integrations.social_media_setup', service_type='snapchat') }}"
+               class="bg-gradient-to-l from-yellow-300 to-yellow-400 text-gray-900 text-xs font-bold px-5 py-2 flex justify-between hover:from-yellow-400 hover:to-yellow-500 transition">
+                <span>اضبط الإعدادات</span>
+                <span>›</span>
+            </a>
+        </div>
+
+        <!-- لينكدإن -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="font-bold text-gray-900">💼 لينكدإن</div>
+                    {% set cfg = social_integrations.get('linkedin') %}
+                    {% if cfg %}
+                        {% if cfg.is_active and cfg.is_verified %}
+                            <span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">✅ مفعّل</span>
+                        {% elif cfg.is_active %}
+                            <span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">⚠️ غير متحقق</span>
+                        {% else %}
+                            <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">⏸️ معطّل</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">— لم يُعد بعد</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                    <strong>الإمكانيات:</strong>
+                    <ul class="list-disc list-inside text-xs mt-2 space-y-1">
+                        <li>جمع بيانات العملاء المحتملين</li>
+                        <li>الرد على رسائل الصفحة</li>
+                        <li>إدارة الإعلانات المهنية</li>
+                    </ul>
+                </p>
+            </div>
+            <a href="{{ url_for('tenant_social_media_integrations.social_media_setup', service_type='linkedin') }}"
+               class="bg-gradient-to-l from-blue-700 to-blue-800 text-white text-xs font-bold px-5 py-2 flex justify-between hover:from-blue-800 hover:to-blue-900 transition">
+                <span>اضبط الإعدادات</span>
+                <span>›</span>
+            </a>
+        </div>
+
+        <!-- خرائط جوجل -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="font-bold text-gray-900">🗺️ خرائط جوجل</div>
+                    {% set cfg = social_integrations.get('google_maps') %}
+                    {% if cfg %}
+                        {% if cfg.is_active and cfg.is_verified %}
+                            <span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">✅ مفعّل</span>
+                        {% elif cfg.is_active %}
+                            <span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">⚠️ غير متحقق</span>
+                        {% else %}
+                            <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">⏸️ معطّل</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">— لم يُعد بعد</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                    <strong>الإمكانيات:</strong>
+                    <ul class="list-disc list-inside text-xs mt-2 space-y-1">
+                        <li>الرد التلقائي على التقييمات</li>
+                        <li>الإجابة على الأسئلة</li>
+                        <li>تحسين سمعتك الرقمية</li>
+                    </ul>
+                </p>
+            </div>
+            <a href="{{ url_for('tenant_social_media_integrations.social_media_setup', service_type='google_maps') }}"
+               class="bg-gradient-to-l from-red-500 to-red-600 text-white text-xs font-bold px-5 py-2 flex justify-between hover:from-red-600 hover:to-red-700 transition">
+                <span>اضبط الإعدادات</span>
+                <span>›</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات الأمان -->
+<div class="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-900">
+    <div class="flex gap-3">
+        <div class="text-lg">🔐</div>
+        <div>
+            <strong>خصوصيتك أولاً:</strong>
+            <p class="mt-1">جميع مفاتيح الـ API والبيانات الحساسة تُحفظ مشفرة ومرتبطة بحسابك فقط. لا يطّلع عليها أي تاجر آخر. عند التفعيل نقوم بفحص خفيف للمفتاح للتأكد من صحته قبل الاستخدام.</p>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات الذكاء الاصطناعي -->
+<div class="mt-4 bg-purple-50 border border-purple-200 rounded-2xl p-4 text-sm text-purple-900">
+    <div class="flex gap-3">
+        <div class="text-lg">🤖</div>
+        <div>
+            <strong>الرد التلقائي بالذكاء الاصطناعي:</strong>
+            <p class="mt-1">جميع التكاملات مرتبطة بنظام الذكاء الاصطناعي الخاص بك. عند تفعيل أي منصة، ستتمكن من الرد التلقائي على الرسائل والتعليقات والتقييمات باستخدام الذكاء الاصطناعي، تماماً كما هو الحال مع الواتساب والشات.</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

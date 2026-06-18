@@ -1,0 +1,82 @@
+{% extends 'tenant/_base_panel.html' %}
+{% block title %}نمط الإيجار{% endblock %}
+{% block panel %}
+
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+            🎯 نمط الإيجار
+        </h1>
+        <p class="text-gray-600 mt-1">
+            اختر نوع نشاطك. يمكنك تغييره لاحقاً إذا تطلّب الأمر.
+        </p>
+    </div>
+
+    <form method="POST" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        {# يومي (افتراضي — يشمل الشهري) #}
+        <label class="block bg-white rounded-2xl border-2 p-5 cursor-pointer transition
+                {% if current_mode == 'daily' %}border-blue-500 shadow-md{% else %}border-gray-200 hover:border-blue-300{% endif %}">
+            <div class="flex items-start gap-4">
+                <input type="radio" name="hotel_mode" value="daily"
+                       {% if current_mode == 'daily' %}checked{% endif %}
+                       class="mt-1 w-5 h-5 accent-blue-600">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-2xl">🏨</span>
+                        <h3 class="font-bold text-gray-900 text-lg">يومي (يشمل الشهري)</h3>
+                        <span class="bg-emerald-100 text-emerald-700 text-xs rounded-full px-2 py-0.5">الأشمل</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">
+                        مناسب للفنادق والشقق المخدومة والنُزُل: حجوزات يومية + إمكانية إيجار شهري للإقامات الطويلة.
+                    </p>
+                    <ul class="text-xs text-gray-500 space-y-1">
+                        <li class="flex items-center gap-1.5">✅ حجوزات الليلة الواحدة + روابط دفع</li>
+                        <li class="flex items-center gap-1.5">✅ إيجار شهري وعقد رسمي للإقامات الطويلة</li>
+                        <li class="flex items-center gap-1.5">✅ صور الوحدات وجولات 360°</li>
+                    </ul>
+                </div>
+            </div>
+        </label>
+
+        {# شهري بحت #}
+        <label class="block bg-white rounded-2xl border-2 p-5 cursor-pointer transition
+                {% if current_mode == 'monthly' %}border-purple-500 shadow-md{% else %}border-gray-200 hover:border-purple-300{% endif %}">
+            <div class="flex items-start gap-4">
+                <input type="radio" name="hotel_mode" value="monthly"
+                       {% if current_mode == 'monthly' %}checked{% endif %}
+                       class="mt-1 w-5 h-5 accent-purple-600">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-2xl">📅</span>
+                        <h3 class="font-bold text-gray-900 text-lg">شهري فقط</h3>
+                        <span class="bg-purple-100 text-purple-700 text-xs rounded-full px-2 py-0.5">رسمي</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">
+                        مناسب للشقق المؤجَّرة شهرياً فقط (عقود رسمية). لن تظهر خيارات الحجز اليومي في الشات ولا في لوحة التحكم.
+                    </p>
+                    <ul class="text-xs text-gray-500 space-y-1">
+                        <li class="flex items-center gap-1.5">✅ عقود إلكترونية + توثيق هوية المستأجر</li>
+                        <li class="flex items-center gap-1.5">✅ مدد شهرية/سنوية فقط</li>
+                        <li class="flex items-center gap-1.5 text-gray-400">⚪ لا حجوزات ليلة واحدة</li>
+                    </ul>
+                </div>
+            </div>
+        </label>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
+            <strong>⚠️ ملاحظة:</strong>
+            تغيير النمط لا يحذف بياناتك. الوحدات والصور تبقى كما هي.
+            في النمط الشهري يختفي السعر اليومي وحقول الحجز اليومي من الشات ومن لوحة التحكم.
+        </div>
+
+        <button type="submit"
+                class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700
+                       text-white font-bold py-3 rounded-xl shadow-md">
+            💾 حفظ النمط
+        </button>
+    </form>
+</div>
+
+{% endblock %}

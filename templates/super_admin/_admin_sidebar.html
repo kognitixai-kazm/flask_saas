@@ -1,0 +1,106 @@
+{# Sidebar السوبر أدمن — هوية KOGNITIX + Drawer للجوال #}
+{% set _sa_user = g.get('current_admin') or g.get('current_super_admin') %}
+
+{# زر القائمة للجوال #}
+<button type="button"
+        onclick="document.getElementById('sa-drawer').classList.toggle('-translate-x-full');document.getElementById('sa-backdrop').classList.toggle('hidden');"
+        class="md:hidden fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#0b1f3a]">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+</button>
+
+{# خلفية Backdrop للجوال #}
+<div id="sa-backdrop"
+     class="hidden md:hidden fixed inset-0 bg-black/40 z-30 transition-all"
+     onclick="document.getElementById('sa-drawer').classList.add('-translate-x-full');this.classList.add('hidden');">
+</div>
+
+{# القائمة الجانبية الرئيسية #}
+<aside id="sa-drawer"
+       class="fixed md:sticky top-0 right-0 h-screen w-72 z-40 flex-shrink-0
+              bg-gradient-to-b from-[#0b1f3a] to-[#0e2a4d] text-white border-l border-white/10
+              transform translate-x-0 -translate-x-full md:translate-x-0 transition-transform duration-300 overflow-y-auto">
+
+    {# رأس القائمة: KOGNITIX #}
+    <div class="sticky top-0 px-5 pt-5 pb-4 border-b border-white/10 bg-gradient-to-b from-[#0b1f3a] to-transparent">
+        <div class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='img/logo.png') }}"
+                 class="w-11 h-11 rounded-lg bg-white/10 p-1.5 shadow-lg" alt="KOGNITIX">
+            <div class="leading-tight">
+                <div class="text-white font-extrabold text-lg tracking-tight">KOGNITIX</div>
+                <div class="text-[10px] uppercase tracking-[0.18em] text-cyan-300/90">Admin Console</div>
+            </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2 text-xs text-blue-200/80">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="truncate">{{ (_sa_user.username if _sa_user else 'admin') }}</span>
+        </div>
+    </div>
+
+    {# القائمة الرئيسية #}
+    <nav class="p-3 space-y-1 text-sm pb-24">
+        {% set _routes = [
+            ('super_admin.dashboard',       '📊', 'الرئيسية'),
+            ('super_admin.tenant_usage_report', '📈', 'استهلاك التجار'),
+            ('super_admin.tenants_list',    '🏢', 'المستأجرون'),
+            ('super_admin.activities_list', '🧩', 'الأنشطة'),
+            ('admin_pricing.index',         '💳', 'تسعير الخدمات'),
+            ('admin_system.index',          '🔑', 'مفاتيح النظام'),
+            ('super_admin.audit_logs',      '📋', 'السجلات'),
+            ('super_admin.system_info',     '⚙️', 'معلومات النظام'),
+        ] %}
+        {% for ep, icon, label in _routes %}
+            {% set _href = url_for(ep) %}
+            {% set _active = request.endpoint == ep %}
+            <a href="{{ _href }}"
+               class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                      {{ 'bg-white/15 text-white shadow-md' if _active else 'text-blue-100/80 hover:bg-white/10 hover:text-white' }}">
+                <span class="text-base">{{ icon }}</span>
+                <span class="flex-1">{{ label }}</span>
+                {% if _active %}<span class="w-1.5 h-1.5 rounded-full bg-cyan-300"></span>{% endif %}
+            </a>
+        {% endfor %}
+
+        {# فاصل #}
+        <hr class="my-4 border-white/10">
+
+        {# قسم الحساب #}
+        <div class="px-4 py-2 text-xs uppercase tracking-widest text-blue-300/60 font-bold">الحساب</div>
+        <a href="{{ url_for('super_admin.account_change_password') }}"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-blue-100/80 hover:bg-white/10 hover:text-white transition-all">
+            <span>🔐</span> تغيير كلمة المرور
+        </a>
+        <form method="POST" action="{{ url_for('super_admin.logout') }}" class="mt-1">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="w-full text-right flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-rose-300/90 hover:bg-rose-500/15 hover:text-rose-200 transition-all">
+                <span>🚪</span> خروج
+            </button>
+        </form>
+    </nav>
+</aside>
+
+{# تحسينات CSS إضافية #}
+<style>
+    #sa-drawer {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
+
+    #sa-drawer::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #sa-drawer::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #sa-drawer::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+
+    #sa-drawer::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+</style>

@@ -1,0 +1,55 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}العقود — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<a href="{{ url_for('tenant_integrations.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع للتكاملات</a>
+<h1 class="text-2xl font-extrabold mb-1">📄 العقود الإلكترونية</h1>
+<p class="text-gray-500 text-sm mb-6">فعّل توقيع العقود إلكترونياً وأرسلها لعملائك مباشرة عبر واتساب.</p>
+
+<form method="POST" class="bg-white rounded-2xl p-6 shadow-sm space-y-4 border border-gray-100">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+        <label class="block text-sm font-bold mb-1">المزوّد</label>
+        <select name="provider" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+            {% set p = config.provider if config else 'custom' %}
+            <option value="custom"   {{ 'selected' if p == 'custom' }}>الخدمة المدمجة (KOGNITIX)</option>
+            <option value="docusign" {{ 'selected' if p == 'docusign' }}>DocuSign</option>
+        </select>
+        <p class="text-xs text-gray-400 mt-1">الخدمة المدمجة تُنشئ عقوداً جاهزة للتوقيع وتُرسلها بدون مفاتيح خارجية.</p>
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">API Key <span class="text-gray-400 font-normal">(عند اختيار DocuSign)</span></label>
+        <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono">
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">رابط القالب الافتراضي (اختياري)</label>
+        <input name="template_url" value="{{ (config.extra_config.template_url if config and config.extra_config else '') }}"
+               dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+    </div>
+
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="auto_send_whatsapp"
+               {{ 'checked' if config and (config.extra_config or {}).get('auto_send_whatsapp') }}>
+        <span class="text-sm">إرسال العقد للعميل تلقائياً عبر واتساب عند الإنشاء</span>
+    </label>
+
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}>
+        <span class="text-sm font-bold">تفعيل العقود</span>
+    </label>
+
+    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900">
+        💡 العقود تُنشأ من قسم
+        <a href="{{ url_for('tenant_contracts.index') }}" class="font-bold underline">📄 إدارة العقود</a>
+        — هنا فقط لضبط طريقة التوقيع والإرسال.
+    </div>
+
+    <button type="submit" class="bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-800">
+        💾 حفظ
+    </button>
+</form>
+{% endblock %}

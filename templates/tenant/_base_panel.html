@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="flex min-h-screen">
+    {% include "tenant/_sidebar.html" %}
+    <main class="flex-1 p-4 md:p-8 bg-gray-50 min-h-screen pt-16 md:pt-8">
+        <div class="max-w-6xl mx-auto">
+            {% block panel_content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<!-- Driver.js for Onboarding Tour -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+
+{% endblock %}

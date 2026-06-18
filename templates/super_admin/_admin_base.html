@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block body_class %}bg-[#f5f7fb]{% endblock %}
+{% block body %}
+<div class="flex min-h-screen flex-col md:flex-row">
+    {% include "super_admin/_admin_sidebar.html" %}
+    <main class="flex-1 w-full overflow-x-hidden p-4 md:p-8 pt-20 md:pt-8">
+        <div class="max-w-7xl mx-auto w-full">
+            {% block panel_content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<style>
+    /* تحسينات التجاوب على الجوال */
+    @media (max-width: 768px) {
+        main {
+            padding-top: 5rem;
+        }
+        
+        /* إخفاء الـ scrollbar على الجوال للتوفير في المساحة */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+        }
+    }
+    
+    /* تحسينات الأداء والانتقالات */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    button, a {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+</style>
+{% endblock %}

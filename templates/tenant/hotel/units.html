@@ -1,0 +1,38 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}الوحدات{% endblock %}
+{% block panel_content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">🛏️ الوحدات (غرف/شقق/أجنحة)</h1>
+  <a href="{{ url_for('tenant_hotel.unit_form') }}" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm">+ إضافة وحدة</a>
+</div>
+{% if units %}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+<thead class="bg-gray-50 text-gray-500"><tr>
+  <th class="text-right py-3 px-4 whitespace-nowrap">النوع</th><th class="text-right py-3 px-4 whitespace-nowrap">الرقم</th>
+  <th class="text-right py-3 px-4 whitespace-nowrap">الفرع</th><th class="text-right py-3 px-4 whitespace-nowrap">الطابق</th>
+  <th class="text-right py-3 px-4 whitespace-nowrap">السعر/يوم</th><th class="text-right py-3 px-4 whitespace-nowrap">الحالة</th><th class="py-3 px-4"></th>
+</tr></thead>
+<tbody>
+{% for u in units %}
+<tr class="border-t hover:bg-gray-50">
+  <td class="py-3 px-4 whitespace-nowrap">{{ u.type_label }}</td>
+  <td class="py-3 px-4 font-mono whitespace-nowrap">{{ u.unit_number }}</td>
+  <td class="py-3 px-4 whitespace-nowrap">{{ u.branch.name if u.branch else '—' }}</td>
+  <td class="py-3 px-4 whitespace-nowrap">{{ u.floor.number if u.floor else '—' }}</td>
+  <td class="py-3 px-4 font-bold whitespace-nowrap">{{ u.daily_price }} ر.س</td>
+  <td class="py-3 px-4 whitespace-nowrap"><span class="px-2 py-0.5 rounded-full text-xs border {{ u.status_color_class }}">{{ u.status_label }}</span></td>
+  <td class="py-3 px-4 flex gap-2 whitespace-nowrap">
+    <a href="{{ url_for('tenant_hotel.unit_form', id=u.id) }}" class="text-blue-600 text-xs">تعديل</a>
+    <form method="POST" action="{{ url_for('tenant_hotel.unit_delete', id=u.id) }}" onsubmit="return confirm('حذف؟')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-red-500 text-xs">حذف</button></form>
+  </td>
+</tr>
+{% endfor %}
+</tbody></table>
+</div>
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400"><div class="text-4xl mb-3">🛏️</div><p>لا توجد وحدات. أضف غرفتك الأولى!</p></div>
+{% endif %}
+{% endblock %}

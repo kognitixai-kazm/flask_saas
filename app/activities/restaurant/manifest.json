@@ -1,0 +1,21 @@
+{
+  "code": "restaurant",
+  "name_ar": "مطعم / كافيه",
+  "name_en": "Restaurant / Cafe",
+  "icon": "🍽️",
+  "description": "إدارة المنيو والطلبات والحجوزات",
+  "version": "1.0.0",
+  "fields": [
+    {"key": "cuisine_type", "label_ar": "نوع المطبخ", "type": "text", "required": false},
+    {"key": "seating_capacity", "label_ar": "سعة الجلوس", "type": "number", "required": false},
+    {"key": "delivery_available", "label_ar": "يوجد توصيل", "type": "boolean", "required": false},
+    {"key": "delivery_phone", "label_ar": "رقم التوصيل", "type": "text", "required": false},
+    {"key": "opening_time", "label_ar": "وقت الافتتاح", "type": "time", "required": false},
+    {"key": "closing_time", "label_ar": "وقت الإغلاق", "type": "time", "required": false},
+    {"key": "address", "label_ar": "العنوان", "type": "text", "required": true},
+    {"key": "phone", "label_ar": "رقم التواصل", "type": "text", "required": true},
+    {"key": "menu_description", "label_ar": "وصف المنيو (أصناف رئيسية)", "type": "textarea", "required": false}
+  ],
+  "intents": ["menu", "ordering", "reservation", "delivery", "complaints"],
+  "dashboard_sections": ["menu", "orders", "reservations", "analytics"]
+}

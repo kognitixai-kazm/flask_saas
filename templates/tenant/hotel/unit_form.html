@@ -1,0 +1,214 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}{{ 'تعديل' if is_edit else 'إضافة' }} وحدة{% endblock %}
+{% block panel_content %}
+<h1 class="text-2xl font-bold mb-6">🛏️ {{ 'تعديل' if is_edit else 'إضافة' }} وحدة</h1>
+<form method="POST" enctype="multipart/form-data" class="bg-white rounded-xl p-6 shadow-sm space-y-4 max-w-2xl">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <!-- الفرع والنوع -->
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1">الفرع *</label>
+      <select name="branch_id" id="branch_select" required
+              class="w-full border rounded-lg px-4 py-2.5 text-sm"
+              onchange="filterFloors()">
+        <option value="">اختر الفرع...</option>
+        {% for b in branches %}
+        <option value="{{ b.id }}" {{ 'selected' if unit and unit.branch_id == b.id }}>{{ b.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">نوع الوحدة *</label>
+      <select name="unit_type" required class="w-full border rounded-lg px-4 py-2.5 text-sm">
+        {% for code,label in unit_types %}
+        <option value="{{ code }}" {{ 'selected' if unit and unit.unit_type == code }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <!-- الرقم والطابق -->
+  <div class="grid grid-cols-3 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1">رقم الوحدة *</label>
+      <input name="unit_number" value="{{ unit.unit_number if unit else '' }}" required
+             class="w-full border rounded-lg px-4 py-2.5 text-sm"
+             placeholder="مثال: 101">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">الطابق</label>
+      <select name="floor_id" id="floor_select" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+        <option value="">— بدون طابق —</option>
+        {% for f in floors %}
+        <option value="{{ f.id }}"
+                data-branch="{{ f.branch_id }}"
+                {{ 'selected' if unit and unit.floor_id == f.id }}>
+          طابق {{ f.number }}
+        </option>
+        {% endfor %}
+      </select>
+      <p id="floor_hint" class="text-xs text-gray-400 mt-1 hidden">اختر الفرع أولاً لتظهر طوابقه</p>
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">إضافة طابق جديد</label>
+      <input name="new_floor_number" id="new_floor_input" placeholder="رقم طابق جديد"
+             class="w-full border rounded-lg px-4 py-2.5 text-sm" disabled>
+      <p class="text-xs text-gray-400 mt-1">يُنشأ تلقائياً عند الحفظ</p>
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium mb-1">العنوان/الوصف</label>
+    <textarea name="description" rows="2" class="w-full border rounded-lg px-4 py-2.5 text-sm">{{ unit.description if unit else '' }}</textarea>
+  </div>
+
+  <!-- التفاصيل الداخلية -->
+  <h3 class="font-bold text-sm pt-4 border-t">🏠 تفاصيل الوحدة (اختياري)</h3>
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div><label class="block text-xs text-gray-500 mb-1">غرف النوم 🛏️</label>
+    <input type="number" name="bedrooms_count" value="{{ unit.bedrooms_count if unit else '' }}" min="0" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+    <div><label class="block text-xs text-gray-500 mb-1">الصالة 🛋️</label>
+    <input type="number" name="living_rooms" value="{{ unit.living_rooms if unit else '' }}" min="0" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+    <div><label class="block text-xs text-gray-500 mb-1">المجلس</label>
+    <input type="number" name="halls" value="{{ unit.halls if unit else '' }}" min="0" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+    <div><label class="block text-xs text-gray-500 mb-1">الحمامات 🚿</label>
+    <input type="number" name="bathrooms_count" value="{{ unit.bathrooms_count if unit else 1 }}" min="0" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+    <div><label class="block text-xs text-gray-500 mb-1">المطبخ 🍳</label>
+    <input type="number" name="kitchens" value="{{ unit.kitchens if unit else '' }}" min="0" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+    <div><label class="block text-xs text-gray-500 mb-1">أقصى ضيوف 👥</label>
+    <input type="number" name="max_guests" value="{{ unit.max_guests if unit else 2 }}" min="1" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+  </div>
+  <div><label class="block text-xs text-gray-500 mb-1">إضافات أخرى (بلكونة، مخزن...)</label>
+  <input name="extra_rooms" value="{{ unit.extra_rooms if unit else '' }}" class="w-full border rounded-lg px-4 py-2 text-sm" placeholder="مثال: بلكونة, غرفة خادمة"></div>
+
+  <!-- الأسعار (تعتمد على نمط النشاط) -->
+  <h3 class="font-bold text-sm pt-4 border-t">💰 الأسعار (ريال)</h3>
+  {% set is_monthly_only = (g.current_tenant and g.current_tenant.hotel_mode == 'monthly') %}
+  {% if is_monthly_only %}
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-xs text-gray-500 mb-1">شهري <span class="text-red-500">*</span></label>
+    <input type="number" name="monthly_price" value="{{ unit.monthly_price if unit else 0 }}" step="0.01" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+    <div><label class="block text-xs text-gray-500 mb-1">سنوي</label>
+    <input type="number" name="yearly_price" value="{{ unit.yearly_price if unit else 0 }}" step="0.01" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+  </div>
+  <input type="hidden" name="daily_price" value="0">
+  <p class="text-xs text-purple-700">📅 نشاطك مضبوط على «شهري فقط» — لا يظهر سعر يومي.</p>
+  {% else %}
+  <div class="grid grid-cols-3 gap-4">
+    <div><label class="block text-xs text-gray-500 mb-1">يومي</label>
+    <input type="number" name="daily_price" value="{{ unit.daily_price if unit else 0 }}" step="0.01" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+    <div><label class="block text-xs text-gray-500 mb-1">شهري</label>
+    <input type="number" name="monthly_price" value="{{ unit.monthly_price if unit else 0 }}" step="0.01" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+    <div><label class="block text-xs text-gray-500 mb-1">سنوي</label>
+    <input type="number" name="yearly_price" value="{{ unit.yearly_price if unit else 0 }}" step="0.01" class="w-full border rounded-lg px-4 py-2 text-sm"></div>
+  </div>
+  {% endif %}
+
+  <!-- التوفر -->
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-xs text-gray-500 mb-1">نوع التوفر</label>
+    <select name="availability_type" class="w-full border rounded-lg px-4 py-2 text-sm">
+      {% if is_monthly_only %}
+        {% for v,l in [('monthly','شهري'),('yearly','سنوي')] %}
+        <option value="{{ v }}" {{ 'selected' if unit and unit.availability_type == v else ('selected' if v == 'monthly' and not unit) }}>{{ l }}</option>{% endfor %}
+      {% else %}
+        {% for v,l in [('daily','يومي'),('monthly','شهري'),('yearly','سنوي'),('all','الكل')] %}
+        <option value="{{ v }}" {{ 'selected' if unit and unit.availability_type == v }}>{{ l }}</option>{% endfor %}
+      {% endif %}
+    </select></div>
+    <div><label class="block text-xs text-gray-500 mb-1">حالة الوحدة</label>
+    <select name="status" class="w-full border rounded-lg px-4 py-2 text-sm">
+      <option value="available" {{ 'selected' if not unit or unit.status == 'available' }}>متاحة</option>
+      <option value="booked" {{ 'selected' if unit and unit.status == 'booked' }}>مؤجرة / محجوزة</option>
+      <option value="maintenance" {{ 'selected' if unit and unit.status == 'maintenance' }}>صيانة</option>
+      <option value="office" {{ 'selected' if unit and unit.status == 'office' }}>مكتب</option>
+      <option value="storage" {{ 'selected' if unit and unit.status == 'storage' }}>مستودع</option>
+      <option value="closed" {{ 'selected' if unit and unit.status == 'closed' }}>مغلقة</option>
+    </select></div>
+  </div>
+
+  <!-- المميزات -->
+  <div><label class="block text-sm font-medium mb-1">المميزات</label>
+  <input name="amenities" value="{{ unit.amenities if unit else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="واي فاي, مكيف, تلفزيون, ثلاجة..."></div>
+
+  <!-- iCal Sync -->
+  <h3 class="font-bold text-sm pt-4 border-t">📅 مزامنة التقويم (iCal Sync)</h3>
+  <div>
+    <label class="block text-xs text-gray-500 mb-1">رابط استيراد التقويم (مثل رابط Booking.com)</label>
+    <input name="ical_import_url" value="{{ unit.ical_import_url if unit else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2 text-sm" placeholder="https://...">
+  </div>
+  {% if unit %}
+  <div>
+    <label class="block text-xs text-gray-500 mb-1">رابط تصدير التقويم (ضعه في المنصات الخارجية)</label>
+    <div class="flex gap-2">
+      <input type="text" readonly value="{{ url_for('public.export_ical', token=unit.ical_export_token, _external=True) }}" dir="ltr" class="w-full bg-gray-50 border rounded-lg px-4 py-2 text-sm text-gray-600 select-all">
+    </div>
+  </div>
+  {% endif %}
+
+
+  <!-- الصور -->
+  <h3 class="font-bold text-sm pt-4 border-t">📸 الصور (اختياري)</h3>
+  <div><label class="block text-xs text-gray-500 mb-1">رابط جولة 360° (اختياري)</label>
+  <input name="image_360_link" value="{{ unit.image_360_link if unit else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2 text-sm" placeholder="https://..."></div>
+  <div><label class="block text-xs text-gray-500 mb-1">رفع صور الوحدة (يمكن اختيار أكثر من ملف)</label>
+  <input type="file" name="unit_images" accept="image/jpeg,image/png,image/gif,image/webp" multiple class="w-full border rounded-lg px-4 py-2 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700"></div>
+  <div><label class="block text-xs text-gray-500 mb-1">أو روابط الصور (رابط في كل سطر)</label>
+  <textarea name="images_text" rows="3" dir="ltr" class="w-full border rounded-lg px-4 py-2 text-sm" placeholder="https://image1.jpg&#10;https://image2.jpg">{% if unit and unit.images %}{% for img in unit.images %}{{ img }}
+{% endfor %}{% endif %}</textarea></div>
+
+  <div class="flex gap-3 pt-4">
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-blue-700">حفظ</button>
+    <a href="{{ url_for('tenant_hotel.units') }}" class="bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm hover:bg-gray-200">إلغاء</a>
+  </div>
+</form>
+
+<script>
+// بيانات الطوابق مجمّعة حسب الفرع
+const floorsByBranch = {{ floors_by_branch_json | safe }};
+
+function filterFloors() {
+  const branchId = document.getElementById('branch_select').value;
+  const floorSelect = document.getElementById('floor_select');
+  const newFloorInput = document.getElementById('new_floor_input');
+  const hint = document.getElementById('floor_hint');
+  const options = floorSelect.querySelectorAll('option[data-branch]');
+
+  if (!branchId) {
+    // لم يُختر فرع — أخفِ كل الطوابق
+    options.forEach(o => { o.style.display = 'none'; });
+    if (floorSelect.value) { floorSelect.value = ''; }
+    hint.classList.remove('hidden');
+    newFloorInput.disabled = true;
+    return;
+  }
+
+  hint.classList.add('hidden');
+  newFloorInput.disabled = false;
+
+  let hasVisible = false;
+  options.forEach(o => {
+    if (o.dataset.branch === branchId) {
+      o.style.display = '';
+      hasVisible = true;
+    } else {
+      o.style.display = 'none';
+      // إلغاء التحديد إذا كان الطابق المحدد لفرع مختلف
+      if (o.selected) {
+        o.selected = false;
+        floorSelect.value = '';
+      }
+    }
+  });
+
+  // إذا لم يكن هناك طوابق لهذا الفرع
+  if (!hasVisible) {
+    floorSelect.value = '';
+  }
+}
+
+// تشغيل الفلتر عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', filterFloors);
+</script>
+{% endblock %}

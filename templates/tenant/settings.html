@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}إعدادات النشاط — {{ tenant.business_name }}{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+<aside class="w-64 bg-white border-l shadow-sm hidden md:block">
+<div class="p-6 border-b"><div class="font-bold text-lg text-blue-600 truncate">{{ tenant.business_name }}</div></div>
+<nav class="p-4 space-y-1">
+<a href="{{ url_for('tenant.dashboard') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">📊 الرئيسية</a>
+<a href="{{ url_for('tenant.profile') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">👤 الملف الشخصي</a>
+<a href="{{ url_for('tenant.settings') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">⚙️ إعدادات النشاط</a>
+<a href="{{ url_for('tenant.conversations') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">💬 المحادثات</a>
+<a href="{{ url_for('tenant.chat_link') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">🔗 رابط الشات</a>
+<a href="{{ url_for('tenant.billing') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">💳 الاشتراك</a>
+<a href="{{ url_for('tenant.team') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">👥 الفريق</a>
+<hr class="my-3"><form method="POST" action="{{ url_for('tenant.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<button class="block w-full text-right px-4 py-2.5 rounded-lg text-red-500 hover:bg-red-50 text-sm">🚪 خروج</button></form>
+</nav></aside>
+<main class="flex-1 p-8"><div class="max-w-4xl mx-auto">
+<h1 class="text-2xl font-bold mb-6">إعدادات النشاط</h1>
+
+<form method="POST" action="{{ url_for('tenant.settings') }}" class="bg-white p-6 rounded-xl shadow-sm border mb-8">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h3 class="text-lg font-bold mb-4">🔔 إعدادات التذكير التلقائي</h3>
+    <p class="text-sm text-gray-500 mb-4">اختر القنوات التي سيتم إرسال تذكيرات الدفع للعملاء من خلالها. يتم إرسال التذكير تلقائياً قبل الانتهاء بـ 3 أيام ويستمر يومياً حتى يتم الدفع.</p>
+    
+    <div class="space-y-3 mb-6">
+        <label class="flex items-center gap-3">
+            <input type="checkbox" name="reminder_send_whatsapp" class="w-5 h-5 text-blue-600 rounded" 
+                   {% if tenant.settings.get('reminder_send_whatsapp') %}checked{% endif %}>
+            <span class="font-medium">واتساب (WhatsApp)</span>
+        </label>
+        
+        <label class="flex items-center gap-3">
+            <input type="checkbox" name="reminder_send_email" class="w-5 h-5 text-blue-600 rounded"
+                   {% if tenant.settings.get('reminder_send_email') %}checked{% endif %}>
+            <span class="font-medium">البريد الإلكتروني (Email)</span>
+        </label>
+        
+        <label class="flex items-center gap-3">
+            <input type="checkbox" name="reminder_send_sms" class="w-5 h-5 text-blue-600 rounded"
+                   {% if tenant.settings.get('reminder_send_sms') %}checked{% endif %}>
+            <span class="font-medium">رسائل نصية (SMS)</span>
+        </label>
+    </div>
+
+    <div class="mb-4">
+        <label class="block text-sm font-medium mb-1">رسالة التذكير العامة (اختياري)</label>
+        <textarea name="global_reminder_message" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="نود تذكيركم باقتراب موعد الدفع للإيجار. شاكرين ومقدرين حسن تعاونكم.">{{ tenant.settings.get('global_reminder_message', '') }}</textarea>
+        <p class="text-xs text-gray-500 mt-1">إذا لم تضع رسالة هنا، سيتم استخدام الرسالة المخصصة في قالب العقد.</p>
+    </div>
+
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700">حفظ إعدادات التذكير</button>
+</form>
+
+{% block page_content %}{% endblock %}
+</div></main></div>
+{% endblock %}

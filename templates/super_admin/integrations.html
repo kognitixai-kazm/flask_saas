@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}التكاملات — إدارة المنصة{% endblock %}
+{% block body_class %}bg-gray-900{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+<aside class="w-60 bg-gray-800 text-gray-300 flex-shrink-0">
+<div class="p-6 border-b border-gray-700"><div class="font-bold text-white">👑 إدارة المنصة</div></div>
+<nav class="p-4 space-y-1">
+<a href="{{ url_for('super_admin.dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📊 الرئيسية</a>
+<a href="{{ url_for('super_admin.tenants_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🏢 المستأجرون</a>
+<a href="{{ url_for('super_admin.tenants_list') }}#bot-settings" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🤖 إعدادات البوت</a>
+<a href="{{ url_for('super_admin.plans_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">💰 الباقات</a>
+<a href="{{ url_for('super_admin.activities_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🧩 الأنشطة</a>
+<a href="{{ url_for('super_admin.audit_logs') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📋 السجلات</a>
+<a href="{{ url_for('admin_integrations.list_all') }}" class="block px-4 py-2 rounded-lg bg-gray-700 text-white text-sm">🔗 التكاملات</a>
+<a href="{{ url_for('super_admin.system_info') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">⚙️ النظام</a>
+<a href="{{ url_for('super_admin.account_change_password') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🔐 تغيير كلمة المرور</a>
+<hr class="border-gray-700 my-3"><form method="POST" action="{{ url_for('super_admin.logout') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<button class="block w-full text-right px-4 py-2 rounded-lg text-red-400 hover:bg-gray-700 text-sm">🚪 خروج</button>
+</form></nav></aside>
+
+<main class="flex-1 bg-gray-50 p-8">
+<div class="max-w-6xl mx-auto">
+<h1 class="text-2xl font-bold mb-6">🔗 التكاملات والربط</h1>
+
+{% for tenant_id, data in integrations_map.items() %}
+{% set t = data.tenant %}
+<div class="bg-white rounded-xl shadow-sm p-6 mb-4">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h3 class="font-bold text-lg">{{ t.activity.icon }} {{ t.business_name }}</h3>
+      <span class="text-xs text-gray-400">{{ t.slug }}</span>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <!-- واتساب -->
+    <a href="{{ url_for('admin_integrations.whatsapp_setup', tenant_id=t.id) }}" class="border rounded-xl p-4 text-center hover:shadow-md transition {{ 'border-green-300 bg-green-50' if data.whatsapp and data.whatsapp.is_active else 'border-gray-200' }}">
+      <div class="text-2xl mb-1">💬</div>
+      <div class="text-sm font-bold">واتساب</div>
+      <div class="text-xs mt-1 {{ 'text-green-600' if data.whatsapp and data.whatsapp.is_active else 'text-gray-400' }}">
+        {{ data.whatsapp.status_text if data.whatsapp else '⚪ غير مربوط' }}
+      </div>
+    </a>
+    <!-- دفع -->
+    <a href="{{ url_for('admin_integrations.payment_setup', tenant_id=t.id) }}" class="border rounded-xl p-4 text-center hover:shadow-md transition {{ 'border-green-300 bg-green-50' if data.payment and data.payment.is_active else 'border-gray-200' }}">
+      <div class="text-2xl mb-1">💳</div>
+      <div class="text-sm font-bold">بوابة الدفع</div>
+      <div class="text-xs mt-1 {{ 'text-green-600' if data.payment and data.payment.is_active else 'text-gray-400' }}">
+        {{ data.payment.status_text if data.payment else '⚪ غير مربوط' }}
+      </div>
+    </a>
+    <!-- محاسبة -->
+    <a href="{{ url_for('admin_integrations.accounting_setup', tenant_id=t.id) }}" class="border rounded-xl p-4 text-center hover:shadow-md transition {{ 'border-green-300 bg-green-50' if data.accounting and data.accounting.is_active else 'border-gray-200' }}">
+      <div class="text-2xl mb-1">🧾</div>
+      <div class="text-sm font-bold">المحاسبة</div>
+      <div class="text-xs mt-1 {{ 'text-green-600' if data.accounting and data.accounting.is_active else 'text-gray-400' }}">
+        {{ data.accounting.status_text if data.accounting else '⚪ غير مربوط' }}
+      </div>
+    </a>
+    <!-- عقود -->
+    <a href="{{ url_for('admin_integrations.contracts_setup', tenant_id=t.id) }}" class="border rounded-xl p-4 text-center hover:shadow-md transition {{ 'border-green-300 bg-green-50' if data.contracts and data.contracts.is_active else 'border-gray-200' }}">
+      <div class="text-2xl mb-1">📄</div>
+      <div class="text-sm font-bold">العقود</div>
+      <div class="text-xs mt-1 {{ 'text-green-600' if data.contracts and data.contracts.is_active else 'text-gray-400' }}">
+        {{ data.contracts.status_text if data.contracts else '⚪ غير مربوط' }}
+      </div>
+    </a>
+    <!-- SRM -->
+    <a href="{{ url_for('admin_integrations.srm_setup', tenant_id=t.id) }}" class="border rounded-xl p-4 text-center hover:shadow-md transition {{ 'border-green-300 bg-green-50' if data.srm and data.srm.is_active else 'border-gray-200' }}">
+      <div class="text-2xl mb-1">📦</div>
+      <div class="text-sm font-bold">الموردين</div>
+      <div class="text-xs mt-1 {{ 'text-green-600' if data.srm and data.srm.is_active else 'text-gray-400' }}">
+        {{ data.srm.status_text if data.srm else '⚪ غير مربوط' }}
+      </div>
+    </a>
+    <!-- Booking.com -->
+    <a href="{{ url_for('admin_integrations.booking_com_setup', tenant_id=t.id) }}" class="border rounded-xl p-4 text-center hover:shadow-md transition {{ 'border-green-300 bg-green-50' if data.booking_com and data.booking_com.is_active else 'border-gray-200' }}">
+      <div class="text-2xl mb-1">🏨</div>
+      <div class="text-sm font-bold">Booking</div>
+      <div class="text-xs mt-1 {{ 'text-green-600' if data.booking_com and data.booking_com.is_active else 'text-gray-400' }}">
+        {{ data.booking_com.status_text if data.booking_com else '⚪ غير مربوط' }}
+      </div>
+    </a>
+  </div>
+  <div class="mt-4">
+    <a href="{{ url_for('admin_bot.settings', tenant_id=t.id) }}" class="flex items-center justify-center gap-2 w-full border-2 border-indigo-200 bg-indigo-50 rounded-xl py-3 text-sm font-bold text-indigo-800 hover:bg-indigo-100 transition">
+      🤖 إعدادات البوت (تعليمات، مفاتيح AI، صور، صوت، اتصال)
+    </a>
+  </div>
+</div>
+{% endfor %}
+
+{% if not tenants %}
+<div class="text-center py-16 text-gray-400"><p>لا يوجد تجار مفعّلين.</p></div>
+{% endif %}
+</div></main></div>
+{% endblock %}

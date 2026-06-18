@@ -1,0 +1,51 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}{{ 'تعديل' if service else 'إضافة' }} خدمة{% endblock %}
+{% block panel_content %}
+<h1 class="text-2xl font-bold mb-6">🛎️ {{ 'تعديل' if service else 'إضافة' }} خدمة</h1>
+<form method="POST" class="bg-white rounded-xl p-6 shadow-sm space-y-4 max-w-lg">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="grid grid-cols-3 gap-4">
+    <div class="col-span-2"><label class="block text-sm font-medium mb-1">اسم الخدمة *</label>
+    <input name="name" value="{{ service.name if service else '' }}" required class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="مثال: واي فاي مجاني"></div>
+    <div><label class="block text-sm font-medium mb-1">أيقونة</label>
+    <input name="icon" value="{{ service.icon if service else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm text-center" placeholder="🏊"></div>
+  </div>
+
+  <div><label class="block text-sm font-medium mb-1">الوصف</label>
+  <textarea name="description" rows="2" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="وصف مختصر للخدمة...">{{ service.description if service else '' }}</textarea></div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="flex items-center gap-2 mb-2">
+        <input type="checkbox" name="is_free" id="is_free" {{ 'checked' if not service or service.is_free }} onchange="document.getElementById('price_field').style.display=this.checked?'none':'block'">
+        <span class="text-sm font-medium">مجانية</span>
+      </label>
+      <div id="price_field" style="{{ 'display:none' if not service or service.is_free else '' }}">
+        <label class="block text-sm font-medium mb-1">السعر (ريال)</label>
+        <input type="number" name="price" value="{{ service.price if service else 0 }}" step="0.01" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+      </div>
+    </div>
+    <div class="flex items-end pb-2">
+      <label class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" {{ 'checked' if not service or service.is_active }}>
+        <span class="text-sm font-medium">مفعّلة</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="flex gap-3 pt-4">
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-blue-700">حفظ</button>
+    <a href="{{ url_for('tenant_hotel.services') }}" class="bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm hover:bg-gray-200">إلغاء</a>
+  </div>
+</form>
+
+<div class="mt-6 max-w-lg">
+  <h3 class="text-sm font-bold text-gray-500 mb-3">💡 أمثلة على الخدمات</h3>
+  <div class="flex flex-wrap gap-2 text-xs">
+    {% for ex in ['🏊 مسبح', '📶 واي فاي', '🅿️ مواقف', '🏋️ صالة رياضية', '🧹 تنظيف يومي', '🍳 إفطار', '🛎️ خدمة غرف', '👕 غسيل وكي', '🧖 سبا ومساج', '🎮 ألعاب أطفال', '🔒 خزنة', '❄️ تكييف', '📺 تلفزيون', '☕ مكينة قهوة'] %}
+    <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full cursor-pointer hover:bg-blue-100" onclick="document.querySelector('[name=name]').value='{{ ex[2:] }}';document.querySelector('[name=icon]').value='{{ ex[:2] }}'">{{ ex }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

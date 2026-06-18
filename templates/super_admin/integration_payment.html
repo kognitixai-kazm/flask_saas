@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}بوابة الدفع — {{ tenant.business_name }}{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8 px-4">
+<div class="max-w-2xl mx-auto">
+  <a href="{{ url_for('admin_integrations.list_all') }}" class="text-blue-600 text-sm mb-4 block">← رجوع</a>
+  <h1 class="text-2xl font-bold mb-6">💳 بوابة الدفع — {{ tenant.business_name }}</h1>
+  <form method="POST" class="bg-white rounded-xl p-6 shadow-sm space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><label class="block text-sm font-medium mb-1">المزوّد</label>
+    <select name="provider" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+      <option value="moyasar" {{ 'selected' if config and config.provider == 'moyasar' }}>Moyasar</option>
+      <option value="tap" {{ 'selected' if config and config.provider == 'tap' }}>Tap Payments</option>
+      <option value="stripe" {{ 'selected' if config and config.provider == 'stripe' }}>Stripe</option>
+    </select></div>
+    <div><label class="block text-sm font-medium mb-1">API Key (Public)</label>
+    <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <div><label class="block text-sm font-medium mb-1">API Secret</label>
+    <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <div class="grid grid-cols-2 gap-4">
+      <div><label class="block text-sm font-medium mb-1">الوضع</label>
+      <select name="payment_mode" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+        <option value="test" {{ 'selected' if config and config.payment_mode == 'test' }}>🧪 تجريبي</option>
+        <option value="live" {{ 'selected' if config and config.payment_mode == 'live' }}>🟢 حقيقي</option>
+      </select></div>
+      <div><label class="block text-sm font-medium mb-1">العملة</label>
+      <select name="payment_currency" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+        <option value="SAR" {{ 'selected' if not config or config.payment_currency == 'SAR' }}>ريال سعودي</option>
+        <option value="AED" {{ 'selected' if config and config.payment_currency == 'AED' }}>درهم إماراتي</option>
+        <option value="USD" {{ 'selected' if config and config.payment_currency == 'USD' }}>دولار</option>
+      </select></div>
+    </div>
+    <label class="flex items-center gap-2"><input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}><span class="text-sm font-bold">تفعيل</span></label>
+    {% if config and config.is_verified %}<div class="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">✅ متحقق</div>{% endif %}
+    {% if config and config.last_error %}<div class="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">❌ {{ config.last_error }}</div>{% endif %}
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm">حفظ وتحقق</button>
+  </form>
+</div></div>
+{% endblock %}

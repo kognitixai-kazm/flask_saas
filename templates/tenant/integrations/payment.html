@@ -1,0 +1,148 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}بوابة الدفع — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<a href="{{ url_for('tenant_integrations.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع للتكاملات</a>
+<h1 class="text-2xl font-extrabold mb-1">💳 بوابة الدفع</h1>
+<p class="text-gray-500 text-sm mb-6">اربط حسابك في بوابة الدفع لاستقبال المدفوعات مباشرة في حسابك البنكي.</p>
+
+{# دليل سريع: كيف يعمل الدفع #}
+<div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 mb-6 text-sm">
+    <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">ℹ️ كيف يعمل الدفع في KOGNITIX؟</h3>
+    <ol class="space-y-2 text-blue-900 list-decimal list-inside">
+        <li><b>تنشئ حساباً</b> عند المزوّد (Moyasar/Tap/Stripe) — هذا حسابك أنت، ليس حسابنا.</li>
+        <li><b>تحصل على المفاتيح</b> من لوحة تحكم المزوّد (Public + Secret).</li>
+        <li><b>تدخلها هنا</b> ونتحقق من صلاحيتها فوراً.</li>
+        <li>عند طلب أي عميل، <b>النظام يولّد رابط دفع</b> ويرسله له (في الشات أو واتساب).</li>
+        <li>العميل يدفع، <b>الفلوس تروح مباشرة إلى حسابك البنكي</b> عند المزوّد، ثم تنتقل لحسابك حسب جدول التسوية لديهم.</li>
+        <li>النظام يستقبل تأكيد الدفع تلقائياً (Webhook) ويُحدّث حالة الطلب/العقد.</li>
+    </ol>
+    <p class="mt-3 text-xs text-blue-800">
+        <b>ملاحظة:</b> KOGNITIX لا تحتفظ بأموالك ولا تأخذ عمولة على المدفوعات. العمولة الوحيدة هي عمولة المزوّد نفسه (Moyasar/Tap/Stripe).
+    </p>
+</div>
+
+{# روابط المزودين الرسميين #}
+<div class="grid sm:grid-cols-3 gap-3 mb-6">
+    <a href="https://moyasar.com" target="_blank" rel="noopener"
+       class="bg-white border-2 border-gray-200 hover:border-blue-400 rounded-xl p-4 text-center transition group">
+        <div class="text-2xl mb-2">💚</div>
+        <div class="font-bold text-gray-900 group-hover:text-blue-700">Moyasar</div>
+        <div class="text-xs text-gray-500 mt-1">للسوق السعودي · مدى/فيزا/ماستر/Apple Pay</div>
+        <div class="text-xs text-blue-600 mt-2">إنشاء حساب →</div>
+    </a>
+    <a href="https://tap.company" target="_blank" rel="noopener"
+       class="bg-white border-2 border-gray-200 hover:border-blue-400 rounded-xl p-4 text-center transition group">
+        <div class="text-2xl mb-2">🟦</div>
+        <div class="font-bold text-gray-900 group-hover:text-blue-700">Tap Payments</div>
+        <div class="text-xs text-gray-500 mt-1">للخليج · KNET/مدى/فيزا/Apple Pay</div>
+        <div class="text-xs text-blue-600 mt-2">إنشاء حساب →</div>
+    </a>
+    <a href="https://stripe.com" target="_blank" rel="noopener"
+       class="bg-white border-2 border-gray-200 hover:border-blue-400 rounded-xl p-4 text-center transition group">
+        <div class="text-2xl mb-2">⚡</div>
+        <div class="font-bold text-gray-900 group-hover:text-blue-700">Stripe</div>
+        <div class="text-xs text-gray-500 mt-1">دولي · أكثر من 135 عملة</div>
+        <div class="text-xs text-blue-600 mt-2">إنشاء حساب →</div>
+    </a>
+</div>
+
+<form method="POST" class="bg-white rounded-2xl p-6 shadow-sm space-y-4 border border-gray-100">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+        <label class="block text-sm font-bold mb-1">المزوّد</label>
+        <select name="provider" id="providerSelect" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+            {% set p = config.provider if config else 'moyasar' %}
+            <option value="moyasar" {{ 'selected' if p == 'moyasar' }} data-url="https://dashboard.moyasar.com/keys">Moyasar</option>
+            <option value="tap"     {{ 'selected' if p == 'tap' }}     data-url="https://www.tap.company/business/dashboard/developers/api">Tap Payments</option>
+            <option value="stripe"  {{ 'selected' if p == 'stripe' }}  data-url="https://dashboard.stripe.com/apikeys">Stripe</option>
+        </select>
+        <a id="providerHelp" href="#" target="_blank" rel="noopener"
+           class="text-xs text-blue-600 mt-1 inline-flex items-center gap-1 hover:underline">
+            🔗 افتح صفحة المفاتيح لدى المزوّد
+        </a>
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">Public/API Key</label>
+        <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono" placeholder="pk_test_...">
+        <p class="text-xs text-gray-500 mt-1">المفتاح العام — يُستخدم لإنشاء روابط الدفع.</p>
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">Secret Key</label>
+        <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono" placeholder="sk_test_...">
+        <p class="text-xs text-gray-500 mt-1">المفتاح السري — لا تشاركه مع أحد. النظام يخزّنه آمناً.</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+        <div>
+            <label class="block text-sm font-bold mb-1">الوضع</label>
+            <select name="payment_mode" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+                {% set m = config.payment_mode if config else 'test' %}
+                <option value="test" {{ 'selected' if m == 'test' }}>تجريبي (Test)</option>
+                <option value="live" {{ 'selected' if m == 'live' }}>مباشر (Live)</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">ابدأ بالتجريبي للتأكد، ثم انقل للمباشر.</p>
+        </div>
+        <div>
+            <label class="block text-sm font-bold mb-1">العملة</label>
+            <input name="payment_currency" value="{{ (config.payment_currency if config else 'SAR') }}"
+                   dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+            <p class="text-xs text-gray-500 mt-1">SAR / AED / KWD / USD ...</p>
+        </div>
+    </div>
+
+    {# Webhook URL — يحتاج التاجر يضعه في حساب المزوّد #}
+    {% set wh_url = config.webhook_url if config else (request.host_url|trim('/')) ~ '/webhook/payment/' ~ g.current_tenant.slug %}
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+        <label class="block text-sm font-bold mb-1">📡 Webhook URL (يُلصق في لوحة المزوّد)</label>
+        <div class="flex gap-2">
+            <input dir="ltr" readonly value="{{ wh_url }}"
+                   class="flex-1 border rounded-lg px-3 py-2 text-xs font-mono bg-white">
+            <button type="button" onclick="navigator.clipboard.writeText('{{ wh_url }}'); this.textContent='✓ تم النسخ'"
+                    class="bg-gray-700 text-white text-xs font-bold rounded-lg px-3">📋 نسخ</button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">
+            بعد إدخال هذا الرابط في حساب المزوّد، النظام يستلم إشعارات الدفع تلقائياً ويُحدّث حالة الطلبات.
+        </p>
+    </div>
+
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}>
+        <span class="text-sm font-bold">تفعيل الدفع (يُحقَّق من المفاتيح عند الحفظ)</span>
+    </label>
+
+    {% if config and config.is_verified %}
+        <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">
+            ✅ تم التحقق — البوابة جاهزة. النظام الآن يقدر يولّد روابط دفع للعملاء، والفلوس تروح مباشرة لحسابك عند المزوّد.
+        </div>
+    {% elif config and config.last_error %}
+        <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-rose-700 text-sm">⚠️ {{ config.last_error }}</div>
+    {% else %}
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm">
+            ℹ️ بعد الحفظ والتحقق ستصبح البوابة جاهزة. الفلوس <b>تروح مباشرة لحسابك عند المزوّد</b> — KOGNITIX لا تتحكم بحسابك.
+        </div>
+    {% endif %}
+
+    <button type="submit" class="bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-800">
+        💾 حفظ والتحقق من المفاتيح
+    </button>
+</form>
+
+<script>
+(function () {
+    const sel = document.getElementById('providerSelect');
+    const help = document.getElementById('providerHelp');
+    function update() {
+        const opt = sel.options[sel.selectedIndex];
+        help.href = opt.dataset.url || '#';
+    }
+    sel.addEventListener('change', update);
+    update();
+})();
+</script>
+{% endblock %}

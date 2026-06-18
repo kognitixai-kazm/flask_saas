@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}إدارة الأسعار — لوحة الأدمن{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-6 px-4">
+<div class="max-w-6xl mx-auto">
+
+<a href="{{ url_for('super_admin.dashboard') }}" class="text-blue-600 text-sm mb-4 block">← رجوع</a>
+<h1 class="text-2xl font-bold mb-1">💰 إدارة الأسعار والاستهلاك</h1>
+<p class="text-gray-500 text-sm mb-6">حدد أسعار النماذج والخدمات + شاهد الإيرادات</p>
+
+<!-- إحصائيات عامة -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <div class="text-xs text-gray-500 mb-1">الإيرادات (30 يوم)</div>
+    <div class="text-2xl font-bold text-green-600">{{ "%.2f"|format(total_revenue) }} ر.س</div>
+  </div>
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <div class="text-xs text-gray-500 mb-1">التكلفة الفعلية</div>
+    <div class="text-2xl font-bold text-orange-600">{{ "%.2f"|format(total_cost) }} ر.س</div>
+  </div>
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <div class="text-xs text-gray-500 mb-1">صافي الربح</div>
+    <div class="text-2xl font-bold text-blue-600">{{ "%.2f"|format(total_profit) }} ر.س</div>
+  </div>
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <div class="text-xs text-gray-500 mb-1">عدد التجار النشطين</div>
+    <div class="text-2xl font-bold text-purple-600">{{ overview|length }}</div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="flex gap-1 mb-4 overflow-x-auto text-sm">
+  <button onclick="showTab('models')" class="tab-btn px-4 py-2 rounded-t-lg bg-blue-600 text-white">🤖 نماذج AI</button>
+  <button onclick="showTab('services')" class="tab-btn px-4 py-2 rounded-t-lg bg-gray-200 text-gray-700">⚙️ الخدمات</button>
+  <button onclick="showTab('tenants')" class="tab-btn px-4 py-2 rounded-t-lg bg-gray-200 text-gray-700">🏢 التجار</button>
+</div>
+
+<!-- ========== Tab: نماذج AI ========== -->
+<div id="tab-models" class="tab-content">
+{% for m in ai_models %}
+<form method="POST" action="{{ url_for('admin_pricing.update_ai_model', model_id=m.id) }}" class="bg-white rounded-xl p-5 shadow-sm mb-3">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h3 class="font-bold text-lg flex items-center gap-2">
+        <span class="text-2xl">{{ m.icon }}</span>
+        {{ m.display_name }}
+        {% if m.is_default %}<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">افتراضي</span>{% endif %}
+        {% if not m.is_active %}<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">معطّل</span>{% endif %}
+      </h3>
+      <p class="text-xs text-gray-400 mt-1">{{ m.provider }} / {{ m.model_id }}</p>
+    </div>
+    <div class="flex gap-2">
+      {% if not m.is_default %}
+      <a href="{{ url_for('admin_pricing.set_default_ai', model_id=m.id) }}"
+         onclick="return confirm('جعل هذا النموذج الافتراضي؟')"
+         class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full hover:bg-green-200">⭐ افتراضي</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">سعر البيع (ر.س)</label>
+      <input type="number" name="price_per_message" value="{{ m.price_per_message }}" step="0.01" min="0"
+        class="w-full border rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">التكلفة (ر.س)</label>
+      <input type="number" name="cost_per_message" value="{{ m.cost_per_message }}" step="0.01" min="0"
+        class="w-full border rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">الجودة</label>
+      <select name="quality_tier" class="w-full border rounded-lg px-3 py-2 text-sm">
+        <option value="1" {{ 'selected' if m.quality_tier == 1 }}>🟢 اقتصادي</option>
+        <option value="2" {{ 'selected' if m.quality_tier == 2 }}>🔵 متوازن</option>
+        <option value="3" {{ 'selected' if m.quality_tier == 3 }}>🟣 متقدم</option>
+        <option value="4" {{ 'selected' if m.quality_tier == 4 }}>🟡 احترافي</option>
+      </select>
+    </div>
+    <div class="flex items-end">
+      <label class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" {{ 'checked' if m.is_active }}>
+        <span class="text-sm">مفعّل</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">الوصف للتاجر</label>
+      <input type="text" name="description" value="{{ m.description }}"
+        class="w-full border rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div class="flex items-end gap-3">
+      <div class="text-xs">
+        <span class="text-gray-500">هامش الربح:</span>
+        <span class="font-bold {{ 'text-green-600' if m.margin_percent > 50 else 'text-orange-600' }}">{{ m.margin_percent }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end">
+    <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700">💾 حفظ</button>
+  </div>
+</form>
+{% endfor %}
+</div>
+
+<!-- ========== Tab: الخدمات ========== -->
+<div id="tab-services" class="tab-content" style="display:none">
+{% for s in services %}
+<form method="POST" action="{{ url_for('admin_pricing.update_service', service_id=s.id) }}" class="bg-white rounded-xl p-5 shadow-sm mb-3">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <h3 class="font-bold text-lg flex items-center gap-2 mb-3">
+    <span class="text-2xl">{{ s.icon }}</span>
+    {{ s.display_name }}
+    {% if not s.is_active %}<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">معطّل</span>{% endif %}
+  </h3>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">سعر البيع (ر.س)</label>
+      <input type="number" name="price" value="{{ s.price }}" step="0.001" min="0"
+        class="w-full border rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">التكلفة (ر.س)</label>
+      <input type="number" name="cost" value="{{ s.cost }}" step="0.001" min="0"
+        class="w-full border rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div class="flex items-end">
+      <label class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" {{ 'checked' if s.is_active }}>
+        <span class="text-sm">مفعّل</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="block text-xs text-gray-500 mb-1">الوصف</label>
+    <input type="text" name="description" value="{{ s.description }}"
+      class="w-full border rounded-lg px-3 py-2 text-sm">
+  </div>
+
+  <div class="flex justify-end">
+    <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700">💾 حفظ</button>
+  </div>
+</form>
+{% endfor %}
+</div>
+
+<!-- ========== Tab: التجار ========== -->
+<div id="tab-tenants" class="tab-content" style="display:none">
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+<table class="w-full text-sm">
+<thead class="bg-gray-50 text-gray-600">
+<tr>
+  <th class="text-right py-3 px-4">التاجر</th>
+  <th class="text-right py-3 px-4">العمليات</th>
+  <th class="text-right py-3 px-4">الإيرادات</th>
+  <th class="text-right py-3 px-4">التكلفة</th>
+  <th class="text-right py-3 px-4">الربح</th>
+  <th class="text-right py-3 px-4">الهامش</th>
+  <th class="text-right py-3 px-4"></th>
+</tr>
+</thead>
+<tbody>
+{% for t in overview %}
+<tr class="border-t hover:bg-gray-50">
+  <td class="py-3 px-4 font-medium">#{{ t.tenant_id }}</td>
+  <td class="py-3 px-4">{{ t.count }}</td>
+  <td class="py-3 px-4 text-green-600">{{ "%.2f"|format(t.revenue) }} ر.س</td>
+  <td class="py-3 px-4 text-orange-600">{{ "%.2f"|format(t.cost) }} ر.س</td>
+  <td class="py-3 px-4 font-bold text-blue-600">{{ "%.2f"|format(t.profit) }} ر.س</td>
+  <td class="py-3 px-4">
+    <span class="text-xs px-2 py-0.5 rounded-full {{ 'bg-green-100 text-green-700' if t.margin_percent > 50 else 'bg-orange-100 text-orange-700' }}">
+      {{ t.margin_percent }}%
+    </span>
+  </td>
+  <td class="py-3 px-4">
+    <a href="{{ url_for('admin_pricing.tenant_usage', tenant_id=t.tenant_id) }}" class="text-blue-600 text-xs hover:underline">تفاصيل ←</a>
+  </td>
+</tr>
+{% else %}
+<tr><td colspan="7" class="text-center py-8 text-gray-400">لا توجد بيانات استخدام بعد</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('bg-blue-600','text-white');
+    btn.classList.add('bg-gray-200','text-gray-700');
+  });
+  document.getElementById('tab-' + name).style.display = 'block';
+  event.target.classList.remove('bg-gray-200','text-gray-700');
+  event.target.classList.add('bg-blue-600','text-white');
+}
+</script>
+{% endblock %}

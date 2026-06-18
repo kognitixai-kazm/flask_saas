@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}واتساب — {{ tenant.business_name }}{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8 px-4">
+<div class="max-w-2xl mx-auto">
+  <a href="{{ url_for('admin_integrations.list_all') }}" class="text-blue-600 text-sm mb-4 block">← رجوع للتكاملات</a>
+  <h1 class="text-2xl font-bold mb-2">💬 إعداد واتساب — {{ tenant.business_name }}</h1>
+  <p class="text-gray-500 text-sm mb-6">أدخل بيانات Meta Cloud API. التاجر لازم يضيفك في Meta Business Suite أول.</p>
+
+  <form method="POST" class="bg-white rounded-xl p-6 shadow-sm space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div><label class="block text-sm font-medium mb-1">رقم واتساب التاجر</label>
+    <input name="phone_number" value="{{ config.phone_number if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="+966500000000"></div>
+
+    <div><label class="block text-sm font-medium mb-1">Phone Number ID <span class="text-gray-400">(من Meta)</span></label>
+    <input name="phone_number_id" value="{{ config.phone_number_id if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="1234567890"></div>
+
+    <div><label class="block text-sm font-medium mb-1">WhatsApp Business Account ID</label>
+    <input name="waba_id" value="{{ config.waba_id if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="WABA ID"></div>
+
+    <div><label class="block text-sm font-medium mb-1">Access Token <span class="text-gray-400">(Permanent Token)</span></label>
+    <textarea name="access_token" rows="3" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono text-xs">{{ config.access_token if config else '' }}</textarea></div>
+
+    <div><label class="block text-sm font-medium mb-1">Webhook Verify Token <span class="text-gray-400">(تختاره أنت)</span></label>
+    <input name="webhook_verify_token" value="{{ config.webhook_verify_token if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="my_secret_token_123"></div>
+
+    <!-- Webhook URL -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <p class="text-sm font-bold text-blue-800 mb-1">🔗 Webhook URL (ضعه في Meta)</p>
+      <code class="text-xs text-blue-700 break-all" dir="ltr">{{ webhook_url }}</code>
+    </div>
+
+    <label class="flex items-center gap-2">
+      <input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}>
+      <span class="text-sm font-bold">تفعيل واتساب</span>
+    </label>
+
+    {% if config and config.is_verified %}
+    <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">✅ تم التحقق — واتساب يعمل</div>
+    {% elif config and config.last_error %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">❌ {{ config.last_error }}</div>
+    {% endif %}
+
+    {% if config %}
+    <div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
+      📊 مرسلة: {{ config.messages_sent }} | مستقبلة: {{ config.messages_received }}
+    </div>
+    {% endif %}
+
+    <div class="flex gap-3 pt-2">
+      <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-blue-700">حفظ وتحقق</button>
+    </div>
+  </form>
+
+  {% if config and config.is_active %}
+  <form method="POST" action="{{ url_for('admin_integrations.test_whatsapp', tenant_id=tenant.id) }}" class="bg-white rounded-xl p-6 shadow-sm mt-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h3 class="font-bold text-sm mb-3">🧪 رسالة تجريبية</h3>
+    <div class="flex gap-3">
+      <input name="test_phone" placeholder="+966500000000" dir="ltr" class="flex-1 border rounded-lg px-4 py-2.5 text-sm">
+      <button type="submit" class="bg-green-600 text-white px-4 py-2.5 rounded-lg text-sm">إرسال</button>
+    </div>
+  </form>
+  {% endif %}
+</div></div>
+{% endblock %}

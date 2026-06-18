@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}تحويلات بنكية بانتظار الموافقة{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+{% include 'tenant/_sidebar.html' ignore missing %}
+
+<main class="flex-1 p-6 md:p-8">
+<div class="max-w-5xl mx-auto">
+
+<a href="{{ url_for('tenant_contracts.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع للعقود</a>
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold mb-1">🔍 تحويلات بنكية بانتظار الموافقة</h1>
+  <p class="text-sm text-gray-500">راجع إيصال كل تحويل، ثم وافق لإنشاء العقد، أو ارفض مع كتابة السبب.</p>
+</div>
+
+{% if contracts %}
+<div class="space-y-4">
+  {% for c in contracts %}
+  <div class="bg-white rounded-xl shadow-sm border-2 border-amber-200 p-5">
+    <div class="flex flex-col md:flex-row md:items-start gap-5">
+
+      <!-- إيصال التحويل -->
+      <div class="md:w-56 flex-shrink-0">
+        {% if c.bank_transfer_proof_url %}
+        <a href="{{ c.bank_transfer_proof_url }}" target="_blank" class="block">
+          <img src="{{ c.bank_transfer_proof_url }}" class="w-full h-44 object-cover rounded-lg border-2 border-amber-300" alt="إيصال التحويل">
+          <span class="text-xs text-blue-600 hover:underline mt-1 block">🔍 فتح بحجم كامل</span>
+        </a>
+        {% else %}
+        <div class="w-full h-44 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">
+          لا يوجد إيصال
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- بيانات العقد -->
+      <div class="flex-1">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <div class="text-xs text-gray-500 mb-1">العقد</div>
+            <a href="{{ url_for('tenant_contracts.contract_detail', id=c.id) }}"
+               class="font-mono text-sm font-bold text-blue-600 hover:underline">
+              {{ c.contract_number or '#' ~ c.id }}
+            </a>
+          </div>
+          <div class="text-left">
+            <div class="text-xs text-gray-500 mb-1">المبلغ المطلوب</div>
+            <div class="text-xl font-bold text-amber-700">{{ "%.2f"|format(c.payment_amount or 0) }} ر.س</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-700 mb-3">
+          <div>👤 <strong>{{ c.customer_name or '—' }}</strong></div>
+          <div dir="ltr">📱 {{ c.customer_phone or '—' }}</div>
+          <div>📋 {{ c.template.name if c.template else '—' }}</div>
+          <div>🕐 {{ c.created_at.strftime('%Y-%m-%d %H:%M') if c.created_at else '—' }}</div>
+        </div>
+
+        {% if c.payment_reference %}
+        <div class="text-xs text-gray-500 mb-3">
+          المرجع: <code class="bg-gray-100 px-1.5">{{ c.payment_reference }}</code>
+        </div>
+        {% endif %}
+
+        <!-- أزرار -->
+        <div class="flex flex-wrap gap-2 pt-3 border-t">
+          <form method="POST" action="{{ url_for('tenant_contracts.contract_approve_transfer', id=c.id) }}"
+                onsubmit="return confirm('تأكيد الموافقة على التحويل وإنشاء العقد؟');" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="bg-green-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-green-700 font-bold">
+              ✅ موافقة وإنشاء العقد
+            </button>
+          </form>
+
+          <form method="POST" action="{{ url_for('tenant_contracts.contract_reject_transfer', id=c.id) }}"
+                onsubmit="return confirm('رفض التحويل؟');"
+                class="inline-flex items-center gap-2 flex-wrap">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input name="reason" placeholder="سبب الرفض (اختياري)"
+                   class="border rounded-lg px-3 py-2 text-xs flex-1 min-w-[180px]">
+            <button class="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm hover:bg-red-200 font-bold">🚫 رفض</button>
+          </form>
+
+          <a href="{{ url_for('tenant_contracts.contract_detail', id=c.id) }}"
+             class="text-blue-600 px-3 py-2 text-xs hover:underline">عرض التفاصيل الكاملة →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-xl p-10 shadow-sm text-center">
+  <div class="text-5xl mb-3">✅</div>
+  <h3 class="font-bold mb-2">لا توجد تحويلات معلّقة</h3>
+  <p class="text-sm text-gray-500">جميع التحويلات البنكية تمت مراجعتها.</p>
+</div>
+{% endif %}
+
+</div>
+</main>
+</div>
+{% endblock %}

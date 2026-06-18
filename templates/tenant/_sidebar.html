@@ -1,0 +1,122 @@
+{# Sidebar لوحة التاجر — قابل للتحول إلى Drawer على الجوال #}
+{% set _sub = g.current_tenant.subscription %}
+{% set _act = g.current_tenant.activity.code %}
+{% set new_bookings = g.current_tenant.bookings.filter_by(status='new').count() %}
+{% set new_inq = g.current_tenant.inquiries.filter_by(status='new').count() %}
+
+<!-- زر فتح القائمة (يظهر فقط على الجوال) -->
+<button type="button"
+        onclick="document.getElementById('tenant-drawer').classList.toggle('-translate-x-full');document.getElementById('drawer-backdrop').classList.toggle('hidden');"
+        class="md:hidden fixed top-3 right-3 z-50 bg-white border border-gray-200 rounded-xl p-2.5 shadow-md">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-700">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+</button>
+
+<!-- خلفية شفافة عند فتح Drawer -->
+<div id="drawer-backdrop"
+     class="hidden md:hidden fixed inset-0 bg-black/40 z-30"
+     onclick="document.getElementById('tenant-drawer').classList.add('-translate-x-full');this.classList.add('hidden');">
+</div>
+
+<aside id="tenant-drawer"
+       class="fixed md:sticky top-0 right-0 h-screen md:h-screen w-72 bg-white border-l border-gray-200 z-40 flex-shrink-0
+              transform translate-x-0 -translate-x-full md:translate-x-0 transition-transform duration-200 overflow-y-auto">
+
+    <!-- Header: شعار KOGNITIX -->
+    <div class="px-5 pt-5 pb-3 border-b border-gray-100 bg-gradient-to-l from-blue-50/40 to-white">
+        <a href="/" class="flex items-center">
+            {% with size='small', tagline=True %}{% include "_brand.html" %}{% endwith %}
+        </a>
+    </div>
+
+    <!-- معرّف التاجر -->
+    <div class="px-5 py-4 border-b border-gray-100 text-right">
+        <div class="flex items-center gap-3">
+            {% if g.current_tenant.logo_path %}
+                <img src="{{ g.current_tenant.logo_path }}" alt="" class="w-12 h-12 rounded-xl object-contain bg-gray-50 p-1 border border-gray-100">
+            {% else %}
+                <div class="w-12 h-12 rounded-xl gradient-brand text-white grid place-items-center font-extrabold">
+                    {{ (g.current_tenant.business_name or '?')[:1] }}
+                </div>
+            {% endif %}
+            <div class="min-w-0 flex-1">
+                <div class="font-bold text-blue-900 truncate">{{ g.current_tenant.business_name }}</div>
+                <div class="text-xs text-gray-500">{{ g.current_tenant.activity.icon }} {{ g.current_tenant.activity.name_ar }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="p-3 space-y-0.5 text-sm pb-24">
+
+        <a href="{{ url_for('tenant.dashboard') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+            <span>📊</span> الرئيسية
+        </a>
+        <a href="{{ url_for('tenant.ai_agents') }}" class="flex items-center justify-between px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="flex items-center gap-2">🤖 فريق الذكاء الاصطناعي</span>
+            <span class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[9px] rounded-full px-2 py-0.5 font-bold shadow-sm animate-pulse">جديد</span>
+        </a>
+
+        {# ---------- إدارة النشاط ---------- #}
+        {% if _act in ('hotel','restaurant') %}
+        <div class="pt-3 pb-1 px-4 text-[11px] tracking-wider text-gray-400 font-bold uppercase">
+            {% if _act == 'hotel' %}🏨 إدارة الفندق{% else %}🍽️ إدارة المطعم{% endif %}
+        </div>
+        <a href="{{ url_for('tenant.branches') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🏢 الفروع</a>
+        {% if _act == 'hotel' %}
+        <a href="{{ url_for('tenant_hotel.mode_settings') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🎯 نمط الإيجار</a>
+        <a href="{{ url_for('tenant_hotel.floors') }}"   class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🏗️ الطوابق</a>
+        <a href="{{ url_for('tenant_hotel.units_dashboard') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-blue-700 bg-blue-50 font-bold">🏠 إدارة الشقق</a>
+        <a href="{{ url_for('tenant_hotel.units') }}"    class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🛏️ تفاصيل الوحدات</a>
+        <a href="{{ url_for('tenant_hotel.services') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🛎️ الخدمات</a>
+        {% if g.current_tenant.hotel_supports_contracts %}
+        <a href="{{ url_for('tenant_contracts.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">📄 العقود الإلكترونية <span class="bg-blue-100 text-blue-700 text-[9px] rounded px-1.5 py-0.5 ms-1">شهري</span></a>
+        {% endif %}
+        {% else %}
+        <a href="{{ url_for('tenant_restaurant.categories') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">📂 التصنيفات</a>
+        <a href="{{ url_for('tenant_restaurant.menu_items') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">📋 المنيو</a>
+        <a href="{{ url_for('tenant_restaurant.services') }}"   class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🛵 الخدمات</a>
+        {% endif %}
+        {% endif %}
+
+        {# ---------- خدمة العملاء ---------- #}
+        <div class="pt-3 pb-1 px-4 text-[11px] tracking-wider text-gray-400 font-bold uppercase">💬 خدمة العملاء</div>
+        <a href="{{ url_for('tenant.conversations') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">💬 المحادثات</a>
+        <a href="{{ url_for('tenant_inquiries.list_inquiries') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="flex items-center gap-2">📩 الاستفسارات والشكاوى</span>
+            {% if new_inq %}<span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">{{ new_inq }}</span>{% endif %}
+        </a>
+        <a href="{{ url_for('tenant_bookings.list_bookings') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="flex items-center gap-2">📅 الحجوزات والطلبات</span>
+            {% if new_bookings %}<span class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full">{{ new_bookings }}</span>{% endif %}
+        </a>
+        {% if _sub and _sub.is_active and _sub.plan and _sub.plan.has_feature('whatsapp') %}
+        <a href="{{ url_for('tenant_whatsapp.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">📱 واتساب</a>
+        {% endif %}
+        <a href="{{ url_for('tenant.chat_link') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🔗 رابط الشات</a>
+
+        {# ---------- المحاسبة والمالية ---------- #}
+        <div class="pt-3 pb-1 px-4 text-[11px] tracking-wider text-gray-400 font-bold uppercase">💰 المحاسبة والمالية</div>
+        <a href="{{ url_for('tenant_accounting.dashboard') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🧾 القيود المحاسبية</a>
+
+        {# ---------- التحكم والإعدادات ---------- #}
+        <div class="pt-3 pb-1 px-4 text-[11px] tracking-wider text-gray-400 font-bold uppercase">⚙️ التحكم والإعدادات</div>
+        <a href="{{ url_for('tenant.profile') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">👤 الملف الشخصي</a>
+        <a href="{{ url_for('tenant.settings') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">⚙️ إعدادات النشاط</a>
+        <a href="{{ url_for('tenant_integrations.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">🔗 التكاملات</a>
+        <a href="{{ url_for('tenant_social_media_integrations.social_media') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="flex items-center gap-2">📱 التواصل الاجتماعي</span>
+            <span class="bg-purple-100 text-purple-700 text-[9px] rounded px-1.5 py-0.5 font-bold">AI</span>
+        </a>
+        <a href="{{ url_for('tenant_usage.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">💳 الاستهلاك والرصيد</a>
+        <a href="{{ url_for('tenant.billing') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">💼 الاشتراك</a>
+
+        <hr class="my-3 border-gray-100">
+        <a href="{{ url_for('tenant.delete_account') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-red-50 text-sm">🗑️ حذف النشاط</a>
+        <form method="POST" action="{{ url_for('tenant.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="w-full text-right flex items-center gap-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50">🚪 خروج</button>
+        </form>
+    </nav>
+</aside>

@@ -1,0 +1,22 @@
+{
+  "code": "hotel",
+  "name_ar": "فندق",
+  "name_en": "Hotel",
+  "icon": "🏨",
+  "description": "إدارة الحجوزات والاستفسارات الفندقية",
+  "version": "1.0.0",
+  "fields": [
+    {"key": "rooms_count", "label_ar": "عدد الغرف", "type": "number", "required": true},
+    {"key": "floors_count", "label_ar": "عدد الطوابق", "type": "number", "required": false},
+    {"key": "checkin_time", "label_ar": "وقت الدخول", "type": "time", "required": false},
+    {"key": "checkout_time", "label_ar": "وقت الخروج", "type": "time", "required": false},
+    {"key": "amenities", "label_ar": "المرافق", "type": "text", "required": false},
+    {"key": "star_rating", "label_ar": "التصنيف (نجوم)", "type": "number", "required": false},
+    {"key": "address", "label_ar": "العنوان", "type": "text", "required": true},
+    {"key": "phone", "label_ar": "رقم التواصل", "type": "text", "required": true},
+    {"key": "email", "label_ar": "بريد الحجوزات", "type": "email", "required": false},
+    {"key": "website", "label_ar": "الموقع الإلكتروني", "type": "url", "required": false}
+  ],
+  "intents": ["booking", "availability", "pricing", "amenities", "complaints", "services"],
+  "dashboard_sections": ["rooms", "services", "complaints", "analytics"]
+}

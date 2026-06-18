@@ -1,0 +1,337 @@
+{% extends "super_admin/_admin_base.html" %}
+{% block title %}KOGNITIX — لوحة الإدارة{% endblock %}
+{% block panel_content %}
+
+{# Hero / ترحيب + نبضات حيّة #}
+<section class="rounded-2xl p-6 md:p-8 mb-6
+                bg-gradient-to-br from-[#0b1f3a] via-[#13325c] to-[#0e2a4d] text-white shadow-lg">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex-1">
+            <div class="flex items-center gap-3 mb-2">
+                <img src="{{ url_for('static', filename='img/logo.png') }}"
+                     class="w-10 h-10 rounded-xl bg-white p-1 shadow" alt="KOGNITIX">
+                <div>
+                    <div class="font-extrabold text-xl tracking-tight">KOGNITIX · Admin</div>
+                    <div class="text-xs uppercase tracking-[0.18em] text-cyan-200/90">Intelligent Business Operations</div>
+                </div>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-extrabold mt-3">أهلاً يا ريّس <span class="text-cyan-200">{{ g.current_admin.username }}</span></h1>
+            <p class="text-blue-100/80 mt-1 text-sm md:text-base">
+                لوحة حيّة تعرض نبض المنصة لحظياً — ومساعد ذكي جاهز يجاوبك بالنص أو الصوت.
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-2 justify-start md:justify-end">
+            <a href="{{ url_for('super_admin.tenants_list', status='pending') }}"
+               class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-sm transition-all">
+                📥 طلبات بانتظار الموافقة
+                {% if stats.pending_tenants %}<span class="bg-amber-400 text-amber-900 text-xs font-bold rounded-full px-2 py-0.5">{{ stats.pending_tenants }}</span>{% endif %}
+            </a>
+            <a href="{{ url_for('admin_system.index') }}"
+               class="inline-flex items-center gap-2 bg-cyan-400 text-[#0b1f3a] font-bold rounded-xl px-4 py-2 text-sm hover:bg-cyan-300 transition-all">
+                🔑 إدارة المفاتيح
+            </a>
+            <a href="{{ url_for('super_admin.dashboard') }}#usage-per-tenant"
+               class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-sm transition-all">
+                📊 استهلاك التجار
+            </a>
+        </div>
+    </div>
+</section>
+
+{# استهلاك كل تاجر — أعلى الصفحة حتى لا يضيع #}
+{% set anchor_id = 'usage-per-tenant' %}
+{% set usage_days = 30 %}
+{% set show_detail_link = True %}
+{% include 'super_admin/_usage_breakdown_panel.html' %}
+
+{# مؤشرات KPI الرئيسية — محسّنة للجوال والمتصفح #}
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+    {% set kpis = [
+        ('🏢', stats.total_tenants, 'إجمالي المستأجرين', 'from-blue-500/10 to-blue-500/0', 'text-blue-700', 'blue'),
+        ('✅', stats.active_tenants, 'نشاط فعّال', 'from-emerald-500/10 to-emerald-500/0', 'text-emerald-700', 'emerald'),
+        ('⏳', stats.pending_tenants, 'بانتظار الموافقة', 'from-amber-500/10 to-amber-500/0', 'text-amber-700', 'amber'),
+        ('💬', stats.total_conversations, 'محادثة سُجّلت', 'from-purple-500/10 to-purple-500/0', 'text-purple-700', 'purple'),
+    ] %}
+    {% for ic, val, lbl, grad, txt, color in kpis %}
+    <div class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 relative overflow-hidden group">
+        <div class="absolute inset-0 bg-gradient-to-br {{ grad }} pointer-events-none"></div>
+        <div class="absolute top-0 right-0 w-24 h-24 bg-{{ color }}-200/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-300"></div>
+        <div class="relative">
+            <div class="text-3xl md:text-4xl">{{ ic }}</div>
+            <div class="text-2xl md:text-3xl font-extrabold mt-2 {{ txt }} tabular-nums">{{ val }}</div>
+            <div class="text-xs text-gray-500 mt-2">{{ lbl }}</div>
+            <div class="mt-3 h-1 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-{{ color }}-400 to-{{ color }}-600 rounded-full animate-pulse" style="width: 60%;"></div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</section>
+
+{# تنبيه: تجار AI لا يعمل عندهم #}
+{% if ai_problems %}
+<section class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 mb-6 shadow-sm">
+    <div class="flex items-start justify-between gap-3 mb-3 flex-col sm:flex-row">
+        <div>
+            <h3 class="font-extrabold text-amber-900 flex items-center gap-2">
+                ⚠️ الذكاء الاصطناعي لا يعمل لـ {{ ai_problems|length }} تاجر
+            </h3>
+            <p class="text-amber-800 text-sm mt-1">
+                هؤلاء التجار سيعتمدون على ردود القواعد فقط حتى يُحلّ المشكل. اضغط على اسم التاجر لتعديل المفاتيح.
+            </p>
+        </div>
+        <a href="{{ url_for('admin_system.index') }}#tab-ai"
+           class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg px-3 py-1.5 whitespace-nowrap transition-all">
+            🔑 إصلاح المفاتيح
+        </a>
+    </div>
+    <div class="space-y-2 max-h-60 overflow-y-auto">
+        {% for p in ai_problems %}
+        <div class="bg-white rounded-xl p-3 border border-amber-200 flex items-center justify-between gap-3 text-sm hover:shadow-md transition-all">
+            <div class="flex-1 min-w-0">
+                <a href="{{ url_for('super_admin.tenant_detail', id=p.tenant_id) }}"
+                   class="font-bold text-amber-900 hover:underline">{{ p.tenant_name }}</a>
+                <span class="inline-block bg-amber-100 text-amber-800 text-[10px] rounded px-1.5 py-0.5 ms-2">{{ p.provider }}</span>
+                <div class="text-amber-700 text-xs truncate">{{ p.message }}</div>
+            </div>
+            <a href="{{ url_for('admin_bot.settings', tenant_id=p.tenant_id) }}"
+               class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg px-3 py-1 whitespace-nowrap transition-all">
+                إعدادات
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{# AI Assistant + Pending Requests — محسّن للجوال #}
+<section class="grid lg:grid-cols-3 gap-4 md:gap-6 mb-6">
+
+    {# AI Assistant #}
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-l from-blue-50 to-cyan-50">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-[#0b1f3a] text-cyan-300 flex items-center justify-center flex-shrink-0">🤖</div>
+                <div class="min-w-0">
+                    <div class="font-bold text-gray-900">المساعد الذكي · KOGNITIX</div>
+                    <div class="text-xs text-gray-500 truncate">اسألني بالنص أو بالصوت — مثل: «كم المستأجرين النشطين؟»</div>
+                </div>
+            </div>
+            <span id="ai-mode-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 whitespace-nowrap ms-2">جاهز</span>
+        </div>
+
+        <div id="ai-thread" class="px-5 py-4 space-y-3 max-h-[360px] overflow-y-auto bg-[#f8fafc]">
+            <div class="bg-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm shadow-sm border border-gray-100">
+                <div class="text-gray-700">أهلاً يا ريّس <strong>{{ g.current_admin.username }}</strong> 👋</div>
+                <div class="text-gray-500 text-xs mt-1">وش تبغى أطّلع لك عليه؟ مثلاً: عدد المستأجرين، الطلبات المعلّقة، رسائل اليوم، التكلفة، أو الإيراد.</div>
+            </div>
+        </div>
+
+        <form id="ai-form" class="p-3 border-t border-gray-100 bg-white">
+            <div class="flex items-end gap-2">
+                <textarea id="ai-input" rows="1"
+                          placeholder="اكتب سؤالك هنا… (مثال: كم طلب بانتظار الموافقة؟)"
+                          class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"></textarea>
+                <button type="button" id="ai-mic" title="تحدّث"
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all">
+                    🎙️
+                </button>
+                <button type="submit" id="ai-send"
+                        class="bg-[#0b1f3a] hover:bg-[#13325c] text-white px-4 h-10 rounded-xl text-sm font-bold flex-shrink-0 transition-all">
+                    إرسال
+                </button>
+            </div>
+            <div class="text-[11px] text-gray-400 mt-2">
+                * المساعد يجيب من بيانات منصتك المباشرة — لا يكشف أي مفاتيح أو معلومات خاصة.
+            </div>
+        </form>
+    </div>
+
+    {# Side: Platform Status + Quick Numbers #}
+    <div class="space-y-4">
+        {# حالة المنصة #}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-gray-900">حالة المنصة</h3>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-[10px] text-gray-500">حيّة</span>
+                </div>
+            </div>
+            <ul class="text-sm space-y-3 text-gray-700">
+                <li class="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <span class="text-gray-600">اشتراكات نشطة</span>
+                    <span class="font-bold text-lg text-blue-700 tabular-nums">{{ stats.active_subs }}</span>
+                </li>
+                <li class="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <span class="text-gray-600">اشتراكات تجريبية</span>
+                    <span class="font-bold text-lg text-emerald-700 tabular-nums">{{ stats.trial_subs }}</span>
+                </li>
+                <li class="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <span class="text-gray-600">إجمالي الرسائل</span>
+                    <span class="font-bold text-lg text-purple-700 tabular-nums">{{ stats.total_messages }}</span>
+                </li>
+                <li class="flex justify-between items-center">
+                    <span class="text-gray-600">الباقات النشطة</span>
+                    <span class="font-bold text-lg text-orange-700 tabular-nums">{{ stats.total_plans }}</span>
+                </li>
+            </ul>
+        </div>
+
+        {# مفاتيح النظام #}
+        <a href="{{ url_for('admin_system.index') }}"
+           class="block bg-gradient-to-tr from-cyan-500 to-blue-700 text-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:scale-105 transition-all">
+            <div class="text-xs uppercase tracking-widest opacity-80">Provider Keys</div>
+            <div class="font-bold text-lg mt-1">إدارة مفاتيح AI / Cloud / Email</div>
+            <div class="text-xs opacity-80 mt-2">اختر المزوّد، أدخِل المفتاح، يتفعّل فوراً مع تحقّق ذكي.</div>
+        </a>
+    </div>
+</section>
+
+{# Recent Tenants — محسّن للجوال #}
+<section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 hover:shadow-md transition-all">
+    <div class="flex items-center justify-between mb-4 flex-col sm:flex-row gap-2">
+        <h3 class="font-bold text-gray-900">آخر المستأجرين</h3>
+        <a href="{{ url_for('super_admin.tenants_list') }}" class="text-blue-600 text-sm hover:underline">عرض الكل →</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="text-gray-500 border-b">
+                <tr>
+                    <th class="text-right py-3 px-2">الاسم</th>
+                    <th class="text-right py-3 px-2 hidden sm:table-cell">البريد</th>
+                    <th class="text-right py-3 px-2">الحالة</th>
+                    <th class="text-right py-3 px-2">التاريخ</th>
+                    <th class="text-right py-3 px-2">إجراء</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in recent_tenants %}
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="py-3 px-2"><a href="{{ url_for('super_admin.tenant_detail', id=t.id) }}" class="text-blue-700 hover:underline font-medium">{{ t.business_name }}</a></td>
+                    <td class="py-3 px-2 hidden sm:table-cell text-gray-400 text-xs" dir="ltr">{{ t.owner_email }}</td>
+                    <td class="py-3 px-2">
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium
+                            {% if t.status == 'active' %}bg-green-100 text-green-700
+                            {% elif t.status == 'pending' %}bg-yellow-100 text-yellow-700
+                            {% elif t.status == 'suspended' %}bg-red-100 text-red-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">{{ t.status }}</span>
+                    </td>
+                    <td class="py-3 px-2 text-gray-400 text-xs">{{ t.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td class="py-3 px-2"><a href="{{ url_for('admin_bot.settings', tenant_id=t.id) }}" class="text-indigo-600 hover:underline text-xs font-medium">إعدادات</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{# Recent Logs — محسّن للجوال #}
+<section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all">
+    <h3 class="font-bold text-gray-900 mb-4">آخر الأحداث</h3>
+    <div class="space-y-2 max-h-72 overflow-y-auto text-xs">
+        {% for log in recent_logs %}
+        <div class="flex justify-between items-start border-b last:border-0 pb-2 gap-2">
+            <span class="text-gray-700 flex-1">{{ log.action }} — <span class="text-gray-400">{{ log.actor_type }}</span></span>
+            <span class="text-gray-400 whitespace-nowrap">{{ log.created_at.strftime('%m/%d %H:%M') }}</span>
+        </div>
+        {% else %}
+        <div class="text-gray-400 text-center py-4">لا توجد أحداث بعد.</div>
+        {% endfor %}
+    </div>
+</section>
+
+{# AI Assistant JS #}
+<script>
+(function () {
+    const askUrl    = "{{ url_for('admin_ai.ask') }}";
+    const csrfToken = "{{ csrf_token() }}";
+    const thread    = document.getElementById('ai-thread');
+    const form      = document.getElementById('ai-form');
+    const input     = document.getElementById('ai-input');
+    const sendBtn   = document.getElementById('ai-send');
+    const micBtn    = document.getElementById('ai-mic');
+    const modeBadge = document.getElementById('ai-mode-badge');
+
+    function appendBubble(text, who) {
+        const wrap = document.createElement('div');
+        wrap.className = 'flex ' + (who === 'me' ? 'justify-end' : 'justify-start');
+        const bubble = document.createElement('div');
+        bubble.className = (who === 'me'
+            ? 'bg-[#0b1f3a] text-white rounded-2xl rounded-tl-sm'
+            : 'bg-white text-gray-800 rounded-2xl rounded-tr-sm border border-gray-100')
+            + ' px-4 py-2.5 text-sm max-w-[85%] sm:max-w-[70%] shadow-sm whitespace-pre-wrap break-words';
+        bubble.textContent = text;
+        wrap.appendChild(bubble);
+        thread.appendChild(wrap);
+        thread.scrollTop = thread.scrollHeight;
+    }
+
+    function setBusy(busy) {
+        sendBtn.disabled = busy;
+        sendBtn.textContent = busy ? '...' : 'إرسال';
+        modeBadge.textContent = busy ? 'يفكّر…' : 'جاهز';
+        modeBadge.className = 'text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ' + (busy
+            ? 'bg-amber-100 text-amber-700'
+            : 'bg-emerald-100 text-emerald-700');
+    }
+
+    async function ask(question) {
+        appendBubble(question, 'me');
+        setBusy(true);
+        try {
+            const res = await fetch(askUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ question })
+            });
+            const data = await res.json();
+            const reply = (data && data.reply) || 'ما تيسّر لي رد دقيق الحين، جرّب مرة ثانية.';
+            appendBubble(reply, 'bot');
+        } catch (e) {
+            appendBubble('انقطع الاتصال للحظة، جرّب مرة ثانية.', 'bot');
+        } finally { setBusy(false); }
+    }
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = (input.value || '').trim();
+        if (!q) return;
+        input.value = '';
+        ask(q);
+    });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+    });
+
+    // Web Speech API
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+        micBtn.addEventListener('click', () => { alert('متصفحك لا يدعم الإدخال الصوتي.'); });
+    } else {
+        const recog = new SR();
+        recog.lang = 'ar-SA';
+        recog.interimResults = false;
+        let listening = false;
+        recog.onstart = () => {
+            listening = true; micBtn.textContent = '⏺️';
+            modeBadge.textContent = 'يستمع…';
+            modeBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 whitespace-nowrap';
+        };
+        recog.onend = () => {
+            listening = false; micBtn.textContent = '🎙️';
+            modeBadge.textContent = 'جاهز';
+            modeBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 whitespace-nowrap';
+        };
+        recog.onresult = (ev) => {
+            const txt = ev.results[0][0].transcript || '';
+            if (txt.trim()) ask(txt.trim());
+        };
+        recog.onerror = () => { listening = false; micBtn.textContent = '🎙️'; };
+        micBtn.addEventListener('click', () => {
+            try { listening ? recog.stop() : recog.start(); } catch (_) {}
+        });
+    }
+})();
+</script>
+{% endblock %}

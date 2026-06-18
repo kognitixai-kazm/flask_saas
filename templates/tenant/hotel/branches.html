@@ -1,0 +1,33 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}الفروع — {{ g.current_tenant.business_name }}{% endblock %}
+{% block panel_content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">🏢 الفروع</h1>
+  <a href="{{ url_for('tenant.branch_form') }}" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700">+ إضافة فرع</a>
+</div>
+{% if branches %}
+<div class="space-y-4">
+  {% for b in branches %}
+  <div class="bg-white rounded-xl p-5 shadow-sm flex justify-between items-start">
+    <div>
+      <h3 class="font-bold text-lg">{{ b.name }} {% if b.is_main %}<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">رئيسي</span>{% endif %}</h3>
+      <p class="text-gray-500 text-sm">{{ b.address or '—' }}</p>
+      <p class="text-gray-400 text-xs mt-1">📞 {{ b.phone or '—' }} | 📧 {{ b.email or '—' }}</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{{ url_for('tenant.branch_form', id=b.id) }}" class="text-blue-600 text-sm hover:underline">تعديل</a>
+      <form method="POST" action="{{ url_for('tenant.branch_delete', id=b.id) }}" onsubmit="return confirm('حذف؟')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="text-red-500 text-sm hover:underline">حذف</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400">
+  <div class="text-4xl mb-3">🏢</div>
+  <p>لا توجد فروع. أضف فرعك الأول!</p>
+</div>
+{% endif %}
+{% endblock %}

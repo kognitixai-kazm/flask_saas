@@ -1,0 +1,39 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}حذف النشاط{% endblock %}
+{% block panel_content %}
+<h1 class="text-2xl font-bold text-red-600 mb-6">حذف النشاط نهائياً</h1>
+<div class="bg-red-50 border border-red-200 rounded-xl p-6 max-w-lg space-y-6">
+  <p class="text-red-700">هذا الإجراء <strong>لا يمكن التراجع عنه</strong>. سيتم حذف كل بيانات النشاط من المنصة، بما فيها الفروع والمحادثات والاستفسارات والإعدادات.</p>
+
+  <div class="border border-red-200 rounded-lg p-4 bg-white">
+    <p class="text-sm text-gray-700 mb-3">الخطوة 1: إرسال رمز تحقق إلى بريد المالك المسجّل عند إنشاء الحساب (<strong dir="ltr">{{ owner_email_masked }}</strong>).</p>
+    <form method="POST" action="{{ url_for('tenant.delete_account_send_code') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-900">إرسال رمز التحقق بالبريد</button>
+    </form>
+    <p class="text-xs text-gray-500 mt-2">حد أقصى 5 طلبات إرسال في الساعة لنفس الحساب.</p>
+  </div>
+
+  <div class="border border-red-200 rounded-lg p-4 bg-white">
+    <p class="text-sm text-gray-700 mb-3">الخطوة 2: بعد استلام الرمز، أدخل البيانات التالية ثم أكّد الحذف.</p>
+    <form method="POST" action="{{ url_for('tenant.delete_account') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="block text-sm font-medium mb-2">اسم النشاط كما يظهر بالضبط: <strong>{{ tenant.business_name }}</strong></label>
+      <input type="text" name="confirm_name" required autocomplete="off" class="w-full border border-red-300 rounded-lg px-4 py-2.5 text-sm mb-3" placeholder="اكتب اسم النشاط هنا">
+
+      <label class="block text-sm font-medium mb-2">رمز التحقق من البريد (6 أرقام)</label>
+      <input type="text" name="email_code" required maxlength="24" autocomplete="one-time-code" dir="ltr"
+             class="w-full border border-red-300 rounded-lg px-4 py-2.5 text-sm mb-3" placeholder="مثال: 583921">
+      <p class="text-[11px] text-gray-500 mb-3">يقبل الأرقام العربية أو الإنجليزية؛ بدون مسافات. تأكد أن الرمز لم يمرّ وقت صلاحيته (حوالي 15 دقيقة).</p>
+
+      <label class="block text-sm font-medium mb-2">كلمة مرور لوحة التحكم (حسابك الحالي)</label>
+      <input type="password" name="panel_password" required autocomplete="current-password" class="w-full border border-red-300 rounded-lg px-4 py-2.5 text-sm mb-4" placeholder="كلمة المرور">
+
+      <div class="flex gap-3 flex-wrap">
+        <button type="submit" class="bg-red-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-red-700">حذف نهائياً</button>
+        <a href="{{ url_for('tenant.dashboard') }}" class="bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm inline-flex items-center">إلغاء</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

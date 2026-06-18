@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}عقد {{ contract.contract_number }}{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+{% include 'tenant/_sidebar.html' ignore missing %}
+
+<main class="flex-1 p-6 md:p-8">
+<div class="max-w-4xl mx-auto">
+
+<a href="{{ url_for('tenant_contracts.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع</a>
+
+<div class="flex justify-between items-start mb-6">
+  <div>
+    <h1 class="text-2xl font-bold mb-1">📄 العقد {{ contract.contract_number }}</h1>
+    <p class="text-sm text-gray-500">{{ contract.template.name if contract.template }}</p>
+  </div>
+  <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">{{ contract.status_label }}</span>
+</div>
+
+<!-- ⏳ بانتظار الموافقة على التحويل البنكي -->
+{% if contract.status == 'awaiting_approval' %}
+<div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-5 mb-4">
+  <div class="flex items-start gap-3">
+    <div class="text-3xl">🔍</div>
+    <div class="flex-1">
+      <h3 class="font-bold text-amber-900 mb-1">العميل أرسل تحويلاً بنكياً — يحتاج تحقق منك</h3>
+      <p class="text-sm text-amber-800 mb-3">
+        المبلغ المطلوب: <strong>{{ "%.2f"|format(contract.payment_amount or 0) }} ر.س</strong>.
+        راجع إيصال التحويل أدناه، ثم وافق أو ارفض.
+      </p>
+
+      {% if contract.bank_transfer_proof_url %}
+      <a href="{{ contract.bank_transfer_proof_url }}" target="_blank" class="inline-block mb-3">
+        <img src="{{ contract.bank_transfer_proof_url }}" class="max-h-60 rounded-lg border-2 border-amber-300" alt="إيصال التحويل">
+      </a>
+      {% endif %}
+
+      <div class="flex flex-wrap gap-2">
+        <form method="POST" action="{{ url_for('tenant_contracts.contract_approve_transfer', id=contract.id) }}"
+              onsubmit="return confirm('تأكيد الموافقة على التحويل وإنشاء العقد؟');" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="bg-green-600 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-green-700 font-bold">
+            ✅ تأكيد التحويل وإنشاء العقد
+          </button>
+        </form>
+
+        <form method="POST" action="{{ url_for('tenant_contracts.contract_reject_transfer', id=contract.id) }}"
+              onsubmit="return confirm('رفض التحويل؟');" class="inline flex items-center gap-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input name="reason" placeholder="سبب الرفض (اختياري)" class="border rounded-lg px-3 py-2 text-sm">
+          <button class="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm hover:bg-red-200 font-bold">🚫 رفض</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% elif contract.status == 'rejected' and contract.bank_transfer_rejected_at %}
+<div class="bg-red-50 border border-red-300 rounded-xl p-4 mb-4">
+  <div class="text-sm text-red-800">
+    🚫 رُفض التحويل بتاريخ {{ contract.bank_transfer_rejected_at.strftime('%Y-%m-%d %H:%M') }}
+    {% if contract.bank_transfer_note %} — السبب: {{ contract.bank_transfer_note }}{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- بيانات العميل -->
+<div class="bg-white rounded-xl p-5 shadow-sm mb-4">
+  <h3 class="font-bold mb-3">👤 بيانات العميل</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+    <div><span class="text-gray-500">الاسم:</span> <strong>{{ contract.customer_name or '—' }}</strong></div>
+    <div><span class="text-gray-500">الجوال:</span> <strong dir="ltr">{{ contract.customer_phone or '—' }}</strong></div>
+    <div><span class="text-gray-500">البريد:</span> <strong dir="ltr">{{ contract.customer_email or '—' }}</strong></div>
+    <div><span class="text-gray-500">رقم الهوية:</span> <strong dir="ltr">{{ contract.customer_id_number or '—' }}</strong></div>
+  </div>
+</div>
+
+<!-- البيانات الكاملة -->
+{% if contract.field_values %}
+<div class="bg-white rounded-xl p-5 shadow-sm mb-4">
+  <h3 class="font-bold mb-3">📝 جميع الحقول المُجمَّعة</h3>
+  <div class="space-y-2">
+    {% for key, value in contract.field_values.items() %}
+    <div class="flex items-start gap-2 py-2 border-b last:border-0">
+      <span class="text-xs text-gray-500 min-w-[120px]"><code class="bg-gray-100 px-1.5 rounded">{{ key }}</code></span>
+      <div class="flex-1 text-sm">
+        {% if value is string and value.startswith('http') %}
+          {% if 'image' in key or '.jpg' in value or '.png' in value or '.webp' in value %}
+            <a href="{{ value }}" target="_blank">
+              <img src="{{ value }}" class="max-h-32 rounded-lg border" alt="">
+            </a>
+          {% else %}
+            <a href="{{ value }}" target="_blank" class="text-blue-600 hover:underline" dir="ltr">{{ value[:80] }}</a>
+          {% endif %}
+        {% else %}
+          <span dir="auto">{{ value }}</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- الدفع -->
+<div class="bg-white rounded-xl p-5 shadow-sm mb-4">
+  <h3 class="font-bold mb-3">💰 الدفع</h3>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+    <div>
+      <div class="text-xs text-gray-500 mb-1">المبلغ المطلوب</div>
+      <div class="text-xl font-bold">{{ "%.2f"|format(contract.payment_amount or 0) }} ر.س</div>
+    </div>
+    <div>
+      <div class="text-xs text-gray-500 mb-1">المدفوع</div>
+      <div class="text-xl font-bold text-green-600">{{ "%.2f"|format(contract.payment_paid or 0) }} ر.س</div>
+    </div>
+    <div>
+      <div class="text-xs text-gray-500 mb-1">الحالة</div>
+      <div class="text-base font-bold {{ 'text-green-600' if contract.payment_status == 'paid' else 'text-orange-600' }}">{{ contract.payment_status }}</div>
+    </div>
+  </div>
+  {% if contract.payment_reference %}
+  <div class="mt-3 text-xs text-gray-500">المرجع: <code class="bg-gray-100 px-1.5">{{ contract.payment_reference }}</code></div>
+  {% endif %}
+</div>
+
+<!-- ملف العقد + إجراءات -->
+<div class="bg-white rounded-xl p-5 shadow-sm mb-4">
+  <h3 class="font-bold mb-3">📂 ملف العقد</h3>
+
+  {% if contract.contract_pdf_url %}
+  <a href="{{ contract.contract_pdf_url }}" target="_blank" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-blue-700 inline-block">📄 تنزيل PDF</a>
+  {% elif contract.external_contract_url %}
+  <a href="{{ contract.external_contract_url }}" target="_blank" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-blue-700 inline-block">🔗 فتح في نظامك</a>
+  {% else %}
+  <p class="text-gray-500 text-sm">لم يتم توليد العقد بعد</p>
+  {% endif %}
+
+  <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+    <form method="POST" action="{{ url_for('tenant_contracts.contract_regenerate', id=contract.id) }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-lg text-xs hover:bg-yellow-200">🔄 إعادة التوليد</button>
+    </form>
+    {% if contract.status in ['signed', 'sent'] %}
+    <form method="POST" action="{{ url_for('tenant_contracts.contract_resend', id=contract.id) }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-xs hover:bg-green-200">📤 إعادة الإرسال للعميل</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<!-- التواريخ -->
+<div class="bg-white rounded-xl p-5 shadow-sm">
+  <h3 class="font-bold mb-3">🕐 السجل الزمني</h3>
+  <div class="space-y-2 text-sm">
+    {% if contract.created_at %}<div>📝 إنشاء: {{ contract.created_at.strftime('%Y-%m-%d %H:%M') }}</div>{% endif %}
+    {% if contract.paid_at %}<div>💰 الدفع: {{ contract.paid_at.strftime('%Y-%m-%d %H:%M') }}</div>{% endif %}
+    {% if contract.signed_at %}<div>✍️ التوقيع: {{ contract.signed_at.strftime('%Y-%m-%d %H:%M') }}</div>{% endif %}
+    {% if contract.sent_at %}<div>📤 الإرسال: {{ contract.sent_at.strftime('%Y-%m-%d %H:%M') }}</div>{% endif %}
+  </div>
+</div>
+
+</div>
+</main>
+</div>
+{% endblock %}

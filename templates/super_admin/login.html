@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}إدارة المنصة — دخول{% endblock %}
+{% block body %}
+<div class="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4">
+    <div class="bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+        <div class="text-4xl text-center mb-4">👑</div>
+        <h1 class="text-xl font-bold text-center text-white mb-6">إدارة المنصة</h1>
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="username" placeholder="اسم المستخدم" required dir="ltr" autofocus
+                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500">
+            <input type="password" name="password" placeholder="كلمة المرور" required
+                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">دخول</button>
+        </form>
+        <p class="text-center text-sm mt-4">
+            <a href="{{ url_for('super_admin.forgot_password') }}" class="text-blue-400 hover:underline">نسيت كلمة المرور؟</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}{{ 'تعديل' if item else 'إضافة' }} صنف{% endblock %}
+{% block panel_content %}
+<h1 class="text-2xl font-bold mb-6">📋 {{ 'تعديل' if item else 'إضافة' }} صنف</h1>
+<form method="POST" enctype="multipart/form-data" class="bg-white rounded-xl p-6 shadow-sm space-y-4 max-w-2xl">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">التصنيف *</label>
+    <select name="category_id" required class="w-full border rounded-lg px-4 py-2.5 text-sm">
+      <option value="">اختر...</option>
+      {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if item and item.category_id == c.id }}>{{ c.icon }} {{ c.name }}</option>{% endfor %}
+    </select></div>
+    <div><label class="block text-sm font-medium mb-1">الفرع (اختياري)</label>
+    <select name="branch_id" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+      <option value="">كل الفروع</option>
+      {% for b in branches %}<option value="{{ b.id }}" {{ 'selected' if item and item.branch_id == b.id }}>{{ b.name }}</option>{% endfor %}
+    </select></div>
+  </div>
+  <div><label class="block text-sm font-medium mb-1">اسم الصنف *</label>
+  <input name="name" value="{{ item.name if item else '' }}" required class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="مثال: كابتشينو"></div>
+  <div><label class="block text-sm font-medium mb-1">الوصف</label>
+  <input name="description" value="{{ item.description if item else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">السعر (ريال) *</label>
+    <input type="number" name="price" value="{{ item.price if item else '' }}" required step="0.01" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+    <div><label class="block text-sm font-medium mb-1">سعر العرض (اختياري)</label>
+    <input type="number" name="discount_price" value="{{ item.discount_price if item else '' }}" step="0.01" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+  </div>
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">السعرات الحرارية</label>
+    <input type="number" name="calories" value="{{ item.calories if item else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+    <div><label class="block text-sm font-medium mb-1">وقت التحضير (دقيقة)</label>
+    <input type="number" name="prep_time_min" value="{{ item.prep_time_min if item else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+  </div>
+  <!-- صور الصنف -->
+  <div>
+    <label class="block text-sm font-medium mb-1">📸 صور الصنف</label>
+    {% if item and item.images %}
+    <div class="flex flex-wrap gap-2 mb-2">
+      {% for url in item.images %}
+      <div class="relative">
+        <img src="{{ url }}" class="w-20 h-20 object-cover rounded-lg border">
+      </div>
+      {% endfor %}
+    </div>
+    <label class="flex items-center gap-2 text-xs text-gray-600 mb-2">
+      <input type="checkbox" name="clear_images"> استبدال الصور القديمة (سيتم حذفها)
+    </label>
+    {% endif %}
+    <input type="file" name="item_images" accept="image/*" multiple
+           class="w-full border rounded-lg px-3 py-2 text-sm">
+    <p class="text-xs text-gray-400 mt-1">JPG/PNG/WebP — تُرفَع تلقائياً إلى التخزين السحابي إن كان مُفعّلاً.</p>
+  </div>
+
+  <div class="flex gap-6">
+    <label class="flex items-center gap-2"><input type="checkbox" name="is_available" {{ 'checked' if not item or item.is_available }}><span class="text-sm">متوفر</span></label>
+    <label class="flex items-center gap-2"><input type="checkbox" name="is_popular" {{ 'checked' if item and item.is_popular }}><span class="text-sm">⭐ مميز</span></label>
+    <label class="flex items-center gap-2"><input type="checkbox" name="is_spicy" {{ 'checked' if item and item.is_spicy }}><span class="text-sm">🌶️ حار</span></label>
+    <label class="flex items-center gap-2"><input type="checkbox" name="is_vegetarian" {{ 'checked' if item and item.is_vegetarian }}><span class="text-sm">🥬 نباتي</span></label>
+  </div>
+  <div class="flex gap-3 pt-2">
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm">حفظ</button>
+    <a href="{{ url_for('tenant_restaurant.menu_items') }}" class="bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm">إلغاء</a>
+  </div>
+</form>
+{% endblock %}

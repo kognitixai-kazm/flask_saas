@@ -1,0 +1,59 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}استعراض المصروفات{% endblock %}
+
+{% block panel_content %}
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">المصروفات التشغيلية</h1>
+            <p class="text-gray-500 mt-1">سجل المصروفات التي تم سدادها وتسجيلها في النظام.</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{{ url_for('tenant_accounting.dashboard') }}" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200">
+                &rarr; لوحة القيود
+            </a>
+            <a href="{{ url_for('tenant_accounting.new_expense') }}" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                + تسجيل مصروف
+            </a>
+        </div>
+    </div>
+
+    <!-- جدول المصروفات -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-right">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500 text-sm border-b">
+                        <th class="px-4 py-3 font-medium">رقم المرجع</th>
+                        <th class="px-4 py-3 font-medium">التاريخ</th>
+                        <th class="px-4 py-3 font-medium">البيان</th>
+                        <th class="px-4 py-3 font-medium">القسم</th>
+                        <th class="px-4 py-3 font-medium">المبلغ</th>
+                        <th class="px-4 py-3 font-medium text-center">بواسطة</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for exp in expenses %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3 text-sm text-gray-900">#EXP-{{ exp.id }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500" dir="ltr">{{ exp.expense_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ exp.description }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500">
+                            {% if exp.category == 'general' %}عام{% else %}{{ exp.category }}{% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-sm font-bold text-red-600">{{ exp.amount }} د.م</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 text-center">{{ exp.created_by }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            لا توجد مصروفات مسجلة بعد.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

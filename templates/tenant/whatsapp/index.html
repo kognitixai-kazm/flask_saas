@@ -1,0 +1,53 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}واتساب — {{ g.current_tenant.business_name }}{% endblock %}
+{% block panel_content %}
+<h1 class="text-2xl font-bold mb-2">واتساب</h1>
+<p class="text-gray-500 text-sm mb-6">محادثات العملاء عبر واتساب. ربط الرقم والتوكن يتم من إدارة المنصة فقط.</p>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="font-bold text-gray-800 mb-1">الرد التلقائي (البوت)</div>
+      <p class="text-sm text-gray-500">عند الإيقاف: تُحفظ رسائل العملاء فقط ولا يُرسل رد آلياً حتى ترد أنت من هنا أو من الاستفسارات.</p>
+    </div>
+    <form method="post" action="{{ url_for('tenant_whatsapp.toggle_auto_reply') }}" class="flex-shrink-0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if auto_reply %}
+      <input type="hidden" name="enable" value="0">
+      <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium">إيقاف الرد التلقائي</button>
+      {% else %}
+      <input type="hidden" name="enable" value="1">
+      <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium">تشغيل الرد التلقائي</button>
+      {% endif %}
+    </form>
+  </div>
+  <p class="text-xs mt-3 {{ 'text-emerald-600' if auto_reply else 'text-amber-700' }}">
+    الحالة: {% if auto_reply %}مفعّل{% else %}موقوف{% endif %}
+  </p>
+</div>
+
+{% if not has_integration %}
+<div class="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl p-4 mb-6">
+  واتساب غير مربوط تقنياً لهذا النشاط بعد. عند التفعيل من المنصة ستتمكن من إرسال الردود من هنا.
+</div>
+{% endif %}
+
+<h2 class="font-bold text-lg mb-3">المحادثات</h2>
+{% if not conversations %}
+<p class="text-gray-500 text-sm">لا توجد محادثات واتساب بعد.</p>
+{% else %}
+<div class="space-y-2">
+  {% for c in conversations %}
+  <a href="{{ url_for('tenant_whatsapp.conversation', conv_id=c.id) }}" class="block bg-white rounded-xl border border-gray-100 p-4 hover:border-blue-200 hover:shadow-sm transition">
+    <div class="flex justify-between items-start gap-3">
+      <div>
+        <div class="font-medium text-gray-900">{{ c.visitor_name or 'عميل' }}</div>
+        <div class="text-xs text-gray-400 dir-ltr">{{ c.visitor_phone or c.visitor_id }}</div>
+      </div>
+      <span class="text-xs text-gray-400 whitespace-nowrap">{{ c.updated_at.strftime('%Y-%m-%d %H:%M') if c.updated_at else '' }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

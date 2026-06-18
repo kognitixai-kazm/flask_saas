@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KOGNITIX — حلول الأعمال الذكية{% endblock %}</title>
+    <meta name="description" content="KOGNITIX — منصة ذكية لإدارة خدمة العملاء، الفروع، الحجوزات، الشكاوى والتحليلات لأي نشاط تجاري.">
+    <meta name="theme-color" content="#0b3a8c">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.png') }}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-50:  #eef4ff;
+            --brand-100: #d9e6ff;
+            --brand-500: #2c6df0;
+            --brand-600: #1f54d4;
+            --brand-700: #163fa8;
+            --brand-800: #0e2e80;
+            --brand-900: #0b2360;
+            --accent:    #16d1e2;
+        }
+
+        * { font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif; }
+        html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; scroll-behavior: smooth; }
+        body { font-weight: 400; color: #1f2937; line-height: 1.65; background: #f7f9fc; }
+
+        h1, h2, h3, h4, h5 { font-weight: 700; color: #0b1f3a; letter-spacing: -0.012em; }
+        h1 { font-weight: 800; }
+
+        label, .text-sm, p { color: #374151; }
+        button, input, select, textarea { font-family: inherit; }
+        input::placeholder, textarea::placeholder { color: #9ca3af; }
+        input, select, textarea { color: #111827; font-weight: 500; }
+        button { font-weight: 600; }
+
+        table { font-size: 14px; }
+        th { color: #1f2937; font-weight: 700; }
+        td { color: #374151; }
+
+        .text-gray-400 { color: #6b7280 !important; }
+        .text-gray-500 { color: #4b5563 !important; }
+        .text-gray-600 { color: #374151 !important; }
+
+        .gradient-brand {
+            background: linear-gradient(135deg, var(--brand-700) 0%, var(--brand-500) 55%, var(--accent) 100%);
+        }
+        .gradient-soft {
+            background: linear-gradient(180deg, #f3f7ff 0%, #ffffff 100%);
+        }
+        .ring-brand:focus-within {
+            box-shadow: 0 0 0 4px rgba(44,109,240,0.15);
+        }
+
+        nav a { font-weight: 500; }
+        nav a:hover { font-weight: 600; }
+
+        .stat-number, .text-3xl, .text-2xl { font-weight: 800; letter-spacing: -0.02em; }
+
+        /* تأثيرات صغيرة موحّدة */
+        .card-shadow { box-shadow: 0 1px 2px rgba(11,35,96,0.04), 0 8px 24px -12px rgba(11,35,96,0.10); }
+        .hover-lift { transition: transform .15s ease, box-shadow .15s ease; }
+        .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(11,35,96,0.10); }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen {% block body_class %}{% endblock %}">
+
+    {% block body %}{% endblock %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="flash-messages" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 space-y-2 w-96 max-w-[calc(100%-2rem)]">
+        {% for category, message in messages %}
+        <div class="px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium cursor-pointer
+            {% if category == 'success' %}bg-green-600
+            {% elif category == 'danger' %}bg-red-600
+            {% elif category == 'warning' %}bg-yellow-600
+            {% else %}bg-blue-600{% endif %}"
+            onclick="this.remove()">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    <script>setTimeout(()=>{const el=document.getElementById('flash-messages');if(el)el.remove()},5000)</script>
+    {% endif %}
+    {% endwith %}
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

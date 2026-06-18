@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}العقود — {{ tenant.business_name }}{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8 px-4">
+<div class="max-w-2xl mx-auto">
+  <a href="{{ url_for('admin_integrations.list_all') }}" class="text-blue-600 text-sm mb-4 block">← رجوع</a>
+  <h1 class="text-2xl font-bold mb-6">📄 العقود الإلكترونية — {{ tenant.business_name }}</h1>
+  <form method="POST" class="bg-white rounded-xl p-6 shadow-sm space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><label class="block text-sm font-medium mb-1">المزوّد</label>
+    <select name="provider" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+      <option value="custom" {{ 'selected' if not config or config.provider == 'custom' }}>مخصص (PDF)</option>
+      <option value="docusign" {{ 'selected' if config and config.provider == 'docusign' }}>DocuSign</option>
+    </select></div>
+    <div><label class="block text-sm font-medium mb-1">API Key (اختياري)</label>
+    <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <div><label class="block text-sm font-medium mb-1">رابط قالب العقد (PDF)</label>
+    <input name="template_url" value="{{ (config.extra_config or {}).get('template_url','') if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="https://...contract_template.pdf"></div>
+    <label class="flex items-center gap-2"><input type="checkbox" name="auto_send_whatsapp" {{ 'checked' if config and (config.extra_config or {}).get('auto_send_whatsapp') }}><span class="text-sm">إرسال العقد تلقائياً عبر واتساب بعد التأكيد</span></label>
+    <label class="flex items-center gap-2"><input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}><span class="text-sm font-bold">تفعيل</span></label>
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm">حفظ</button>
+  </form>
+</div></div>
+{% endblock %}

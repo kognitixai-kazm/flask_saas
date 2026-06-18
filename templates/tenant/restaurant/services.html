@@ -1,0 +1,23 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}خدمات المطعم{% endblock %}
+{% block panel_content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">🛵 خدمات المطعم</h1>
+  <a href="{{ url_for('tenant_restaurant.service_form') }}" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm">+ خدمة جديدة</a>
+</div>
+{% if services %}
+<div class="space-y-3">
+  {% for s in services %}
+  <div class="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center">
+    <div><strong>{{ s.type_label }}</strong> <span class="text-xs text-gray-400">{{ s.description[:60] }}</span>
+    {% if s.delivery_fee %}<br><span class="text-xs">رسوم التوصيل: {{ s.delivery_fee }} ر.س</span>{% endif %}</div>
+    <div class="flex gap-2">
+      <a href="{{ url_for('tenant_restaurant.service_form', id=s.id) }}" class="text-blue-600 text-sm">تعديل</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400"><div class="text-4xl mb-3">🛵</div><p>لا توجد خدمات. أضف خدمة (توصيل، حجز طاولة...)</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}واتساب — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<a href="{{ url_for('tenant_integrations.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع للتكاملات</a>
+<h1 class="text-2xl font-extrabold mb-1">💬 واتساب (Meta Cloud)</h1>
+<p class="text-gray-500 text-sm mb-6">أدخل بيانات Meta Cloud API الخاصة برقمك — كل المفاتيح محفوظة لنشاطك فقط.</p>
+
+<form method="POST" class="bg-white rounded-2xl p-6 shadow-sm space-y-4 border border-gray-100">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+        <label class="block text-sm font-bold mb-1">رقم واتساب</label>
+        <input name="phone_number" value="{{ config.phone_number if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="+966500000000">
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">Phone Number ID <span class="text-gray-400 font-normal">(من Meta)</span></label>
+        <input name="phone_number_id" value="{{ config.phone_number_id if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="1234567890">
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">WhatsApp Business Account ID</label>
+        <input name="waba_id" value="{{ config.waba_id if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="WABA ID">
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">Access Token <span class="text-gray-400 font-normal">(Permanent Token)</span></label>
+        <textarea name="access_token" rows="3" dir="ltr"
+                  class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono">{{ config.access_token if config else '' }}</textarea>
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">Webhook Verify Token <span class="text-gray-400 font-normal">(تختاره أنت)</span></label>
+        <input name="webhook_verify_token" value="{{ config.webhook_verify_token if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="my_secret_token_123">
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p class="text-sm font-bold text-blue-800 mb-1">🔗 Webhook URL (ضعه في Meta Developer)</p>
+        <code class="text-xs text-blue-700 break-all" dir="ltr">{{ webhook_url }}</code>
+    </div>
+
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}>
+        <span class="text-sm font-bold">تفعيل واتساب</span>
+    </label>
+
+    {% if config and config.is_verified %}
+        <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">✅ تم التحقق — واتساب يعمل.</div>
+    {% elif config and config.last_error %}
+        <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-rose-700 text-sm">⚠️ {{ config.last_error }}</div>
+    {% endif %}
+
+    {% if config %}
+    <div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
+        📊 مرسلة: {{ config.messages_sent }} · مستقبلة: {{ config.messages_received }}
+    </div>
+    {% endif %}
+
+    <button type="submit" class="bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-800">
+        💾 حفظ مع تحقق
+    </button>
+</form>
+
+{% if config and config.is_active %}
+<form method="POST" action="{{ url_for('tenant_integrations.whatsapp_test') }}"
+      class="bg-white rounded-2xl p-6 shadow-sm mt-4 border border-gray-100">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h3 class="font-bold mb-3">🧪 اختبر بإرسال رسالة</h3>
+    <div class="flex gap-3">
+        <input name="test_phone" placeholder="+966500000000" dir="ltr"
+               class="flex-1 border rounded-lg px-4 py-2.5 text-sm">
+        <button type="submit" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-emerald-700">إرسال</button>
+    </div>
+</form>
+{% endif %}
+{% endblock %}

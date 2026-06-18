@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}إدارة المنصة{% endblock %}
+{% block body_class %}bg-gray-900{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+<aside class="w-60 bg-gray-800 text-gray-300 flex-shrink-0">
+<div class="p-6 border-b border-gray-700"><div class="font-bold text-white">👑 إدارة المنصة</div></div>
+<nav class="p-4 space-y-1">
+<a href="{{ url_for('super_admin.dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📊 الرئيسية</a>
+<a href="{{ url_for('super_admin.tenants_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🏢 المستأجرون</a>
+<a href="{{ url_for('super_admin.tenants_list') }}#bot-settings" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🤖 إعدادات البوت</a>
+<a href="{{ url_for('super_admin.plans_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">💰 الباقات</a>
+<a href="{{ url_for('super_admin.activities_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🧩 الأنشطة</a>
+<a href="{{ url_for('super_admin.audit_logs') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📋 السجلات</a>
+<a href="{{ url_for('admin_integrations.list_all') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🔗 التكاملات</a>
+<a href="{{ url_for('super_admin.account_change_password') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🔐 تغيير كلمة المرور</a>
+<hr class="border-gray-700 my-3"><form method="POST" action="{{ url_for('super_admin.logout') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<button class="block w-full text-right px-4 py-2 rounded-lg text-red-400 hover:bg-gray-700 text-sm">🚪 خروج</button>
+</form></nav></aside>
+<main class="flex-1 bg-gray-50 p-8"><div class="max-w-6xl mx-auto">
+<h1 class="text-2xl font-bold mb-6">audit_logs</h1>
+<p class="text-gray-500">محتوى تفصيلي يُضاف في المرحلة القادمة.</p>
+</div></main></div>
+{% endblock %}

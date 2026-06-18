@@ -1,0 +1,65 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}Booking.com — KOGNITIX{% endblock %}
+{% block panel_content %}
+<div class="max-w-2xl">
+    <a href="{{ url_for('tenant_integrations.index') }}" class="text-blue-600 text-sm mb-4 inline-block font-medium">← العودة للتكاملات</a>
+    
+    <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 flex items-center gap-2">
+            🏨 ربط Booking.com
+        </h1>
+        <p class="text-gray-500 mt-2 text-sm">اربط فندقك أو وحداتك السكنية مع Booking.com لمزامنة الحجوزات والأسعار مباشرة إلى المنصة.</p>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 text-sm text-blue-900">
+        💡 <strong>أين ستظهر حجوزاتي؟</strong><br>
+        بمجرد تفعيل الربط بشكل صحيح، سيتم سحب أي حجوزات جديدة من منصة Booking.com وستظهر مباشرة في قائمة <a href="{{ url_for('tenant_bookings.list_bookings') }}" class="font-bold underline">الحجوزات الخاصة بك</a>.
+    </div>
+
+    <form method="POST" class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">مزود الخدمة</label>
+            <select name="provider" class="w-full border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white transition text-sm">
+                <option value="booking_api" {{ 'selected' if config and config.provider == 'booking_api' }}>Booking.com (Channel Manager)</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Hotel ID (رقم الفندق)</label>
+            <input type="text" name="hotel_id" value="{{ (config.extra_config or {}).get('hotel_id','') if config else '' }}" dir="ltr" class="w-full border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white transition font-mono text-sm" placeholder="e.g. 1234567">
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">API Key / Username</label>
+            <input type="text" name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white transition font-mono text-sm">
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">API Secret / Password</label>
+            <input type="password" name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr" class="w-full border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white transition font-mono text-sm">
+        </div>
+
+        <div class="pt-2 border-t">
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }} class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                <span class="text-sm font-bold text-gray-900">تفعيل التكامل</span>
+            </label>
+            <p class="text-xs text-gray-500 mt-1 mr-8">عند التفعيل، ستبدأ المنصة في التخاطب مع سيرفرات Booking.com بانتظام.</p>
+        </div>
+
+        <div class="pt-4 flex items-center justify-between">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-sm transition">
+                حفظ الإعدادات
+            </button>
+            {% if config and config.is_active %}
+                <span class="text-emerald-600 font-bold text-sm flex items-center gap-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    التكامل مفعّل
+                </span>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

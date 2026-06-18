@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الشات غير متاح — KOGNITIX</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Tajawal',sans-serif;margin:0;padding:0;box-sizing:border-box}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;
+     background:linear-gradient(180deg,#f3f7ff 0%,#fff 100%);text-align:center;padding:2rem;color:#1f2937}
+.card{background:#fff;border:1px solid #e3e8ef;border-radius:24px;padding:36px 28px;max-width:380px;
+      box-shadow:0 10px 35px -10px rgba(11,35,96,.12)}
+.logo{width:64px;height:64px;margin:0 auto 18px;border-radius:18px;background:#fff;
+      box-shadow:0 8px 22px -8px rgba(31,84,212,.25);border:1px solid #e3e8ef;overflow:hidden;display:grid;place-items:center}
+.logo img{width:100%;height:100%;object-fit:contain;padding:6px}
+h1{font-size:1.35rem;font-weight:800;color:#0b1f3a;margin-bottom:6px}
+p{color:#475569;font-size:.95rem;line-height:1.7}
+.brand{margin-top:18px;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:#64748b;font-weight:700}
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt=""></div>
+    <h1>الشات غير متاح حالياً</h1>
+    <p>الخدمة مؤقتاً متوقفة. حاول مرة أخرى بعد قليل، أو تواصل مع المنشأة مباشرة.</p>
+    <div class="brand">KOGNITIX · Intelligent Business Solutions</div>
+</div>
+</body>
+</html>

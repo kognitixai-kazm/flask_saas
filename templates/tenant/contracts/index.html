@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}العقود الإلكترونية — {{ g.current_tenant.business_name }}{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+{% include 'tenant/_sidebar.html' ignore missing %}
+
+<main class="flex-1 p-6 md:p-8">
+<div class="max-w-6xl mx-auto">
+
+<div class="flex justify-between items-center mb-6">
+  <div>
+    <h1 class="text-2xl font-bold mb-1">📄 العقود الإلكترونية</h1>
+    <p class="text-sm text-gray-500">إدارة قوالب العقود + العقود الموقّعة</p>
+  </div>
+  <div class="flex gap-2">
+    {% if counts.awaiting %}
+    <a href="{{ url_for('tenant_contracts.transfers_pending') }}" class="bg-amber-500 text-white px-4 py-2.5 rounded-lg text-sm hover:bg-amber-600 font-bold">
+      🔍 تحويلات بانتظار الموافقة ({{ counts.awaiting }})
+    </a>
+    {% endif %}
+    <a href="{{ url_for('tenant_contracts.new_manual') }}" class="bg-green-600 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-green-700">📝 عقد يدوي جديد</a>
+    <a href="{{ url_for('tenant_contracts.template_form') }}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-blue-700">+ قالب جديد</a>
+  </div>
+</div>
+
+<!-- إحصائيات -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-xl p-4 shadow-sm">
+    <div class="text-xs text-gray-500 mb-1">الإجمالي</div>
+    <div class="text-2xl font-bold text-gray-700">{{ counts.total }}</div>
+  </div>
+  <div class="bg-white rounded-xl p-4 shadow-sm">
+    <div class="text-xs text-gray-500 mb-1">بانتظار الدفع</div>
+    <div class="text-2xl font-bold text-orange-600">{{ counts.pending }}</div>
+  </div>
+  <a href="{{ url_for('tenant_contracts.transfers_pending') }}" class="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div class="text-xs text-gray-500 mb-1">تحويلات بنكية للمراجعة</div>
+    <div class="text-2xl font-bold text-amber-600">{{ counts.awaiting }}</div>
+  </a>
+  <div class="bg-white rounded-xl p-4 shadow-sm">
+    <div class="text-xs text-gray-500 mb-1">مُرسَلة</div>
+    <div class="text-2xl font-bold text-green-600">{{ counts.sent }}</div>
+  </div>
+</div>
+
+<!-- القوالب -->
+<h2 class="text-lg font-bold mb-3">📋 قوالب العقود</h2>
+{% if templates %}
+<div class="grid md:grid-cols-2 gap-4 mb-8">
+  {% for tpl in templates %}
+  <div class="bg-white rounded-xl p-5 shadow-sm {{ 'opacity-60' if not tpl.is_active }}">
+    <div class="flex justify-between items-start mb-3">
+      <div>
+        <h3 class="font-bold text-base">{{ tpl.name }}</h3>
+        <p class="text-xs text-gray-500 mt-1">{{ tpl.description[:80] if tpl.description else '—' }}</p>
+      </div>
+      <span class="text-xs px-2 py-0.5 rounded-full {{ 'bg-green-100 text-green-700' if tpl.is_active else 'bg-gray-100 text-gray-500' }}">
+        {{ 'مفعّل' if tpl.is_active else 'معطّل' }}
+      </span>
+    </div>
+    <div class="text-xs text-gray-600 space-y-1 mb-3">
+      <div>📑 النوع: {{ {'monthly_rental':'إيجار شهري','daily_rental':'إيجار يومي','service':'خدمة'}.get(tpl.contract_type, tpl.contract_type) }}</div>
+      <div>⚙️ التوليد:
+        {% if tpl.provider == 'external' %}
+          🔗 نظام خارجي ({{ tpl.external_api_url[:40] if tpl.external_api_url else '—' }})
+        {% else %}
+          🏢 قالب المنصة (PDF مع شعارك)
+        {% endif %}
+      </div>
+      <div>📥 حقول العميل: {{ (tpl.required_fields or [])|length }}</div>
+    </div>
+    <div class="flex gap-2 pt-3 border-t">
+      <a href="{{ url_for('tenant_contracts.template_form', id=tpl.id) }}" class="text-blue-600 text-xs hover:underline">✏️ تعديل</a>
+      <form method="POST" action="{{ url_for('tenant_contracts.template_toggle', id=tpl.id) }}" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="text-yellow-600 text-xs hover:underline">{{ '⏸ تعطيل' if tpl.is_active else '▶ تفعيل' }}</button>
+      </form>
+      <form method="POST" action="{{ url_for('tenant_contracts.template_delete', id=tpl.id) }}" class="inline" onsubmit="return confirm('حذف القالب؟')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="text-red-500 text-xs hover:underline">🗑 حذف</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-xl p-8 shadow-sm text-center mb-8">
+  <div class="text-5xl mb-3">📋</div>
+  <h3 class="font-bold mb-2">لا توجد قوالب بعد</h3>
+  <p class="text-sm text-gray-500 mb-4">أنشئ أول قالب عقد لتفعيل العقود الإلكترونية في الشات</p>
+  <a href="{{ url_for('tenant_contracts.template_form') }}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-blue-700 inline-block">+ إنشاء قالب</a>
+</div>
+{% endif %}
+
+<!-- العقود الموقّعة -->
+<h2 class="text-lg font-bold mb-3">📂 آخر 20 عقد</h2>
+{% if contracts %}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+<table class="w-full text-sm">
+<thead class="bg-gray-50 text-gray-600">
+<tr>
+  <th class="text-right py-3 px-4">الرقم</th>
+  <th class="text-right py-3 px-4">العميل</th>
+  <th class="text-right py-3 px-4">القالب</th>
+  <th class="text-right py-3 px-4">المبلغ</th>
+  <th class="text-right py-3 px-4">الحالة</th>
+  <th class="text-right py-3 px-4">التاريخ</th>
+  <th></th>
+</tr>
+</thead>
+<tbody>
+{% for c in contracts %}
+<tr class="border-t hover:bg-gray-50">
+  <td class="py-3 px-4 font-mono text-xs">{{ c.contract_number or c.id }}</td>
+  <td class="py-3 px-4">{{ c.customer_name or '—' }}</td>
+  <td class="py-3 px-4 text-xs text-gray-500">{{ c.template.name if c.template else '—' }}</td>
+  <td class="py-3 px-4">{{ c.payment_paid }}/{{ c.payment_amount }} ر.س</td>
+  <td class="py-3 px-4">
+    <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">{{ c.status_label }}</span>
+  </td>
+  <td class="py-3 px-4 text-xs text-gray-500">{{ c.created_at.strftime('%Y-%m-%d') if c.created_at }}</td>
+  <td class="py-3 px-4"><a href="{{ url_for('tenant_contracts.contract_detail', id=c.id) }}" class="text-blue-600 text-xs hover:underline">تفاصيل</a></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="text-center text-gray-400 py-6 text-sm">لا توجد عقود بعد</p>
+{% endif %}
+
+</div>
+</main>
+</div>
+{% endblock %}

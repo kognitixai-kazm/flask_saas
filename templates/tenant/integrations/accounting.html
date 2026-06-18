@@ -1,0 +1,70 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}المحاسبة — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<a href="{{ url_for('tenant_integrations.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع للتكاملات</a>
+<h1 class="text-2xl font-extrabold mb-1">🧾 النظام المحاسبي</h1>
+<p class="text-gray-500 text-sm mb-6">اربط نظامك المحاسبي لإصدار الفواتير وتسجيل العمليات تلقائياً.</p>
+
+<form method="POST" class="bg-white rounded-2xl p-6 shadow-sm space-y-4 border border-gray-100">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+        <label class="block text-sm font-bold mb-1">المزوّد</label>
+        <select name="provider" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+            {% set p = config.provider if config else 'qoyod' %}
+            <option value="qoyod" {{ 'selected' if p == 'qoyod' }}>قيود</option>
+            <option value="daftra" {{ 'selected' if p == 'daftra' }}>دفترة</option>
+            <option value="xero" {{ 'selected' if p == 'xero' }}>Xero</option>
+            <option value="custom" {{ 'selected' if p == 'custom' }}>مخصص</option>
+        </select>
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">API Key</label>
+        <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono">
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">API Secret <span class="text-gray-400 font-normal">(اختياري)</span></label>
+        <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr"
+               class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono">
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">Webhook URL <span class="text-gray-400 font-normal">(لاستقبال أحداث منك)</span></label>
+        <input name="webhook_url" value="{{ (config.extra_config.webhook_url if config and config.extra_config else '') }}"
+               dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono">
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
+        🔗 <strong>عنوان استلام الأحداث الواردة:</strong>
+        <code class="font-mono break-all" dir="ltr">{{ inbound_accounting_url }}</code>
+    </div>
+
+    <div>
+        <label class="block text-sm font-bold mb-1">Ingest Secret <span class="text-gray-400 font-normal">(لتفعيل التحقق من الـ webhook الوارد)</span></label>
+        <input name="ingest_secret" value="" placeholder="اتركه فارغاً للإبقاء"
+               dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono">
+        {% if config and (config.extra_config or {}).get('ingest_secret') %}
+        <p class="text-xs text-emerald-700 mt-1">✓ مضبوط</p>
+        {% endif %}
+    </div>
+
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="auto_send_invoice"
+               {{ 'checked' if config and (config.extra_config or {}).get('auto_send_invoice') }}>
+        <span class="text-sm">إرسال الفاتورة تلقائياً عند نجاح الدفع</span>
+    </label>
+
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}>
+        <span class="text-sm font-bold">تفعيل النظام المحاسبي</span>
+    </label>
+
+    <button type="submit" class="bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-800">
+        💾 حفظ
+    </button>
+</form>
+{% endblock %}

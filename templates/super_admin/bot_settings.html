@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %}إعدادات البوت — {{ tenant.business_name }}{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-6 px-4">
+<form id="wa-call-test-form" method="POST" action="{{ url_for('admin_bot.call_test_outbound', tenant_id=tenant.id) }}" class="hidden" aria-hidden="true">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+<div class="max-w-4xl mx-auto">
+  <div class="flex flex-wrap gap-4 text-sm mb-4">
+    <a href="{{ url_for('super_admin.tenant_detail', id=tenant.id) }}" class="text-blue-600 hover:underline">← المستأجر</a>
+    <a href="{{ url_for('admin_integrations.list_all') }}" class="text-blue-600 hover:underline">← التكاملات</a>
+    <a href="{{ url_for('super_admin.tenants_list') }}" class="text-blue-600 hover:underline">← كل المستأجرين</a>
+  </div>
+  <h1 class="text-2xl font-bold mb-1">🤖 إعدادات البوت — {{ tenant.business_name }}</h1>
+  <p class="text-gray-500 text-sm mb-6">{{ tenant.activity.icon }} {{ tenant.activity.name_ar }}</p>
+
+  <!-- ==================== Tabs ==================== -->
+  <div class="flex gap-1 mb-6 overflow-x-auto text-sm" id="tabs">
+    <button onclick="showTab('general')" class="tab-btn px-4 py-2 rounded-t-lg bg-blue-600 text-white">🎨 عام</button>
+    <button onclick="showTab('keys')" class="tab-btn px-4 py-2 rounded-t-lg bg-gray-200 text-gray-600">🔑 مفاتيح API</button>
+    <button onclick="showTab('replies')" class="tab-btn px-4 py-2 rounded-t-lg bg-gray-200 text-gray-600">📝 ردود مخصصة</button>
+    <button onclick="showTab('call')" class="tab-btn px-4 py-2 rounded-t-lg bg-gray-200 text-gray-600">📞 الاتصال</button>
+  </div>
+
+  <form method="POST" action="{{ url_for('admin_bot.save_settings', tenant_id=tenant.id) }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- ==================== Tab 1: عام ==================== -->
+    <div id="tab-general" class="tab-content bg-white rounded-xl p-6 shadow-sm space-y-4">
+      <h2 class="font-bold text-lg mb-4">🎨 أسلوب البوت وتعليماته</h2>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium mb-1">أسلوب الرد</label>
+        <select name="tone" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+          <option value="friendly" {{ 'selected' if config.tone == 'friendly' }}>😊 ودّي</option>
+          <option value="formal" {{ 'selected' if config.tone == 'formal' }}>🎩 رسمي</option>
+          <option value="gulf_dialect" {{ 'selected' if config.tone == 'gulf_dialect' }}>🏜️ لهجة خليجية</option>
+          <option value="custom" {{ 'selected' if config.tone == 'custom' }}>✏️ مخصص</option>
+        </select></div>
+        <div><label class="block text-sm font-medium mb-1">اسم البوت (اختياري)</label>
+        <input name="bot_name" value="{{ config.bot_name }}" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="مثال: سارة"></div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">صياغة الوكيل في الردود التلقائية (شات / واتساب)</label>
+        <select name="agent_gender" class="w-full border rounded-lg px-4 py-2.5 text-sm max-w-md">
+          <option value="neutral" {{ 'selected' if (config.agent_gender or 'neutral') == 'neutral' }}>محايد (نحن / الفريق)</option>
+          <option value="male" {{ 'selected' if config.agent_gender == 'male' }}>مذكر (أنا جاهز …)</option>
+          <option value="female" {{ 'selected' if config.agent_gender == 'female' }}>مؤنث (أنا جاهزة …)</option>
+        </select>
+        <p class="text-xs text-gray-400 mt-1">يؤثر على التحية والشكر والوداع ونبرة المتابعة، بدون إيموجي في ردود المحرك.</p>
+      </div>
+
+      <div><label class="block text-sm font-medium mb-1">تعليمات مخصصة للبوت</label>
+      <textarea name="custom_instructions" rows="4" class="w-full border rounded-lg px-4 py-3 text-sm" placeholder="مثال: دائماً اسأل العميل عن تاريخ الوصول. لا تذكر المنافسين. قدّم عروض الشتاء.">{{ config.custom_instructions }}</textarea>
+      <p class="text-xs text-gray-400 mt-1">هذه التعليمات توجّه البوت عند الرد. كلما كانت أوضح كان الرد أفضل.</p></div>
+
+      <div><label class="block text-sm font-medium mb-1">مواضيع ممنوعة (كلمة في كل سطر)</label>
+      <textarea name="blocked_topics" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm" placeholder="مثال:&#10;أسعار المنافسين&#10;سياسة&#10;دين">{{ config.blocked_topics }}</textarea></div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="auto_learn_enabled" {{ 'checked' if config.auto_learn_enabled }}>
+          <span class="text-sm font-bold">🧠 التعلم التلقائي</span>
+        </label>
+        <span class="text-xs text-gray-400">عند رد صاحب النشاط على استفسار، يُضاف كرد مخصص تلقائياً</span>
+      </div>
+    </div>
+
+    <!-- ==================== Tab 2: مفاتيح API ==================== -->
+    <div id="tab-keys" class="tab-content bg-white rounded-xl p-6 shadow-sm space-y-5" style="display:none">
+      <h2 class="font-bold text-lg mb-4">🔑 مفاتيح API</h2>
+
+      <!-- معالج صور -->
+      <div class="border rounded-lg p-4">
+        <h3 class="font-bold text-sm mb-3">🖼️ معالج الصور</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="block text-xs text-gray-500 mb-1">المزوّد</label>
+          <select name="image_provider" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <option value="">غير مفعّل</option>
+            <option value="cloudinary" {{ 'selected' if config.image_provider == 'cloudinary' }}>Cloudinary</option>
+            <option value="imgbb" {{ 'selected' if config.image_provider == 'imgbb' }}>ImgBB</option>
+          </select></div>
+          <div><label class="block text-xs text-gray-500 mb-1">API Key</label>
+          <input name="image_api_key" value="{{ config.image_api_key }}" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm font-mono"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">تحليل صور واتساب يعمل تلقائياً عبر مفتاح <strong>OpenAI</strong> أو <strong>Gemini</strong> (قسم AI أعلاه أو مفتاح المنصة). ImgBB اختياري لرفع صورة عامة لاحقاً.</p>
+      </div>
+
+      <!-- معالج صوت -->
+      <div class="border rounded-lg p-4">
+        <h3 class="font-bold text-sm mb-3">🎤 معالج الصوت</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="block text-xs text-gray-500 mb-1">المزوّد</label>
+          <select name="voice_provider" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <option value="">غير مفعّل</option>
+            <option value="openai_whisper" {{ 'selected' if config.voice_provider == 'openai_whisper' }}>OpenAI Whisper</option>
+            <option value="google_speech" {{ 'selected' if config.voice_provider == 'google_speech' }}>Google Speech</option>
+          </select></div>
+          <div><label class="block text-xs text-gray-500 mb-1">API Key</label>
+          <input name="voice_api_key" value="{{ config.voice_api_key }}" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm font-mono"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">نسخ رسائل صوتية واتساب: اختر <strong>OpenAI Whisper</strong> وضع مفتاحاً هنا، أو اتركه فارغاً ويُستخدم مفتاح OpenAI من قسم AI / المنصة.</p>
+      </div>
+
+      <!-- AI -->
+      <div class="border rounded-lg p-4">
+        <h3 class="font-bold text-sm mb-3">🧠 ذكاء اصطناعي (AI)</h3>
+        <p class="text-xs text-gray-400 mb-2">مفتاح هذا التاجر يتجاوز مفاتيح المنصة العامة. اختر المزوّد ثم ضع اسم موديل مدعوم من وثائق ذلك المزوّد.</p>
+        <ul class="text-xs text-gray-500 list-disc pr-5 mb-3 space-y-0.5">
+          <li><strong>OpenAI</strong> — توازن تكلفة/جودة: <code class="bg-gray-100 px-1 rounded">gpt-4o-mini</code> أو أقوى: <code class="bg-gray-100 px-1 rounded">gpt-4o</code></li>
+          <li><strong>Anthropic</strong> — عربي وجودة عالية: <code class="bg-gray-100 px-1 rounded">claude-3-5-sonnet-20241022</code> أو أسرع: <code class="bg-gray-100 px-1 rounded">claude-3-5-haiku-20241022</code></li>
+          <li><strong>Google Gemini</strong> — سريع ومناسب لاحقاً لصور+نص: <code class="bg-gray-100 px-1 rounded">gemini-2.0-flash</code> أو <code class="bg-gray-100 px-1 rounded">gemini-1.5-flash</code></li>
+        </ul>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div><label class="block text-xs text-gray-500 mb-1">المزوّد</label>
+          <select name="ai_provider" id="ai_provider_select" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <option value="">المفتاح العام للمنصة (حسب إعداد السيرفر)</option>
+            <option value="openai" {{ 'selected' if config.ai_provider == 'openai' }}>OpenAI</option>
+            <option value="anthropic" {{ 'selected' if config.ai_provider == 'anthropic' }}>Anthropic (Claude)</option>
+            <option value="google_gemini" {{ 'selected' if config.ai_provider in ('google_gemini', 'google') }}>Google Gemini</option>
+          </select></div>
+          <div><label class="block text-xs text-gray-500 mb-1">API Key</label>
+          <input name="ai_api_key" value="{{ config.ai_api_key }}" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm font-mono" placeholder="حسب المزوّد"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">اسم الموديل</label>
+          <select name="ai_model" id="ai_model_select" class="w-full border rounded-lg px-3 py-2 text-sm" dir="ltr">
+            <option value="" data-provider="">الافتراضي / تلقائي</option>
+            {% for m in ai_models %}
+            <option value="{{ m.model_id }}" data-provider="{{ m.provider }}" {{ 'selected' if config.ai_model == m.model_id }}>
+              {{ m.icon }} {{ m.display_name }}
+            </option>
+            {% endfor %}
+          </select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Tab 5: اتصال ==================== -->
+    <div id="tab-call" class="tab-content bg-white rounded-xl p-6 shadow-sm space-y-4" style="display:none">
+      <h2 class="font-bold text-lg mb-4">📞 بوت الاتصال الصوتي</h2>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-yellow-700 text-sm mb-4">⚠️ يحتاج سيرفر HTTPS عام (SITE_URL) + حساب Twilio. Vonage وBland غير مفعّلين في الطلبات بعد.</div>
+      {% if config.call_webhook_url %}
+      <div class="bg-gray-50 border rounded-lg p-3 text-xs mb-4">
+        <span class="font-bold text-gray-700">رابط TwiML لـ Twilio:</span>
+        <code class="block dir-ltr mt-1 break-all">{{ config.call_webhook_url }}</code>
+        <span class="text-gray-500">يُحدَّث تلقائياً عند الحفظ حسب SITE_URL.</span>
+      </div>
+      {% endif %}
+
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-500 mb-1">المزوّد</label>
+        <select name="call_provider" class="w-full border rounded-lg px-3 py-2 text-sm">
+          <option value="">غير مفعّل</option>
+          <option value="twilio" {{ 'selected' if config.call_provider == 'twilio' }}>Twilio</option>
+          <option value="vonage" {{ 'selected' if config.call_provider == 'vonage' }}>Vonage</option>
+          <option value="bland" {{ 'selected' if config.call_provider == 'bland' }}>Bland.ai</option>
+        </select></div>
+        <div><label class="block text-xs text-gray-500 mb-1">رقم الاتصال</label>
+        <input name="call_phone_number" value="{{ config.call_phone_number }}" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="+966..."></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-500 mb-1">API Key / Account SID</label>
+        <input name="call_api_key" value="{{ config.call_api_key }}" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm font-mono"></div>
+        <div><label class="block text-xs text-gray-500 mb-1">API Secret / Auth Token</label>
+        <input name="call_api_secret" value="{{ config.call_api_secret }}" dir="ltr" type="password" class="w-full border rounded-lg px-3 py-2 text-sm font-mono"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-500 mb-1">صوت البوت</label>
+        <select name="call_voice" class="w-full border rounded-lg px-3 py-2 text-sm">
+          <option value="female_ar" {{ 'selected' if config.call_voice == 'female_ar' }}>👩 أنثى — عربي</option>
+          <option value="male_ar" {{ 'selected' if config.call_voice == 'male_ar' }}>👨 ذكر — عربي</option>
+          <option value="female_en" {{ 'selected' if config.call_voice == 'female_en' }}>👩 أنثى — إنجليزي</option>
+          <option value="male_en" {{ 'selected' if config.call_voice == 'male_en' }}>👨 ذكر — إنجليزي</option>
+        </select></div>
+        <div class="flex items-end pb-1"><label class="flex items-center gap-2">
+          <input type="checkbox" name="call_is_active" {{ 'checked' if config.call_is_active }}>
+          <span class="text-sm font-bold">تفعيل الاتصال</span>
+        </label></div>
+      </div>
+      <div><label class="block text-xs text-gray-500 mb-1">رسالة الترحيب الصوتية</label>
+      <textarea name="call_greeting" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="أهلاً بك في فندق العالية. كيف يمكنني مساعدتك؟">{{ config.call_greeting }}</textarea></div>
+
+      <div class="border-t pt-4 mt-2">
+        <p class="text-xs text-gray-600 mb-2 font-bold">اختبار مكالمة صادرة (Twilio فقط)</p>
+        <div class="flex flex-wrap gap-2 items-end">
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs text-gray-500 mb-1">رقم العميل (E.164)</label>
+            <input form="wa-call-test-form" name="test_call_phone" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="+9665xxxxxxxx">
+          </div>
+          <button type="submit" form="wa-call-test-form" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm">اتصال تجريبي</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-sm hover:bg-blue-700 font-bold">💾 حفظ كل الإعدادات</button>
+    </div>
+  </form>
+
+  <!-- ==================== Tab 3: ردود مخصصة ==================== -->
+  <div id="tab-replies" class="tab-content bg-white rounded-xl p-6 shadow-sm mt-0" style="display:none">
+    <h2 class="font-bold text-lg mb-2">📝 الردود المخصصة</h2>
+    <p class="text-xs text-gray-400 mb-4">يدوية: {{ manual_count }} | متعلّمة: {{ learned_count }} — الردود المخصصة لها الأولوية القصوى في الشات</p>
+
+    <!-- إضافة رد جديد -->
+    <form method="POST" action="{{ url_for('admin_bot.add_reply', tenant_id=tenant.id) }}" class="bg-gray-50 rounded-lg p-4 mb-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div><label class="block text-xs text-gray-500 mb-1">كلمات مفتاحية (مفصولة بفاصلة)</label>
+        <input name="keywords" required class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="جاكوزي, حوض سباحة, مسبح خاص"></div>
+        <div><label class="block text-xs text-gray-500 mb-1">الرد</label>
+        <input name="reply_text" required class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="نعم! متوفر في الأجنحة الملكية فقط"></div>
+      </div>
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">+ إضافة</button>
+    </form>
+
+    <!-- قائمة الردود -->
+    {% if replies %}
+    <div class="space-y-2">
+      {% for r in replies %}
+      <div class="flex items-center gap-3 border rounded-lg p-3 {{ 'opacity-50' if not r.is_active }}">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs px-2 py-0.5 rounded-full {{ 'bg-blue-100 text-blue-700' if r.source == 'manual' else 'bg-purple-100 text-purple-700' }}">{{ 'يدوي' if r.source == 'manual' else '🧠 متعلّم' }}</span>
+            <span class="text-xs text-gray-400">استُخدم {{ r.usage_count }} مرة</span>
+          </div>
+          <div class="text-sm"><strong>🔑</strong> {{ r.keywords[:60] }}</div>
+          <div class="text-sm text-gray-500">💬 {{ r.reply_text[:80] }}{% if r.reply_text|length > 80 %}...{% endif %}</div>
+        </div>
+        <div class="flex gap-1">
+          <form method="POST" action="{{ url_for('admin_bot.toggle_reply', tenant_id=tenant.id, reply_id=r.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="text-xs px-2 py-1 rounded {{ 'bg-yellow-100 text-yellow-700' if r.is_active else 'bg-green-100 text-green-700' }}">{{ '⏸' if r.is_active else '▶' }}</button>
+          </form>
+          <form method="POST" action="{{ url_for('admin_bot.delete_reply', tenant_id=tenant.id, reply_id=r.id) }}" onsubmit="return confirm('حذف؟')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="text-xs px-2 py-1 rounded bg-red-100 text-red-700">🗑</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-400 py-8">لا توجد ردود مخصصة بعد</p>
+    {% endif %}
+  </div>
+
+</div></div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('bg-blue-600','text-white'); btn.classList.add('bg-gray-200','text-gray-600'); });
+  document.getElementById('tab-' + name).style.display = 'block';
+  event.target.classList.remove('bg-gray-200','text-gray-600');
+  event.target.classList.add('bg-blue-600','text-white');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const providerSelect = document.getElementById('ai_provider_select');
+  const modelSelect = document.getElementById('ai_model_select');
+  
+  if (providerSelect && modelSelect) {
+    const originalOptions = Array.from(modelSelect.options).map(opt => opt.cloneNode(true));
+    
+    function filterModels() {
+      const provider = providerSelect.value;
+      // Google's provider name in DB is 'google', but the dropdown might send 'google_gemini'.
+      // We map google_gemini to google for filtering matching data-provider.
+      const matchProvider = (provider === 'google_gemini') ? 'google' : provider;
+      const currentVal = modelSelect.value;
+      
+      modelSelect.innerHTML = '';
+      
+      let hasValidSelection = false;
+      
+      originalOptions.forEach(opt => {
+        const optProv = opt.getAttribute('data-provider');
+        if (!optProv || optProv === matchProvider) {
+          modelSelect.appendChild(opt.cloneNode(true));
+          if (opt.value === currentVal) hasValidSelection = true;
+        }
+      });
+      
+      if (hasValidSelection) {
+        modelSelect.value = currentVal;
+      } else {
+        modelSelect.value = '';
+      }
+    }
+    
+    providerSelect.addEventListener('change', filterModels);
+    filterModels();
+  }
+});
+</script>
+{% endblock %}

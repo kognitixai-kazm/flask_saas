@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}المحاسبة — {{ tenant.business_name }}{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8 px-4">
+<div class="max-w-2xl mx-auto">
+  <a href="{{ url_for('admin_integrations.list_all') }}" class="text-blue-600 text-sm mb-4 block">← رجوع</a>
+  <h1 class="text-2xl font-bold mb-6">🧾 النظام المحاسبي — {{ tenant.business_name }}</h1>
+
+  <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm">
+    <p class="font-bold text-blue-900 mb-1">رابط استقبال الفواتير في المنصة (POST + JSON)</p>
+    <code class="text-xs break-all block dir-ltr bg-white p-2 rounded border">{{ inbound_accounting_url }}</code>
+    <p class="text-xs text-blue-800 mt-2">أرسل من النظام المحاسبي جسم JSON يتضمن على الأقل: <code>tenant_id</code>، <code>customer_phone</code>، <code>invoice_url</code>، واختياري <code>invoice_number</code>، <code>amount</code>. إذا ضبطت «سر الاستقبال» أدناه، أضف الحقل <code>secret</code> بنفس القيمة في كل طلب.</p>
+  </div>
+
+  <form method="POST" class="bg-white rounded-xl p-6 shadow-sm space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><label class="block text-sm font-medium mb-1">المزوّد</label>
+    <select name="provider" class="w-full border rounded-lg px-4 py-2.5 text-sm">
+      <option value="qoyod" {{ 'selected' if config and config.provider == 'qoyod' }}>قيود (Qoyod)</option>
+      <option value="daftra" {{ 'selected' if config and config.provider == 'daftra' }}>دفترة (Daftra)</option>
+      <option value="xero" {{ 'selected' if config and config.provider == 'xero' }}>Xero</option>
+    </select></div>
+    <div><label class="block text-sm font-medium mb-1">API Key</label>
+    <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <div><label class="block text-sm font-medium mb-1">API Secret</label>
+    <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <div><label class="block text-sm font-medium mb-1">Webhook URL (اختياري — لربط المنصة بنظامك)</label>
+    <input name="webhook_url" value="{{ (config.extra_config or {}).get('webhook_url','') if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+    <div><label class="block text-sm font-medium mb-1">سر الاستقبال (اختياري)</label>
+    <input name="ingest_secret" type="password" value="{{ (config.extra_config or {}).get('ingest_secret','') if config else '' }}" dir="ltr" autocomplete="new-password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono" placeholder="يُرسل في JSON كحقل secret"></div>
+    <label class="flex items-center gap-2"><input type="checkbox" name="auto_send_invoice" {{ 'checked' if config and (config.extra_config or {}).get('auto_send_invoice') }}><span class="text-sm">إرسال الفواتير تلقائياً عبر واتساب</span></label>
+    <label class="flex items-center gap-2"><input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}><span class="text-sm font-bold">تفعيل</span></label>
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm">حفظ</button>
+  </form>
+</div></div>
+{% endblock %}

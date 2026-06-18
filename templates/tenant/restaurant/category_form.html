@@ -1,0 +1,23 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}{{ 'تعديل' if category else 'إضافة' }} تصنيف{% endblock %}
+{% block panel_content %}
+<h1 class="text-2xl font-bold mb-6">📂 {{ 'تعديل' if category else 'إضافة' }} تصنيف</h1>
+<form method="POST" class="bg-white rounded-xl p-6 shadow-sm space-y-4 max-w-lg">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div><label class="block text-sm font-medium mb-1">اسم التصنيف *</label>
+  <input name="name" value="{{ category.name if category else '' }}" required class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="مثال: مشروبات ساخنة"></div>
+  <div><label class="block text-sm font-medium mb-1">الوصف</label>
+  <input name="description" value="{{ category.description if category else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">أيقونة</label>
+    <input name="icon" value="{{ category.icon if category else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="☕"></div>
+    <div><label class="block text-sm font-medium mb-1">الترتيب</label>
+    <input type="number" name="sort_order" value="{{ category.sort_order if category else 0 }}" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+  </div>
+  <label class="flex items-center gap-2"><input type="checkbox" name="is_active" {{ 'checked' if not category or category.is_active }}><span class="text-sm">مفعّل</span></label>
+  <div class="flex gap-3 pt-2">
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm">حفظ</button>
+    <a href="{{ url_for('tenant_restaurant.categories') }}" class="bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm">إلغاء</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}المنيو{% endblock %}
+{% block panel_content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">📋 المنيو</h1>
+  <a href="{{ url_for('tenant_restaurant.menu_item_form') }}" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm">+ صنف جديد</a>
+</div>
+<!-- فلتر التصنيف -->
+<div class="flex gap-2 mb-4 flex-wrap">
+  <a href="{{ url_for('tenant_restaurant.menu_items') }}" class="px-3 py-1 rounded-full text-sm {{ 'bg-blue-600 text-white' if not request.args.get('category') else 'bg-gray-100 text-gray-600' }}">الكل</a>
+  {% for c in categories %}
+  <a href="?category={{ c.id }}" class="px-3 py-1 rounded-full text-sm {{ 'bg-blue-600 text-white' if request.args.get('category')==c.id|string else 'bg-gray-100 text-gray-600' }}">{{ c.icon }} {{ c.name }}</a>
+  {% endfor %}
+</div>
+{% if items %}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+<table class="w-full text-sm">
+<thead class="bg-gray-50 text-gray-500"><tr>
+  <th class="text-right py-3 px-4">الصنف</th><th class="text-right py-3 px-4">التصنيف</th>
+  <th class="text-right py-3 px-4">السعر</th><th class="text-right py-3 px-4">الحالة</th><th class="py-3 px-4"></th>
+</tr></thead>
+<tbody>
+{% for item in items %}
+<tr class="border-t hover:bg-gray-50">
+  <td class="py-3 px-4"><strong>{{ item.name }}</strong>{% if item.is_popular %} ⭐{% endif %}{% if item.is_spicy %} 🌶️{% endif %}<br><span class="text-xs text-gray-400">{{ item.description[:50] }}</span></td>
+  <td class="py-3 px-4">{{ item.category.icon }} {{ item.category.name }}</td>
+  <td class="py-3 px-4 font-bold">{% if item.discount_price %}<s class="text-gray-400">{{ item.price }}</s> {{ item.discount_price }}{% else %}{{ item.price }}{% endif %} ر.س</td>
+  <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-xs {{ 'bg-green-100 text-green-700' if item.is_available else 'bg-red-100 text-red-700' }}">{{ 'متوفر' if item.is_available else 'غير متوفر' }}</span></td>
+  <td class="py-3 px-4 flex gap-2">
+    <a href="{{ url_for('tenant_restaurant.menu_item_form', id=item.id) }}" class="text-blue-600 text-xs">تعديل</a>
+    <form method="POST" action="{{ url_for('tenant_restaurant.menu_item_delete', id=item.id) }}" onsubmit="return confirm('حذف؟')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-red-500 text-xs">حذف</button></form>
+  </td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}
+<div class="text-center py-16 text-gray-400"><div class="text-4xl mb-3">📋</div><p>لا توجد أصناف. أضف صنفك الأول!</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}إنشاء عقد يدوي{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+{% include 'tenant/_sidebar.html' ignore missing %}
+
+<main class="flex-1 p-6 md:p-8">
+<div class="max-w-4xl mx-auto">
+
+<a href="{{ url_for('tenant_contracts.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع للعقود</a>
+<h1 class="text-2xl font-bold mb-2">📝 إنشاء عقد جديد</h1>
+<p class="text-sm text-gray-500 mb-6">
+  قم بإدخال بيانات المستأجر لاصدار العقد يدوياً. (بياناتك كمؤجر سيتم جلبها تلقائياً من قالب العقد).
+</p>
+
+<form method="POST" class="space-y-6">
+  {{ form.hidden_tag() }}
+
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <h3 class="font-bold mb-4 text-gray-800 border-b pb-2">📋 إعدادات العقد الأساسية</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">اختر قالب العقد *</label>
+        <select name="template_id" required class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors">
+          <option value="">-- اختر قالب --</option>
+          {% for tpl in templates %}
+            <option value="{{ tpl.id }}" data-type="{{ tpl.contract_type }}" {% if request.args.get('template_id') == tpl.id|string %}selected{% endif %}>{{ tpl.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">اختر الفرع *</label>
+        <select name="branch_id" onchange="window.location.href='?branch_id=' + this.value + '&template_id=' + (document.querySelector('[name=template_id]').value || '');" required class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors">
+          <option value="">-- اختر الفرع أولاً --</option>
+          {% for branch in branches %}
+            <option value="{{ branch.id }}" {% if selected_branch_id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">اختر الوحدة (إن وجد)</label>
+        <select name="unit_id" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors" {% if not selected_branch_id %}disabled{% endif %}>
+          <option value="">-- بدون تحديد / وحدة غير مدرجة --</option>
+          {% for u in available_units %}
+            <option value="{{ u.id }}" data-price-daily="{{ u.daily_price or 0 }}" data-price-monthly="{{ u.monthly_price or 0 }}">{{ u.unit_number }} {% if u.title %}- {{ u.title }}{% endif %} ({{ u.type_label }})</option>
+          {% endfor %}
+        </select>
+        {% if not selected_branch_id %}
+        <p class="text-xs text-red-500 mt-1">الرجاء تحديد الفرع أولاً</p>
+        {% else %}
+        <p class="text-xs text-gray-400 mt-1">عرض الوحدات المتاحة فقط.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <h3 class="font-bold mb-4 text-gray-800 border-b pb-2">👤 بيانات الطرف الثاني (المستأجر)</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">اسم المستأجر *</label>
+        <input name="customer_name" required placeholder="الاسم الكامل" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">رقم الجوال *</label>
+        <input name="customer_phone" required placeholder="05xxxxxxxx" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">رقم الهوية / الإقامة</label>
+        <input name="id_number" placeholder="10xxxxxxxx" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">البريد الإلكتروني (اختياري)</label>
+        <input name="customer_email" type="email" placeholder="email@example.com" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium mb-1">العنوان الوطني</label>
+        <input name="address" placeholder="المدينة، الحي، الشارع" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <h3 class="font-bold mb-4 text-gray-800 border-b pb-2">📅 التواريخ والقيمة</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">تاريخ بداية العقد</label>
+        <input type="date" name="check_in_date" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">مدة الإيجار</label>
+        <input type="number" name="duration" placeholder="مثال: 1, 6, 12" class="w-full border rounded-lg px-3 py-2 text-sm">
+        <p class="text-xs text-gray-400 mt-1">بالشهر أو حسب قالب العقد</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">عدد الضيوف</label>
+        <input type="number" name="guests_count" placeholder="مثال: 2" class="w-full border rounded-lg px-3 py-2 text-sm">
+        <p class="text-xs text-gray-400 mt-1">اختياري</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">قيمة الإيجار (المبلغ) *</label>
+        <input type="number" step="0.01" name="payment_amount" required placeholder="0.00" class="w-full border rounded-lg px-3 py-2 text-sm font-bold text-green-700 bg-green-50">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">طريقة الدفع</label>
+        <select name="payment_method" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors">
+          <option value="cash">كاش (نقدي)</option>
+          <option value="bank_transfer">تحويل بنكي</option>
+          <option value="online">دفع إلكتروني (أونلاين)</option>
+          <option value="pos">شبكة (POS)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex gap-4 mt-6">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-sm font-bold shadow-md transition-all">
+      توليد العقد
+    </button>
+    <a href="{{ url_for('tenant_contracts.index') }}" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-8 py-3 rounded-lg text-sm font-bold transition-all">
+      إلغاء
+    </a>
+  </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const unitSelect = document.querySelector('[name=unit_id]');
+    const templateSelect = document.querySelector('[name=template_id]');
+    const amountInput = document.querySelector('[name=payment_amount]');
+
+    function updatePrice() {
+        if(unitSelect && unitSelect.selectedIndex > 0 && templateSelect && templateSelect.selectedIndex > 0) {
+            let uOpt = unitSelect.options[unitSelect.selectedIndex];
+            let tOpt = templateSelect.options[templateSelect.selectedIndex];
+            let tType = tOpt.getAttribute('data-type');
+            let price = 0;
+            if (tType === 'monthly_rental') {
+                price = uOpt.getAttribute('data-price-monthly');
+            } else {
+                price = uOpt.getAttribute('data-price-daily');
+            }
+            if (price && parseFloat(price) > 0) {
+                amountInput.value = price;
+            }
+        }
+    }
+
+    if(unitSelect) unitSelect.addEventListener('change', updatePrice);
+    if(templateSelect) templateSelect.addEventListener('change', updatePrice);
+});
+</script>
+
+</div>
+</main>
+</div>
+{% endblock %}

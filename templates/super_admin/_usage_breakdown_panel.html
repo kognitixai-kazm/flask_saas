@@ -1,0 +1,74 @@
+{# جدول استهلاك AI + واتساب لكل تاجر (يشاركه dashboard + صفحة التقرير)
+   المتغيرات: usage_breakdown, usage_days, anchor_id (اختياري), show_detail_link (bool)
+#}
+<section {% if anchor_id %}id="{{ anchor_id }}"{% endif %}
+         class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 ring-1 ring-gray-900/5">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div>
+            <h3 class="font-extrabold text-gray-900 flex items-center gap-2 text-lg">
+                📊 استهلاك التجار — ذكاء اصطناعي وواتساب
+            </h3>
+            <p class="text-xs text-gray-500 mt-1">
+                فترة: آخر <strong>{{ usage_days }}</strong> يوماً · كل صف هو تاجر (حسب عمليات تم تسعيرها وتسجيلها في نظام المنصّة).
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            {% if show_detail_link %}
+            <a href="{{ url_for('super_admin.tenant_usage_report') }}"
+               class="text-sm bg-[#0b1f3a] hover:bg-[#13325c] text-white font-bold rounded-xl px-4 py-2">
+                صفحة التقرير الكامل ↗
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if usage_breakdown %}
+    <div class="overflow-x-auto rounded-xl border border-gray-100">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-gray-100">
+                <tr class="text-gray-700 text-xs uppercase tracking-wide">
+                    <th class="text-right py-3 px-3">التاجر</th>
+                    <th class="text-right py-3 px-2">محادثات (مرجعّة)</th>
+                    <th class="text-right py-3 px-2">رسائل AI</th>
+                    <th class="text-right py-3 px-2">Tokens</th>
+                    <th class="text-right py-3 px-2">رسائل واتساب</th>
+                    <th class="text-right py-3 px-2">تكلفة AI</th>
+                    <th class="text-right py-3 px-2">تكلفة واتساب</th>
+                    <th class="text-right py-3 px-2">الإجمالي</th>
+                    <th class="text-right py-3 px-2">متوسط / محادثة</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for u in usage_breakdown %}
+                <tr class="border-b border-gray-50 hover:bg-blue-50/40">
+                    <td class="py-2 px-3">
+                        <a href="{{ url_for('super_admin.tenant_detail', id=u.tenant_id) }}"
+                           class="text-blue-700 hover:underline font-semibold">{{ u.tenant_name }}</a>
+                    </td>
+                    <td class="py-2 px-2 text-gray-700">{{ u.conv_count }}</td>
+                    <td class="py-2 px-2"><span class="bg-purple-100 text-purple-800 rounded-lg px-2 py-0.5 text-xs font-bold">{{ u.ai_count }}</span></td>
+                    <td class="py-2 px-2 text-gray-500 tabular-nums" dir="ltr">{{ '{:,}'.format(u.ai_tokens) }}</td>
+                    <td class="py-2 px-2"><span class="bg-emerald-100 text-emerald-800 rounded-lg px-2 py-0.5 text-xs font-bold">{{ u.wa_count }}</span></td>
+                    <td class="py-2 px-2 text-gray-800 tabular-nums" dir="ltr">{{ '%.3f'|format(u.ai_cost) }}</td>
+                    <td class="py-2 px-2 text-gray-800 tabular-nums" dir="ltr">{{ '%.3f'|format(u.wa_cost) }}</td>
+                    <td class="py-2 px-2 font-extrabold text-gray-900 tabular-nums" dir="ltr">{{ '%.3f'|format(u.total_cost) }}</td>
+                    <td class="py-2 px-2 text-gray-500 tabular-nums text-xs" dir="ltr">{{ '%.3f'|format(u.avg_per_conv) }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-[11px] text-gray-400 mt-3">
+        «محادثات»: عدد محادثات مرتبطة بسجلّات الاستخدام في الفترة (قد تكون أقل من إجمالي محادثات الشات لو لم يُسجَّل كل حدث).
+    </p>
+    {% else %}
+    <div class="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 p-6 text-center text-sm text-gray-600">
+        <p class="font-semibold text-gray-800 mb-2">لا يوجد أي سجلّ استهلاك في آخر {{ usage_days }} يوماً</p>
+        <p class="text-xs text-gray-500 leading-relaxed max-w-xl mx-auto">
+            هذا الجدول يعتمد على جدول <code class="bg-white px-1 rounded border text-[11px]" dir="ltr">message_usage</code>:
+            تُضاف فيه الأسطر عند تفاعلات تُحمَّل بتسعير (مثل <strong>رسالة AI</strong>، أو إرسال <strong>رسالة واتساب</strong> بعد التفعيل الأخير).
+            جرّب محادثة شات أو إرسال اختبار واتساب من لوحة التاجر، ثم أعد تحميل هذه الصفحة.
+        </p>
+    </div>
+    {% endif %}
+</section>

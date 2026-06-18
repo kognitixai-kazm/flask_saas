@@ -1,0 +1,106 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}{{ 'تعديل' if branch else 'إضافة' }} فرع{% endblock %}
+{% block panel_content %}
+<h1 class="text-2xl font-bold mb-6">🏢 {{ 'تعديل' if branch else 'إضافة' }} فرع</h1>
+<form method="POST" class="bg-white rounded-xl p-6 shadow-sm space-y-4 max-w-3xl">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">اسم الفرع *</label>
+    <input name="name" value="{{ branch.name if branch else '' }}" required class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+    <div><label class="block text-sm font-medium mb-1">المدينة</label>
+    <input name="city" value="{{ branch.city if branch else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+  </div>
+
+  <div><label class="block text-sm font-medium mb-1">العنوان الكامل</label>
+  <textarea name="address" rows="2" class="w-full border rounded-lg px-4 py-2.5 text-sm">{{ branch.address if branch else '' }}</textarea></div>
+
+  <div><label class="block text-sm font-medium mb-1">رابط الخريطة (Google Maps)</label>
+  <input name="map_link" value="{{ branch.map_link if branch else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">رقم الهاتف</label>
+    <input name="phone" value="{{ branch.phone if branch else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+    <div><label class="block text-sm font-medium mb-1">واتساب</label>
+    <input name="whatsapp" value="{{ branch.whatsapp if branch else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">البريد الإلكتروني</label>
+    <input name="email" value="{{ branch.email if branch else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+    <div><label class="block text-sm font-medium mb-1">بريد الشكاوى</label>
+    <input name="complaints_email" value="{{ branch.complaints_email if branch else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
+  </div>
+
+  <div><label class="flex items-center gap-2"><input type="checkbox" name="is_main" class="form-checkbox" {{ 'checked' if branch and branch.is_main else '' }}><span class="text-sm">فرع رئيسي</span></label></div>
+
+  <h3 class="font-bold text-sm pt-4 border-t">⏰ ساعات العمل</h3>
+  <p class="text-xs text-gray-500 mb-4 leading-relaxed">
+    <strong>من السبت إلى الخميس</strong> بنفس الفترات (فترة إلزامية، وفترة ثانية اختيارية).
+    <strong>الجمعة</strong> منفصلة — فترة واحدة فقط (اترك الحقول فارغة إن كان مغلقاً).
+    القيم تُحفظ بنفس شكل النظام السابق (<code dir="ltr" class="bg-gray-100 px-1 rounded text-xs">HH:MM-HH:MM</code> لكل فترة) عبر حقول الساعة أدناه.
+  </p>
+
+  <div class="rounded-xl border border-gray-200 p-4 space-y-4 bg-gray-50/50">
+    <div class="font-bold text-sm text-gray-800">📅 أسبوع العمل (السبت – الخميس)</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+      <div>
+        <span class="block text-xs text-gray-500 mb-1">الفترة الأولى — يفتح</span>
+        <input type="time" name="week_s1_open" value="{{ hours_form.week_s1_open }}" class="w-full border rounded-lg px-3 py-2 text-sm" step="60">
+      </div>
+      <div>
+        <span class="block text-xs text-gray-500 mb-1">الفترة الأولى — يغلق</span>
+        <input type="time" name="week_s1_close" value="{{ hours_form.week_s1_close }}" class="w-full border rounded-lg px-3 py-2 text-sm" step="60">
+      </div>
+    </div>
+    <label class="flex items-center gap-2 text-sm cursor-pointer">
+      <input type="checkbox" name="week_shift2" id="week_shift2" value="1" class="rounded border-gray-300" {{ 'checked' if hours_form.week_shift2 else '' }}>
+      <span>تفعيل فترة ثانية (مثلاً استراحة ثم عودة للمساء)</span>
+    </label>
+    <div id="week-period2" class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end {{ '' if hours_form.week_shift2 else 'hidden' }}">
+      <div>
+        <span class="block text-xs text-gray-500 mb-1">الفترة الثانية — يفتح</span>
+        <input type="time" name="week_s2_open" value="{{ hours_form.week_s2_open }}" class="w-full border rounded-lg px-3 py-2 text-sm" step="60">
+      </div>
+      <div>
+        <span class="block text-xs text-gray-500 mb-1">الفترة الثانية — يغلق</span>
+        <input type="time" name="week_s2_close" value="{{ hours_form.week_s2_close }}" class="w-full border rounded-lg px-3 py-2 text-sm" step="60">
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-xl border border-amber-200 p-4 space-y-4 bg-amber-50/40">
+    <div class="font-bold text-sm text-amber-900">🕌 الجمعة (منفصل)</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+      <div>
+        <span class="block text-xs text-gray-600 mb-1">يفتح</span>
+        <input type="time" name="fri_s1_open" value="{{ hours_form.fri_s1_open }}" class="w-full border rounded-lg px-3 py-2 text-sm" step="60">
+      </div>
+      <div>
+        <span class="block text-xs text-gray-600 mb-1">يغلق</span>
+        <input type="time" name="fri_s1_close" value="{{ hours_form.fri_s1_close }}" class="w-full border rounded-lg px-3 py-2 text-sm" step="60">
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium mb-1">ملاحظات على الدوام (اختياري)</label>
+    <textarea name="hours_notes" rows="2" maxlength="2000" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="مثال: إقفال مبكر في رمضان، أو مواعيد مختلفة في العيد…">{{ hours_form.hours_notes }}</textarea>
+  </div>
+
+  <div class="flex gap-3 pt-4">
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-blue-700">حفظ</button>
+    <a href="{{ cancel_url }}" class="bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm hover:bg-gray-200">إلغاء</a>
+  </div>
+</form>
+<script>
+(function(){
+  var cb = document.getElementById('week_shift2');
+  var p2 = document.getElementById('week-period2');
+  if (!cb || !p2) return;
+  function sync(){ p2.classList.toggle('hidden', !cb.checked); }
+  cb.addEventListener('change', sync);
+  sync();
+})();
+</script>
+{% endblock %}

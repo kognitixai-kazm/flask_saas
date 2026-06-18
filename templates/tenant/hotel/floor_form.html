@@ -1,0 +1,32 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}{{ 'تعديل' if floor else 'إضافة' }} طابق{% endblock %}
+{% block panel_content %}
+<h1 class="text-2xl font-bold mb-6">🏗️ {{ 'تعديل' if floor else 'إضافة' }} طابق</h1>
+<form method="POST" class="bg-white rounded-xl p-6 shadow-sm space-y-4 max-w-lg">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div><label class="block text-sm font-medium mb-1">الفرع *</label>
+  <select name="branch_id" required class="w-full border rounded-lg px-4 py-2.5 text-sm">
+    <option value="">اختر الفرع...</option>
+    {% for b in branches %}
+    <option value="{{ b.id }}" {{ 'selected' if floor and floor.branch_id == b.id }}>{{ b.name }}</option>
+    {% endfor %}
+  </select></div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">رقم الطابق *</label>
+    <input name="number" value="{{ floor.number if floor else '' }}" required class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="مثال: 1, 2, G, B1"></div>
+
+    <div><label class="block text-sm font-medium mb-1">اسم الطابق (اختياري)</label>
+    <input name="name" value="{{ floor.name if floor else '' }}" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="مثال: الطابق الأرضي"></div>
+  </div>
+
+  <div><label class="block text-sm font-medium mb-1">ملاحظات</label>
+  <textarea name="notes" rows="2" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="ملاحظات إضافية...">{{ floor.notes if floor else '' }}</textarea></div>
+
+  <div class="flex gap-3 pt-4">
+    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-blue-700">حفظ</button>
+    <a href="{{ url_for('tenant_hotel.floors') }}" class="bg-gray-100 text-gray-600 px-6 py-2.5 rounded-lg text-sm hover:bg-gray-200">إلغاء</a>
+  </div>
+</form>
+{% endblock %}

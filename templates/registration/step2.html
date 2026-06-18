@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}اختيار النشاط — KOGNITIX{% endblock %}
+{% block body %}
+<div class="min-h-screen flex items-center justify-center gradient-soft py-12 px-4">
+    <div class="bg-white rounded-3xl card-shadow p-7 md:p-9 w-full max-w-xl border border-blue-100/40">
+
+        <div class="flex justify-center mb-6">
+            {% with size='lg', tagline=True %}{% include "_brand.html" %}{% endwith %}
+        </div>
+
+        <div class="flex items-center justify-center gap-2 mb-6">
+            <span class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm">✓</span>
+            <span class="w-12 h-1 bg-emerald-500 rounded"></span>
+            <span class="w-8 h-8 rounded-full gradient-brand text-white flex items-center justify-center text-sm font-bold">2</span>
+            <span class="w-12 h-1 bg-gray-200 rounded"></span>
+            <span class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-sm">✓</span>
+        </div>
+
+        <h1 class="text-2xl font-extrabold text-center text-blue-900 mb-1">اختر نوع نشاطك</h1>
+        <p class="text-gray-500 text-center text-sm mb-7">الخطوة 2 من 2 — يساعدنا في تخصيص المساعد الذكي لنشاطك</p>
+
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="grid gap-3">
+                {% for act in activities %}
+                <label class="activity-card flex items-center gap-4 border-2 border-gray-200 rounded-2xl p-4 md:p-5 cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition"
+                       data-code="{{ act.code }}">
+                    <input type="radio" name="activity_id" value="{{ act.id }}" class="hidden" required>
+                    <span class="text-3xl">{{ act.icon }}</span>
+                    <div class="flex-1">
+                        <div class="font-extrabold text-blue-900">{{ act.name_ar }}</div>
+                        <div class="text-gray-500 text-xs leading-relaxed">{{ act.description }}</div>
+                    </div>
+                    <span class="dot w-5 h-5 rounded-full border-2 border-gray-300 flex-shrink-0"></span>
+                </label>
+                {% endfor %}
+            </div>
+
+            {# عند اختيار «فندق» يظهر هذا القسم لتحديد نمط الإيجار #}
+            <div id="hotel-mode-section" class="hidden border-2 border-purple-200 rounded-2xl p-4 bg-purple-50/40">
+                <div class="text-sm font-bold text-purple-900 mb-2">🎯 نمط الإيجار</div>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <label class="hmode-card cursor-pointer border-2 rounded-xl p-3 bg-white border-blue-300 hover:border-blue-500 transition">
+                        <input type="radio" name="hotel_mode" value="daily" class="hidden" checked>
+                        <div class="font-bold text-blue-800 text-sm">🏨 يومي (يشمل الشهري)</div>
+                        <div class="text-xs text-gray-500 mt-1">حجوزات يومية + إمكانية إيجار شهري للإقامات الطويلة.</div>
+                    </label>
+                    <label class="hmode-card cursor-pointer border-2 rounded-xl p-3 bg-white border-gray-200 hover:border-purple-400 transition">
+                        <input type="radio" name="hotel_mode" value="monthly" class="hidden">
+                        <div class="font-bold text-purple-800 text-sm">📅 شهري فقط</div>
+                        <div class="text-xs text-gray-500 mt-1">شقق سكنية بعقود رسمية. لا يدعم حجوزات الليلة الواحدة.</div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                <a href="{{ url_for('registration.step1') }}"
+                   class="flex-1 text-center py-3 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition font-bold">← رجوع</a>
+                <button type="submit" class="flex-1 gradient-brand text-white py-3 rounded-xl font-extrabold hover:opacity-95 transition shadow-md">
+                    إرسال الطلب ←
+                </button>
+            </div>
+        </form>
+
+        <p class="text-center text-xs text-gray-500 mt-6">
+            بإرسال الطلب أنت موافق على <a class="text-blue-700 hover:underline" href="{{ url_for('public.terms') }}">الشروط</a>
+            و<a class="text-blue-700 hover:underline" href="{{ url_for('public.privacy') }}">الخصوصية</a>.
+        </p>
+    </div>
+</div>
+
+<script>
+const hotelSection = document.getElementById('hotel-mode-section');
+document.querySelectorAll('.activity-card input[type=radio]').forEach(r => {
+    r.addEventListener('change', () => {
+        document.querySelectorAll('.activity-card').forEach(l => {
+            l.classList.remove('border-blue-600','bg-blue-50');
+            l.querySelector('.dot').classList.remove('border-blue-600','bg-blue-600');
+        });
+        const card = r.closest('.activity-card');
+        card.classList.add('border-blue-600','bg-blue-50');
+        card.querySelector('.dot').classList.add('border-blue-600','bg-blue-600');
+        // إظهار/إخفاء قسم نمط الفندق
+        if (hotelSection) {
+            const code = (card.dataset.code || '').toLowerCase();
+            if (code === 'hotel') {
+                hotelSection.classList.remove('hidden');
+            } else {
+                hotelSection.classList.add('hidden');
+            }
+        }
+    });
+});
+
+// تظليل بطاقة نمط الفندق المختار
+document.querySelectorAll('.hmode-card input[type=radio]').forEach(r => {
+    r.addEventListener('change', () => {
+        document.querySelectorAll('.hmode-card').forEach(l => {
+            l.classList.remove('border-blue-500','border-purple-500','bg-blue-50','bg-purple-50');
+            l.classList.add('border-gray-200');
+        });
+        const card = r.closest('.hmode-card');
+        if (r.value === 'monthly') {
+            card.classList.remove('border-gray-200');
+            card.classList.add('border-purple-500','bg-purple-50');
+        } else {
+            card.classList.remove('border-gray-200');
+            card.classList.add('border-blue-500','bg-blue-50');
+        }
+    });
+});
+</script>
+{% endblock %}

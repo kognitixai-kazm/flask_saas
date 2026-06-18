@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="{{ tenant.primary_color or '#1f54d4' }}">
+<title>{{ tenant.business_name }}</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --brand: {{ tenant.primary_color or '#1f54d4' }};
+    --brand-soft: color-mix(in srgb, var(--brand) 12%, white);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+}
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Tajawal','Segoe UI',Tahoma,sans-serif; -webkit-tap-highlight-color: transparent; }
+html, body { height:100%; overflow:hidden; }
+body { background:#eef2f7; display:flex; flex-direction:column; height:100vh; height:100dvh; color:#1f2937; }
+
+/* ===== Header ===== */
+.header {
+    background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 75%, #16d1e2) 100%);
+    color:#fff; padding: calc(12px + var(--safe-top)) 14px 12px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:0 4px 12px rgba(11,35,96,.18); z-index:10; flex-shrink:0;
+}
+.header .avatar {
+    width:44px; height:44px; border-radius:14px; background:rgba(255,255,255,0.18);
+    display:flex; align-items:center; justify-content:center; font-size:22px;
+    overflow:hidden; flex-shrink:0; border:1px solid rgba(255,255,255,0.25);
+}
+.header .avatar img { width:100%; height:100%; object-fit:cover; border-radius:13px; }
+.header .info { min-width:0; flex:1; }
+.header .name { font-size:16px; font-weight:800; letter-spacing:-0.01em; }
+.header .status { font-size:11px; opacity:0.9; display:flex; align-items:center; gap:6px; }
+.header .status::before { content:''; width:7px; height:7px; border-radius:50%; background:#86efac; box-shadow:0 0 8px #86efac; }
+.header .powered {
+    font-size:10px; opacity:0.88; background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.22); padding:4px 9px; border-radius:999px;
+    display:flex; align-items:center; gap:6px; flex-shrink:0;
+}
+.header .powered img { width:14px; height:14px; border-radius:4px; }
+
+/* ===== Messages ===== */
+.messages {
+    flex:1; overflow-y:auto; padding:16px 12px 8px; display:flex;
+    flex-direction:column; gap:10px;
+    -webkit-overflow-scrolling:touch;
+    background-image:
+        radial-gradient(circle at 20% 0%, rgba(31,84,212,0.04), transparent 40%),
+        radial-gradient(circle at 80% 100%, rgba(22,209,226,0.05), transparent 40%);
+}
+.msg-row { display:flex; align-items:flex-end; gap:8px; max-width:100%; }
+.msg-row.bot { justify-content:flex-start; }
+.msg-row.user { justify-content:flex-end; }
+
+.msg {
+    max-width: 82%;
+    padding:11px 14px; border-radius:18px;
+    font-size:14.5px; line-height:1.75; white-space:pre-wrap; word-wrap:break-word;
+    animation: fadeUp .22s ease;
+    box-shadow: 0 1px 1px rgba(11,35,96,0.04);
+}
+.msg-row.bot .msg {
+    background:#fff; border:1px solid #e3e8ef;
+    border-top-right-radius:6px; color:#1f2937;
+}
+.msg-row.user .msg {
+    background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 80%, #0a1f4d) 100%);
+    color:#fff; border-top-left-radius:6px;
+}
+.msg .time { font-size:10px; opacity:0.55; margin-top:4px; display:block; }
+
+.bot-cluster { max-width:82%; display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
+.msg-images { display:flex; flex-wrap:wrap; gap:8px; }
+.msg-images a { display:block; line-height:0; }
+.msg-images img {
+    max-width: min(220px, 80vw); max-height: 220px;
+    object-fit:cover; border-radius:14px;
+    border:1px solid #e5e7eb; background:#f9fafb;
+}
+
+/* ===== Typing ===== */
+.typing-row { display:none; align-items:center; gap:8px; padding: 0 14px 6px; flex-shrink:0; }
+.typing-row.show { display:flex; }
+.typing-dots { display:flex; gap:5px; padding:11px 16px; background:#fff; border-radius:18px; border:1px solid #e3e8ef; border-top-right-radius:6px; }
+.typing-dots span { width:7px; height:7px; background:var(--brand); opacity:.6; border-radius:50%; animation:dotPulse 1.3s infinite; }
+.typing-dots span:nth-child(2) { animation-delay:.2s; }
+.typing-dots span:nth-child(3) { animation-delay:.4s; }
+
+/* ===== Input ===== */
+.input-bar {
+    padding:10px 10px calc(10px + var(--safe-bottom));
+    background:#fff; border-top:1px solid #e3e8ef;
+    display:flex; gap:8px; align-items:center; flex-shrink:0;
+    box-shadow: 0 -2px 10px rgba(11,35,96,0.04);
+}
+.input-bar input {
+    flex:1; border:1.5px solid #e3e8ef; border-radius:24px; padding:11px 18px;
+    font-size:15px; outline:none; transition:.2s; min-width: 0;
+    background:#f7f9fc;
+}
+.input-bar input:focus { border-color:var(--brand); background:#fff; box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 15%, transparent); }
+.input-bar button {
+    width:46px; height:46px;
+    background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 70%, #16d1e2) 100%);
+    color:#fff; border:none;
+    border-radius:50%; cursor:pointer; transition:.15s;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--brand) 60%, transparent);
+}
+.input-bar button:active { transform:scale(.94); }
+.input-bar button:disabled { opacity:.4; box-shadow:none; }
+.input-bar button svg { width:20px; height:20px; }
+
+/* ===== Welcome ===== */
+.welcome { text-align:center; padding:36px 20px 24px; color:#475569; }
+.welcome .logo {
+    width:64px; height:64px; margin:0 auto 14px;
+    border-radius:18px; background:#fff; display:grid; place-items:center;
+    box-shadow:0 8px 24px -8px rgba(31,84,212,0.25);
+    border:1px solid #e3e8ef; overflow:hidden;
+}
+.welcome .logo img { width:100%; height:100%; object-fit:contain; padding:6px; }
+.welcome .name { font-size:18px; font-weight:800; color:#0b1f3a; margin-bottom:6px; }
+.welcome .sub { font-size:13.5px; line-height:1.7; max-width: 280px; margin: 0 auto; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+@keyframes dotPulse { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+/* Mobile */
+@media (max-width:480px) {
+    .msg { max-width:88%; font-size:14.5px; }
+    .header { padding-top: calc(10px + var(--safe-top)); padding-bottom:10px; }
+    .header .avatar { width:42px; height:42px; }
+    .header .name { font-size:15.5px; }
+    .input-bar { padding:8px 8px calc(8px + var(--safe-bottom)); }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="avatar">
+        {% if tenant.logo_path %}
+            <img src="{{ tenant.logo_path }}" alt="">
+        {% else %}
+            {{ tenant.activity.icon if tenant.activity else '🤖' }}
+        {% endif %}
+    </div>
+    <div class="info">
+        <div class="name">{{ tenant.business_name }}</div>
+        <div class="status">متصل · يرد بالذكاء الاصطناعي</div>
+    </div>
+    <button id="menuBtn" type="button" aria-label="القائمة"
+            style="background:rgba(255,255,255,.12); color:#fff; border:0; width:38px; height:38px;
+                   border-radius:12px; cursor:pointer; font-size:20px; line-height:1;">⋮</button>
+    <div class="powered" title="مدعوم من KOGNITIX">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
+        KOGNITIX
+    </div>
+</div>
+
+<!-- قائمة الإجراءات -->
+<div id="menuOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:50;"></div>
+<div id="menuPanel" style="display:none; position:fixed; top:60px; left:14px; z-index:51;
+        background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.2);
+        min-width:220px; padding:8px; font-size:14px;">
+    <button data-act="new"   class="menu-item">🆕 محادثة جديدة</button>
+    <button data-act="prev"  class="menu-item">📜 المحادثات السابقة</button>
+    <button data-act="logout" class="menu-item">🚪 تسجيل الخروج</button>
+    <button data-act="del-conv" class="menu-item" style="color:#b91c1c;">🗑️ حذف هذه المحادثة</button>
+    <button data-act="del-all"  class="menu-item" style="color:#b91c1c;">⚠️ حذف بياناتي كلياً</button>
+</div>
+<style>
+.menu-item { display:block; width:100%; text-align:right; padding:10px 12px; border:0; background:transparent;
+    border-radius:10px; cursor:pointer; font-size:13.5px; }
+.menu-item:hover { background:#f3f4f6; }
+</style>
+
+<!-- Messages -->
+<div class="messages" id="messages">
+    <div class="welcome">
+        <div class="logo">
+            {% if tenant.logo_path %}
+                <img src="{{ tenant.logo_path }}" alt="">
+            {% else %}
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
+            {% endif %}
+        </div>
+        <div class="name">أهلاً بك {{ visitor.name }} 👋</div>
+        <div class="sub">كيف نقدر نساعدك اليوم في {{ tenant.business_name }}؟</div>
+    </div>
+</div>
+
+<!-- Typing -->
+<div class="typing-row" id="typing">
+    <div class="typing-dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- Input -->
+<div class="input-bar">
+    <input type="text" id="input" placeholder="اكتب رسالتك هنا..." autocomplete="off" autofocus>
+    <button id="sendBtn" onclick="send()" aria-label="إرسال">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+</div>
+
+<script>
+const SLUG='{{ tenant.slug }}';
+let convId=null;
+const msgsEl=document.getElementById('messages');
+const inputEl=document.getElementById('input');
+const typingEl=document.getElementById('typing');
+const sendBtn=document.getElementById('sendBtn');
+let sending=false;
+
+inputEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+
+function addMsg(content, type) {
+    const row = document.createElement('div');
+    row.className = `msg-row ${type}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'msg';
+
+    if (type === 'bot') {
+        bubble.textContent = '';
+        row.appendChild(bubble);
+        msgsEl.appendChild(row);
+        typeText(bubble, content);
+    } else {
+        bubble.textContent = content;
+        row.appendChild(bubble);
+        msgsEl.appendChild(row);
+    }
+    scrollBottom();
+}
+
+function addBotReply(text, images) {
+    const row = document.createElement('div');
+    row.className = 'msg-row bot';
+    const cluster = document.createElement('div');
+    cluster.className = 'bot-cluster';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg';
+    cluster.appendChild(bubble);
+    row.appendChild(cluster);
+    msgsEl.appendChild(row);
+
+    const showImages = () => {
+        if (!images || !images.length) return;
+        const wrap = document.createElement('div');
+        wrap.className = 'msg-images';
+        images.forEach((url) => {
+            const a = document.createElement('a');
+            a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+            const img = document.createElement('img');
+            img.src = url; img.loading = 'lazy'; img.alt = '';
+            img.onerror = function () { this.style.display = 'none'; };
+            a.appendChild(img); wrap.appendChild(a);
+        });
+        cluster.appendChild(wrap);
+        scrollBottom();
+    };
+
+    bubble.textContent = '';
+    typeText(bubble, text || '', () => { showImages(); scrollBottom(); });
+    scrollBottom();
+}
+
+function typeText(el, text, onDone) {
+    let i = 0;
+    const speed = 14;
+    function type() {
+        if (i < text.length) {
+            el.textContent += text.charAt(i);
+            i++;
+            scrollBottom();
+            setTimeout(type, speed);
+        } else if (onDone) {
+            onDone();
+        }
+    }
+    type();
+}
+
+function scrollBottom() {
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+async function send() {
+    const text = inputEl.value.trim();
+    if (!text || sending) return;
+    sending = true;
+    addMsg(text, 'user');
+    inputEl.value = '';
+    sendBtn.disabled = true;
+    typingEl.classList.add('show');
+    scrollBottom();
+
+    try {
+        const resp = await fetch(`/c/${SLUG}/message`, {
+            method:'POST', credentials:'include',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({message:text, conversation_id:convId}),
+        });
+        const data = await resp.json();
+        typingEl.classList.remove('show');
+        if (data.success) {
+            convId = data.conversation_id;
+            addBotReply(data.reply.content, data.reply.images || []);
+            // فقاعات إضافية (مثل رسالة منفصلة بعد الترحيب)
+            const extras = data.extra_replies || [];
+            if (extras.length) {
+                let delay = 600;
+                extras.forEach((er) => {
+                    setTimeout(() => {
+                        typingEl.classList.add('show');
+                        scrollBottom();
+                        setTimeout(() => {
+                            typingEl.classList.remove('show');
+                            addBotReply(er.content || '', er.images || []);
+                        }, 500);
+                    }, delay);
+                    delay += 1500;
+                });
+            }
+        } else {
+            addMsg(data.error || 'تعذّر الاتصال — حاول لحظة بعد قليل.', 'bot');
+        }
+    } catch(e) {
+        typingEl.classList.remove('show');
+        addMsg('انقطع الاتصال للحظة — جرّب مرة ثانية.', 'bot');
+    } finally {
+        sending = false;
+        sendBtn.disabled = false;
+        inputEl.focus();
+    }
+}
+
+(async function(){
+    try {
+        const resp = await fetch(`/c/${SLUG}/history`, { credentials:'include' });
+        const data = await resp.json();
+        if (data.messages && data.messages.length) {
+            convId = data.conversation_id;
+            const w = document.querySelector('.welcome'); if (w) w.style.display = 'none';
+            data.messages.forEach(m => {
+                const row = document.createElement('div');
+                row.className = `msg-row ${m.sender_type === 'visitor' ? 'user' : 'bot'}`;
+                if (m.sender_type === 'visitor') {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'msg';
+                    bubble.textContent = m.content;
+                    row.appendChild(bubble);
+                } else {
+                    const cluster = document.createElement('div');
+                    cluster.className = 'bot-cluster';
+                    const bubble = document.createElement('div');
+                    bubble.className = 'msg';
+                    bubble.textContent = m.content;
+                    cluster.appendChild(bubble);
+                    if (m.images && m.images.length) {
+                        const wrap = document.createElement('div');
+                        wrap.className = 'msg-images';
+                        m.images.forEach((url) => {
+                            const a = document.createElement('a');
+                            a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+                            const img = document.createElement('img');
+                            img.src = url; img.loading = 'lazy'; img.alt = '';
+                            img.onerror = function () { this.style.display = 'none'; };
+                            a.appendChild(img); wrap.appendChild(a);
+                        });
+                        cluster.appendChild(wrap);
+                    }
+                    row.appendChild(cluster);
+                }
+                msgsEl.appendChild(row);
+            });
+            scrollBottom();
+        }
+    } catch(e) {}
+})();
+
+// ===== قائمة الإجراءات (Logout / حذف / محادثة جديدة) =====
+(function () {
+    const btn = document.getElementById('menuBtn');
+    const overlay = document.getElementById('menuOverlay');
+    const panel = document.getElementById('menuPanel');
+    if (!btn) return;
+
+    function openMenu(){ overlay.style.display='block'; panel.style.display='block'; }
+    function closeMenu(){ overlay.style.display='none'; panel.style.display='none'; }
+    btn.addEventListener('click', openMenu);
+    overlay.addEventListener('click', closeMenu);
+
+    async function call(url, body){
+        try {
+            const r = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: body ? JSON.stringify(body) : null,
+            });
+            return await r.json();
+        } catch (e) { return {success:false, error:'تعذّر الاتصال'}; }
+    }
+
+    panel.querySelectorAll('button[data-act]').forEach(b => {
+        b.addEventListener('click', async () => {
+            const act = b.dataset.act;
+            closeMenu();
+
+            if (act === 'logout') {
+                const r = await call(`/c/${SLUG}/logout`);
+                if (r.redirect) location.href = r.redirect;
+                return;
+            }
+            if (act === 'new') {
+                const r = await call(`/c/${SLUG}/conversations/new`);
+                if (r.success) {
+                    convId = r.conversation_id;
+                    msgsEl.innerHTML = '';
+                    addBotReply('تمام، نبدأ من جديد. كيف نقدر نخدمك؟', []);
+                }
+                return;
+            }
+            if (act === 'prev') {
+                const r = await fetch(`/c/${SLUG}/history?all=1`).then(x=>x.json()).catch(()=>({}));
+                const list = (r && r.conversations) || [];
+                if (!list.length) { alert('لا توجد محادثات سابقة.'); return; }
+                const opts = list.map((c, i) =>
+                    `${i+1}) ${(c.last_message||'(فارغة)').slice(0,80)} — ${c.count} رسالة`
+                ).join('\n');
+                const pick = prompt('اختر رقم المحادثة:\n\n' + opts);
+                const n = parseInt(pick, 10);
+                if (!n || n < 1 || n > list.length) return;
+                const chosen = list[n-1];
+                const data = await fetch(`/c/${SLUG}/history?conversation_id=${chosen.id}`).then(x=>x.json());
+                msgsEl.innerHTML = '';
+                convId = data.conversation_id;
+                (data.messages||[]).forEach(m => {
+                    if (m.sender_type === 'visitor') addMsg(m.content, 'me');
+                    else addBotReply(m.content, (m.extra_data && m.extra_data.images) || []);
+                });
+                return;
+            }
+            if (act === 'del-conv') {
+                if (!convId) { alert('لا توجد محادثة لحذفها.'); return; }
+                if (!confirm('متأكد من حذف هذه المحادثة؟ لا يمكن التراجع.')) return;
+                const r = await call(`/c/${SLUG}/conversations/${convId}/delete`);
+                if (r.success) { convId = null; msgsEl.innerHTML=''; addBotReply('تم حذف المحادثة. ابدأ بكتابة رسالة جديدة.', []); }
+                else alert(r.error || 'تعذّر الحذف');
+                return;
+            }
+            if (act === 'del-all') {
+                if (!confirm('سيتم حذف بياناتك ومحادثاتك كاملة من هذه المنصة. متأكد؟')) return;
+                if (!confirm('تأكيد أخير: لا يمكن التراجع عن هذه العملية.')) return;
+                const r = await call(`/c/${SLUG}/me/delete`);
+                if (r.redirect) location.href = r.redirect;
+                else alert(r.error || 'تعذّر الحذف');
+                return;
+            }
+        });
+    });
+})();
+</script>
+</body>
+</html>

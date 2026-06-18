@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}اختيار الباقة — {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-2xl">
+        <div class="flex items-center justify-center gap-2 mb-8">
+            <span class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm">✓</span>
+            <span class="w-12 h-1 bg-green-500 rounded"></span>
+            <span class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm">✓</span>
+            <span class="w-12 h-1 bg-blue-600 rounded"></span>
+            <span class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">3</span>
+        </div>
+
+        <h1 class="text-2xl font-bold text-center mb-2">اختر الباقة</h1>
+        <p class="text-gray-500 text-center text-sm mb-8">الخطوة 3 من 3 — كل الباقات تبدأ بتجربة مجانية 14 يوم</p>
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                {% for plan in plans %}
+                <label class="border-2 border-gray-200 rounded-xl p-5 cursor-pointer hover:border-blue-400 transition relative {% if plan.is_featured %}border-blue-500{% endif %}">
+                    <input type="radio" name="plan_id" value="{{ plan.id }}" class="peer hidden" required {% if plan.is_featured %}checked{% endif %}>
+                    {% if plan.is_featured %}<span class="absolute -top-2 right-3 bg-blue-600 text-white text-xs px-3 py-0.5 rounded-full">مميزة</span>{% endif %}
+                    <div class="font-bold text-lg mb-1">{{ plan.name_ar }}</div>
+                    <div class="text-2xl font-extrabold text-blue-600 mb-2">{{ plan.price_monthly }} <span class="text-xs text-gray-400 font-normal">{{ plan.currency }}/شهر</span></div>
+                    <ul class="text-xs text-gray-500 space-y-1">
+                        <li>{{ plan.max_chats_per_month }} رسالة/شهر</li>
+                        <li>{{ plan.max_users }} مستخدمين</li>
+                        <li>{{ plan.max_branches }} فروع</li>
+                    </ul>
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="flex gap-3">
+                <a href="{{ url_for('registration.step2') }}" class="flex-1 text-center py-3 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">← رجوع</a>
+                <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">إنشاء الحساب ✓</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.querySelectorAll('input[type=radio]').forEach(r => {
+    r.addEventListener('change', () => {
+        document.querySelectorAll('label').forEach(l => l.classList.remove('border-blue-600','bg-blue-50'));
+        r.closest('label').classList.add('border-blue-600','bg-blue-50');
+    });
+    if(r.checked) r.closest('label').classList.add('border-blue-600','bg-blue-50');
+});
+</script>
+{% endblock %}

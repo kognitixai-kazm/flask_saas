@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% block title %}KognitixAI — شريكك الرقمي الذكي{% endblock %}
+{% block body %}
+
+<!-- Navbar -->
+<nav class="bg-white/85 backdrop-blur sticky top-0 z-40 border-b border-gray-100 relative" x-data="{ open: false }">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+        <a href="/" class="flex items-center">
+            {% with tagline=True %}{% include "_brand.html" %}{% endwith %}
+        </a>
+        <div class="hidden md:flex gap-7 text-sm text-gray-600">
+            <a href="#features" class="hover:text-blue-700 transition">لماذا KognitixAI</a>
+            <a href="#use-cases" class="hover:text-blue-700 transition">القطاعات</a>
+            <a href="#ai-agents" class="hover:text-blue-700 transition">فريقك الذكي</a>
+            <a href="#faq" class="hover:text-blue-700 transition">الأسئلة الشائعة</a>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{{ url_for('tenant.login') }}" class="text-sm text-gray-700 hover:text-blue-700 py-2 px-3 hidden sm:inline-block">دخول</a>
+            <a href="{{ url_for('registration.step1') }}" class="text-sm font-bold gradient-brand text-white px-4 md:px-5 py-2 rounded-xl shadow-sm hover:opacity-95 transition whitespace-nowrap">
+                ابدأ الآن
+            </a>
+            <!-- Mobile Menu Toggle -->
+            <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden ml-2 p-2 text-gray-600 hover:text-blue-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+    </div>
+    <!-- Mobile Menu Dropdown -->
+    <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-lg z-50">
+        <div class="flex flex-col px-4 pt-2 pb-4 space-y-3 text-sm text-gray-700">
+            <a href="#features" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="hover:text-blue-700 py-2 border-b border-gray-50">لماذا KognitixAI</a>
+            <a href="#use-cases" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="hover:text-blue-700 py-2 border-b border-gray-50">القطاعات</a>
+            <a href="#ai-agents" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="hover:text-blue-700 py-2 border-b border-gray-50">فريقك الذكي</a>
+            <a href="#faq" class="hover:text-blue-700 py-2 border-b border-gray-50">الأسئلة الشائعة</a>
+            <a href="{{ url_for('tenant.login') }}" class="text-blue-700 font-bold py-2 sm:hidden">تسجيل الدخول</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="gradient-brand text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20" aria-hidden="true">
+        <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-white blur-3xl"></div>
+        <div class="absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-cyan-300 blur-3xl"></div>
+    </div>
+    <div class="max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-28 relative">
+        <div class="grid md:grid-cols-12 gap-10 items-center">
+            <div class="md:col-span-7 text-center md:text-right">
+                <span class="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-blue-50 text-xs md:text-sm px-3 py-1 rounded-full mb-5">
+                    <span class="w-2 h-2 rounded-full bg-cyan-300 animate-pulse"></span>
+                    شريكك الرقمي الذكي
+                </span>
+                <h1 class="text-3xl md:text-5xl font-extrabold leading-tight mb-5">
+                    ضاعف نمو أعمالك ووفر وقتك مع <br class="hidden md:block">
+                    <span class="text-cyan-200">تجربة عميل</span> استثنائية لا تُنسى!
+                </h1>
+                <p class="text-base md:text-lg text-blue-50/90 mb-8 max-w-2xl mx-auto md:mx-0 leading-relaxed">
+                    KognitixAI هو شريكك الرقمي الذكي. ارتقِ بخدمة عملائك، أتمت عملياتك، ودع الذكاء الاصطناعي يعمل من أجلك لتقديم خدمة تليق بعلامتك التجارية.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center md:justify-start mb-6">
+                    <a href="{{ url_for('registration.step1') }}"
+                       class="bg-white text-blue-700 px-6 md:px-8 py-3 rounded-xl font-extrabold text-base md:text-lg hover:bg-blue-50 transition shadow-xl hover:scale-105 duration-300">
+                        ابدأ رحلة التحول الآن ←
+                    </a>
+                    <a href="#features"
+                       class="border border-white/40 text-white px-6 md:px-8 py-3 rounded-xl font-bold hover:bg-white/10 transition">
+                        اكتشف كيف نعمل
+                    </a>
+                </div>
+                <!-- Social Proof -->
+                <div class="flex items-center justify-center md:justify-start gap-4 text-sm text-blue-100">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-blue-200 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-700">+</div>
+                    </div>
+                    <span>انضم لـ <strong>+50 شركة</strong> تستخدم KognitixAI بنجاح</span>
+                </div>
+            </div>
+            <div class="md:col-span-5 hidden md:block">
+                <div class="bg-white/10 backdrop-blur rounded-3xl border border-white/20 p-6 shadow-2xl relative hover:shadow-3xl transition-all duration-300">
+                    <div class="absolute -top-4 -right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                        متصل الآن 🟢
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 text-gray-800">
+                        <div class="flex items-center gap-3 pb-3 border-b">
+                            <img src="{{ url_for('static', filename='img/logo.png') }}" class="w-10 h-10 rounded-lg" alt="KognitixAI">
+                            <div>
+                                <div class="font-bold text-sm">مساعد KognitixAI</div>
+                                <div class="text-[11px] text-green-600">يرد فوراً باحترافية</div>
+                            </div>
+                        </div>
+                        <div class="mt-3 space-y-3 text-sm">
+                            <div class="bg-blue-50 text-blue-900 rounded-2xl rounded-tr-md px-4 py-2 inline-block shadow-sm">مساء الخير، هل يوجد لديكم طاولات متاحة لشخصين الليلة؟</div>
+                            <div class="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-md px-4 py-2 inline-block shadow-sm relative">
+                                أهلاً بك! نعم، يسعدنا استضافتكم. قمت بحجز طاولة مميزة لشخصين الساعة 8:00 مساءً. هل ترغب في الاطلاع على قائمة العشاء الخاصة؟ 🍽️
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why KognitixAI -->
+<section id="features" class="py-16 md:py-24 px-4 md:px-6 bg-white">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-16">
+            <span class="text-xs uppercase tracking-[0.2em] text-blue-600 font-bold">لماذا تختارنا؟</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold mt-3 mb-4 text-gray-900">لماذا KognitixAI؟</h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="rounded-3xl p-8 bg-gradient-to-br from-blue-50 to-white border border-blue-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group">
+                <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300">⏰</div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">تواجد دائم 24/7</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    <strong>خدمة لا تعرف النوم.</strong> كن متاحاً لعملائك في أي وقت، ولا تفوت أي فرصة بيع أو حجز، مهما كان الوقت متأخراً.
+                </p>
+            </div>
+            
+            <div class="rounded-3xl p-8 bg-gradient-to-br from-purple-50 to-white border border-purple-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group">
+                <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300">🎯</div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">دقة واحترافية في الردود</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    <strong>صوت علامتك التجارية الأصيل.</strong> إجابات ذكية، دقيقة، ومصممة خصيصاً لتلبي احتياجات عملائك وتزيد من ولائهم.
+                </p>
+            </div>
+
+            <div class="rounded-3xl p-8 bg-gradient-to-br from-green-50 to-white border border-green-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group">
+                <div class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300">🔗</div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">تكامل سلس وبسيط</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    <strong>جاهزون للعمل فوراً.</strong> اربط المنصة بأنظمتك الحالية بسهولة تامة، وابدأ في استقبال عملائك دون أي تعقيدات.
+                </p>
+            </div>
+
+            <div class="rounded-3xl p-8 bg-gradient-to-br from-orange-50 to-white border border-orange-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group">
+                <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300">📊</div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">تقارير أداء ذكية</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    <strong>بيانات تصنع قراراتك.</strong> احصل على رؤى وتحليلات عميقة حول تفضيلات عملائك وأداء نشاطك لتحقيق نمو مستدام.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Use Cases -->
+<section id="use-cases" class="py-20 md:py-28 px-4 md:px-6 bg-gray-50 border-y border-gray-100">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-16">
+            <span class="text-xs uppercase tracking-[0.2em] text-blue-600 font-bold">الحلول المخصصة</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold mt-3 text-gray-900">حلول مصممة خصيصاً لقطاعك</h2>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-10">
+            <!-- Hotels -->
+            <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-1 group">
+                <div class="h-48 bg-gradient-to-r from-blue-600 to-cyan-500 relative flex items-center justify-center overflow-hidden">
+                    <span class="text-8xl absolute opacity-20 drop-shadow-lg group-hover:scale-110 transition-transform duration-300">🏨</span>
+                    <h3 class="text-3xl font-extrabold text-white relative z-10">قطاع الفنادق</h3>
+                </div>
+                <div class="p-8">
+                    <h4 class="text-xl font-bold text-blue-900 mb-4">"حجوزات أذكى.. ضيوف أسعد"</h4>
+                    <p class="text-gray-600 leading-relaxed">
+                        نحول رحلة ضيفك إلى تجربة رقمية ساحرة. من الرد الفوري على استفسارات الغرف، إلى إتمام الحجوزات بشكل أوتوماتيكي بالكامل. نقدم توصيات مخصصة للضيوف، وندير طلباتهم لضمان إقامة مريحة واستثنائية ترفع من تقييم فندقك.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Restaurants -->
+            <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-1 group">
+                <div class="h-48 bg-gradient-to-r from-orange-500 to-red-500 relative flex items-center justify-center overflow-hidden">
+                    <span class="text-8xl absolute opacity-20 drop-shadow-lg group-hover:scale-110 transition-transform duration-300">🍽️</span>
+                    <h3 class="text-3xl font-extrabold text-white relative z-10">المطاعم والمقاهي</h3>
+                </div>
+                <div class="p-8">
+                    <h4 class="text-xl font-bold text-orange-900 mb-4">"طلبات أسرع.. عمليات أكثر سلاسة"</h4>
+                    <p class="text-gray-600 leading-relaxed">
+                        تفرغ لابتكار أشهى الأطباق ودع لنا الباقي! نستقبل طلبات عملائك، نعالجها، ونحدث حالاتها بشكل آلي ومبهر. تجربة طلب سلسة تقضي على أوقات الانتظار، وتعزز من كفاءة مطعمك وتزيد من رضا زبائنك.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AI Agents -->
+<section id="ai-agents" class="py-16 md:py-24 px-4 md:px-6 bg-white">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-16">
+            <span class="text-xs uppercase tracking-[0.2em] text-blue-600 font-bold">فريقك الذكي</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold mt-3 mb-4 text-gray-900">طاقم عملك من الوكلاء الأذكياء (AI Agents)</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">موظفون رقميون يعملون على مدار الساعة لخدمة عملائك وإدارة شؤونك المالية والتشغيلية بدقة متناهية.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="bg-blue-50/50 rounded-3xl p-8 border border-blue-100 hover:-translate-y-2 transition-transform duration-300 group">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm mb-6 text-blue-600 group-hover:scale-110 transition-transform duration-300">💼</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">وكيل الاستقبال (Front-Desk)</h3>
+                <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                    موظف استقبال احترافي متاح على (واتساب، انستقرام، وغيرها). يجيب على استفسارات النزلاء، يرسل صور الغرف والأسعار، يجمع بيانات العميل، و<strong>ينشئ مسودات العقود وروابط الدفع تلقائياً.</strong>
+                </p>
+                <div class="text-[11px] font-bold text-blue-700 bg-blue-100/50 px-3 py-2 rounded-lg inline-block">💬 أتمتة الحجوزات 100%</div>
+            </div>
+            
+            <div class="bg-purple-50/50 rounded-3xl p-8 border border-purple-100 hover:-translate-y-2 transition-transform duration-300 group">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm mb-6 text-purple-600 group-hover:scale-110 transition-transform duration-300">💸</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">وكيل التحصيل (Collection)</h3>
+                <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                    محاسبك الدقيق الذي لا ينسى. يقوم يومياً بفحص العقود التي قاربت على الانتهاء، ويرسل <strong>تذكيرات دفع لبقة</strong> للنزلاء تتضمن بياناتك البنكية للتحويل عبر الواتساب والإيميل والرسائل النصية.
+                </p>
+                <div class="text-[11px] font-bold text-purple-700 bg-purple-100/50 px-3 py-2 rounded-lg inline-block">💸 تحصيل آلي بدون إحراج</div>
+            </div>
+
+            <div class="bg-green-50/50 rounded-3xl p-8 border border-green-100 hover:-translate-y-2 transition-transform duration-300 group">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm mb-6 text-green-600 group-hover:scale-110 transition-transform duration-300">📊</div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">المستشار المالي (Manager)</h3>
+                <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                    مساعدك الإداري المتاح عبر "شريط بحث ذكي" في لوحة تحكمك. اسأله ببساطة: <em>"كم أرباح هذا الشهر؟"</em> أو <em>"ما نسبة الإشغال؟"</em> وسيقوم فوراً بجلب تقارير دقيقة ومقارنات شهرية.
+                </p>
+                <div class="text-[11px] font-bold text-green-700 bg-green-100/50 px-3 py-2 rounded-lg inline-block">📈 تقارير وأرقام حية فورية</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dashboards UI -->
+<section id="dashboards" class="py-20 md:py-32 px-4 md:px-6 bg-[#0b1f3a] text-white overflow-hidden relative">
+    <div class="absolute inset-0 opacity-10" aria-hidden="true">
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-blue-500 blur-[100px]"></div>
+        <div class="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-cyan-400 blur-[100px]"></div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto relative z-10">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <span class="text-xs uppercase tracking-[0.2em] text-cyan-400 font-bold">لوحات تحكم ذكية</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold mt-4 mb-6 leading-tight text-white drop-shadow-sm">تحكم كامل بأعمالك، وكفاءة تشغيلية لا تضاهى</h2>
+                <div class="space-y-6 text-blue-50 leading-relaxed text-lg">
+                    <p>
+                        لوحة تحكم مركزية تضع كل تفاصيل نشاطك بين يديك. تابع أداء وكلاء الذكاء الاصطناعي، راقب معدلات الحجوزات والمبيعات، وأدر طلبات عملائك لحظة بلحظة لضمان تقديم أعلى مستوى من الخدمة المتميزة.
+                    </p>
+                    <p>
+                        المنصة مصممة لتمنحك رؤية شاملة تدعم اتخاذ قراراتك. مع تقارير دقيقة ومؤشرات أداء حية، ستتمكن من تحسين عملياتك التشغيلية ومضاعفة أرباحك، لتتفرغ أنت لنمو تجارتك.
+                    </p>
+                </div>
+                <div class="mt-8 flex flex-wrap gap-4 text-white font-medium">
+                    <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-5 py-2.5 rounded-full shadow-sm hover:bg-white/10 transition"><span class="text-cyan-400 font-bold">✓</span> تقارير وتحليلات دقيقة</div>
+                    <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-5 py-2.5 rounded-full shadow-sm hover:bg-white/10 transition"><span class="text-cyan-400 font-bold">✓</span> إدارة مركزية لجميع العمليات</div>
+                </div>
+            </div>
+            <div class="relative group mt-8 md:mt-0">
+                <!-- Enhanced Glow Effect with Glassmorphism -->
+                <div class="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-[2rem] blur-2xl opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-300"></div>
+                <div class="absolute -inset-0.5 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-[2rem] blur-lg"></div>
+                
+                <!-- High Quality Dashboard Image Window with Enhanced Glassmorphism -->
+                <div class="relative bg-white/8 backdrop-blur-2xl border border-white/30 rounded-[1.5rem] p-3 shadow-2xl transform group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-500">
+                    <div class="flex items-center gap-2 mb-3 px-2">
+                        <div class="w-3.5 h-3.5 rounded-full bg-rose-500/80"></div>
+                        <div class="w-3.5 h-3.5 rounded-full bg-amber-400/80"></div>
+                        <div class="w-3.5 h-3.5 rounded-full bg-emerald-400/80"></div>
+                    </div>
+                    <img src="{{ url_for('static', filename='img/merchant_dashboard.png') }}" alt="لوحة تحكم ذكية" class="rounded-xl w-full h-auto shadow-inner border border-white/10" />
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section id="faq" class="py-16 md:py-24 px-4 md:px-6 bg-white">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-16">
+            <span class="text-xs uppercase tracking-[0.2em] text-blue-600 font-bold">أسئلة شائعة</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold mt-3 mb-4 text-gray-900">الأسئلة الشائعة</h2>
+            <p class="text-gray-600">إجابات سريعة على أكثر الأسئلة التي يطرحها عملاؤنا</p>
+        </div>
+
+        <div class="space-y-4">
+            <!-- FAQ Item 1 -->
+            <details class="group bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer">
+                <summary class="flex items-center justify-between font-bold text-gray-900 text-lg">
+                    <span>كم الوقت المطلوب للبدء مع KognitixAI؟</span>
+                    <span class="text-2xl text-blue-600 group-open:rotate-180 transition-transform duration-300">+</span>
+                </summary>
+                <p class="text-gray-600 mt-4 leading-relaxed">يمكنك البدء فوراً! التسجيل يستغرق أقل من دقيقة واحدة. بعد ذلك، سيتواصل معك فريقنا لتخصيص الحل حسب احتياجات نشاطك، وستكون جاهزاً للعمل في غضون 24-48 ساعة.</p>
+            </details>
+
+            <!-- FAQ Item 2 -->
+            <details class="group bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer">
+                <summary class="flex items-center justify-between font-bold text-gray-900 text-lg">
+                    <span>هل يمكن دمج KognitixAI مع أنظمتي الحالية؟</span>
+                    <span class="text-2xl text-blue-600 group-open:rotate-180 transition-transform duration-300">+</span>
+                </summary>
+                <p class="text-gray-600 mt-4 leading-relaxed">نعم، بالتأكيد! نحن نوفر واجهات برمجية (APIs) قوية وسهلة الاستخدام تتكامل بسلاسة مع أنظمتك الحالية. فريقنا التقني سيساعدك في كل خطوة من خطوات التكامل.</p>
+            </details>
+
+            <!-- FAQ Item 3 -->
+            <details class="group bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer">
+                <summary class="flex items-center justify-between font-bold text-gray-900 text-lg">
+                    <span>ما هي مستويات الأمان والخصوصية في KognitixAI؟</span>
+                    <span class="text-2xl text-blue-600 group-open:rotate-180 transition-transform duration-300">+</span>
+                </summary>
+                <p class="text-gray-600 mt-4 leading-relaxed">نحن نستخدم أعلى معايير الأمان العالمية. جميع البيانات مشفرة بتقنية SSL، وننتمي لمعايير GDPR و ISO 27001. بيانات عملائك آمنة تماماً معنا.</p>
+            </details>
+
+            <!-- FAQ Item 4 -->
+            <details class="group bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer">
+                <summary class="flex items-center justify-between font-bold text-gray-900 text-lg">
+                    <span>هل يوجد فترة تجريبية مجانية؟</span>
+                    <span class="text-2xl text-blue-600 group-open:rotate-180 transition-transform duration-300">+</span>
+                </summary>
+                <p class="text-gray-600 mt-4 leading-relaxed">نعم! نقدم فترة تجريبية مجانية لمدة 14 يوماً بكل المميزات. لا تحتاج لبطاقة ائتمان، وبإمكانك إلغاء الاشتراك في أي وقت دون أي التزام.</p>
+            </details>
+        </div>
+
+        <div class="mt-12 text-center">
+            <p class="text-gray-600 mb-4">هل لديك سؤال آخر؟</p>
+            <a href="{{ url_for('public.contact') }}" class="inline-block text-blue-600 font-bold hover:text-blue-700 transition">
+                تواصل معنا مباشرة ←
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-16 md:py-24 px-4 md:px-6 bg-white">
+    <div class="max-w-4xl mx-auto rounded-3xl p-8 md:p-14 gradient-brand text-white text-center shadow-2xl relative overflow-hidden hover:shadow-3xl transition-all duration-300">
+        <div class="absolute -top-20 -right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+        <h2 class="text-2xl md:text-3xl font-extrabold mb-3 relative">جاهز لتجربة KognitixAI في نشاطك؟</h2>
+        <p class="text-blue-50/90 mb-8 relative text-lg">سجّل بياناتك خلال دقيقة، نراجع الطلب ونتواصل معك مباشرة لبدء التحول الرقمي.</p>
+        <a href="{{ url_for('registration.step1') }}"
+           class="inline-block bg-white text-blue-700 px-10 py-4 rounded-xl font-extrabold text-lg hover:bg-blue-50 transition shadow-xl relative hover:scale-105 duration-300">
+            اطلب وصول الآن ←
+        </a>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-[#0b1f3a] text-gray-300 py-12 px-4 md:px-6 border-t border-white/10">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                {% with variant='dark', tagline=True %}{% include "_brand.html" %}{% endwith %}
+            </div>
+            <div class="flex gap-6 text-sm">
+                <a href="{{ url_for('public.terms') }}" class="hover:text-white transition">الشروط</a>
+                <a href="{{ url_for('public.privacy') }}" class="hover:text-white transition">الخصوصية</a>
+                <a href="{{ url_for('public.contact') }}" class="hover:text-white transition">تواصل</a>
+            </div>
+            <p class="text-xs">© KognitixAI — جميع الحقوق محفوظة</p>
+        </div>
+    </div>
+</footer>
+
+{% endblock %}

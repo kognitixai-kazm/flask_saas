@@ -1,0 +1,37 @@
+{# مكوّن هوية KOGNITIX — قابل لإعادة الاستخدام
+    pass: size  → small | base | lg | xl  (افتراضي base)
+    pass: tagline → True/False (هل نُظهر «Intelligent Business Solutions»)
+    pass: variant → 'dark' (نص أبيض) | 'light' (نص ملوّن — افتراضي)
+#}
+{% set _size = size|default('base') %}
+{% set _tag = tagline|default(false) %}
+{% set _variant = variant|default('light') %}
+{% set _logo_classes = {
+    'small': 'h-8 w-8',
+    'base':  'h-10 w-10',
+    'lg':    'h-14 w-14',
+    'xl':    'h-20 w-20'
+}[_size] %}
+{% set _name_classes = {
+    'small': 'text-base',
+    'base':  'text-lg',
+    'lg':    'text-2xl',
+    'xl':    'text-3xl'
+}[_size] %}
+{% set _name_color = 'text-white' if _variant == 'dark' else 'text-blue-700' %}
+{% set _tag_color  = 'text-blue-100' if _variant == 'dark' else 'text-gray-500' %}
+
+<div class="flex items-center gap-3 select-none">
+    <img src="{{ url_for('static', filename='img/logo.png') }}"
+         alt="KOGNITIX"
+         class="{{ _logo_classes }} object-contain rounded-xl bg-white shadow-sm"
+         loading="eager" />
+    <div class="flex flex-col leading-tight">
+        <span class="font-extrabold tracking-tight {{ _name_classes }} {{ _name_color }}">KOGNITIX</span>
+        {% if _tag %}
+        <span class="text-[10px] md:text-xs uppercase tracking-[0.18em] {{ _tag_color }}">
+            Intelligent Business Solutions
+        </span>
+        {% endif %}
+    </div>
+</div>

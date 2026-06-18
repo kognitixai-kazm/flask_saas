@@ -1,0 +1,265 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}لوحة تحكم الفندق - {{ 'النمط الشهري' if stats.hotel_mode == 'monthly' else 'النمط اليومي' }}{% endblock %}
+{% block panel_content %}
+
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">🏨 لوحة تحكم النشاط</h1>
+        <p class="text-gray-500 text-sm">
+            أنت الآن في 
+            <span class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                {{ 'النمط الشهري (عقود)' if stats.hotel_mode == 'monthly' else 'النمط اليومي (حجوزات)' }}
+            </span>
+        </p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{{ url_for('tenant_hotel.unit_form') }}" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-sm">
+            <span>➕ إضافة وحدة</span>
+        </a>
+        <a href="{{ url_for('tenant_hotel.mode_settings') }}" class="bg-white text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-50 transition flex items-center gap-2 shadow-sm">
+            <span>⚙️ تغيير النمط</span>
+        </a>
+    </div>
+</div>
+
+<!-- KPI Stats Grid -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <!-- Sales Card -->
+    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-xl">💰</div>
+            <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">المبيعات</span>
+        </div>
+        <div class="text-xl font-black text-gray-900">{{ "{:,.2f}".format(stats.total_sales) }} <span class="text-xs font-normal text-gray-500">ر.س</span></div>
+        <div class="text-[10px] text-gray-400 mt-1">إجمالي {{ 'العقود الموقعة' if stats.hotel_mode == 'monthly' else 'الحجوزات المؤكدة' }}</div>
+    </div>
+
+    <!-- Mode-Specific Card -->
+    {% if stats.hotel_mode == 'monthly' %}
+    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-xl">📄</div>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">عقود نشطة</span>
+        </div>
+        <div class="text-xl font-black text-gray-900">{{ stats.active_contracts_count }}</div>
+        <div class="text-[10px] text-gray-400 mt-1">عقود إيجار سارية حالياً</div>
+    </div>
+    {% else %}
+    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-xl">🔔</div>
+            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">طلبات جديدة</span>
+        </div>
+        <div class="text-xl font-black text-gray-900">{{ stats.new_bookings_count }}</div>
+        <div class="text-[10px] text-gray-400 mt-1">حجوزات بانتظار المراجعة</div>
+    </div>
+    {% endif %}
+
+    <!-- Occupancy Rate Card -->
+    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-xl">📊</div>
+            <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">نسبة الإشغال</span>
+        </div>
+        <div class="flex items-end gap-2">
+            <div class="text-xl font-black text-gray-900">{{ stats.occupancy_rate }}%</div>
+            <div class="w-full bg-gray-100 h-1.5 rounded-full mb-1.5 overflow-hidden">
+                <div class="bg-purple-500 h-full rounded-full" style="width: {{ stats.occupancy_rate }}%"></div>
+            </div>
+        </div>
+        <div class="text-[10px] text-gray-400 mt-1">{{ stats.booked_units }} من أصل {{ stats.total_units }} وحدة</div>
+    </div>
+
+    <!-- Available Units Card -->
+    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-xl">🏠</div>
+            <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">متاح الآن</span>
+        </div>
+        <div class="text-xl font-black text-gray-900">{{ stats.available_units }}</div>
+        <div class="text-[10px] text-gray-400 mt-1">وحدات جاهزة للتأجير</div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: Units Status Grid -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span>📍 حالة الوحدات بالفروع</span>
+            </h2>
+            <div class="hidden sm:flex items-center gap-3">
+                <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-[10px] text-gray-500">متاح</span></div>
+                <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] text-gray-500">محجوز</span></div>
+                <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-yellow-400"></div><span class="text-[10px] text-gray-500">صيانة</span></div>
+            </div>
+        </div>
+
+        {% for b in branches %}
+            {% set branch_units = units|selectattr("branch_id", "equalto", b.id)|list %}
+            {% if branch_units %}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="bg-gray-50/50 px-6 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <span class="font-bold text-blue-900">{{ b.name }}</span>
+                    <span class="text-[10px] text-gray-400">{{ branch_units|length }} وحدة</span>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                        {% for u in branch_units|sort(attribute='unit_number') %}
+                            <div class="relative group">
+                                <button type="button" 
+                                        onclick="openStatusModal({{ u.id }}, '{{ u.unit_number }}', '{{ u.status }}')"
+                                        id="unit-card-{{ u.id }}"
+                                        class="w-full relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 {{ u.status_color_class }}">
+                                    <span class="text-lg font-black block" dir="ltr">{{ u.unit_number }}</span>
+                                    <span id="unit-label-{{ u.id }}" class="text-[8px] font-bold uppercase tracking-wider opacity-80">{{ u.status_label }}</span>
+                                </button>
+                                {% if u.ical_import_url %}
+                                <form method="POST" action="{{ url_for('tenant_hotel.sync_unit_ical', id=u.id) }}" class="absolute -top-2 -right-2 hidden group-hover:block z-10">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="bg-blue-600 text-white p-1.5 rounded-full shadow-md text-xs hover:bg-blue-700 transition-colors" title="مزامنة التقويم الآن">🔄</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Right Column: Recent Activity -->
+    <div class="space-y-6">
+        <!-- Recent Mode-Specific Activity -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-bold text-gray-900">🔔 {{ 'آخر العقود' if stats.hotel_mode == 'monthly' else 'آخر الحجوزات' }}</h3>
+                <a href="{{ url_for('tenant_contracts.index') if stats.hotel_mode == 'monthly' else url_for('tenant_bookings.list_bookings') }}" class="text-blue-600 text-[10px] font-bold hover:underline">الكل</a>
+            </div>
+            <div class="divide-y divide-gray-50">
+                {% if stats.hotel_mode == 'monthly' %}
+                    {% for contract in recent_contracts %}
+                    <div class="p-4 hover:bg-gray-50 transition">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-xs font-bold text-gray-900">{{ contract.customer_name }}</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 font-medium">#{{ contract.contract_number }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px] text-gray-500">
+                            <span>📅 {{ contract.created_at.strftime('%d/%m/%Y') }}</span>
+                            <span>•</span>
+                            <span>💰 {{ contract.total_amount }} ر.س</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-8 text-center text-gray-400 text-xs">لا توجد عقود حديثة</div>
+                    {% endfor %}
+                {% else %}
+                    {% for booking in recent_bookings %}
+                    <div class="p-4 hover:bg-gray-50 transition">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-xs font-bold text-gray-900">{{ booking.customer_name }}</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">#{{ booking.booking_number }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
+                            <span>📅 {{ booking.checkin_date.strftime('%d/%m') if booking.checkin_date else '-' }}</span>
+                            <span>•</span>
+                            <span>💰 {{ booking.total_amount }} ر.س</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-bold text-gray-400">{{ booking.status_label }}</span>
+                            <a href="{{ url_for('tenant_bookings.detail', id=booking.id) }}" class="text-blue-600 text-[9px] font-bold hover:underline">التفاصيل ←</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-8 text-center text-gray-400 text-xs">لا توجد حجوزات حديثة</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-blue-900 rounded-2xl p-6 text-white shadow-lg shadow-blue-100">
+            <h3 class="font-bold mb-4 flex items-center gap-2">⚡ إجراءات سريعة</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="{{ url_for('tenant_hotel.services') }}" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl text-center transition">
+                    <div class="text-xl mb-1">🛠️</div>
+                    <div class="text-[10px] font-bold">الخدمات</div>
+                </a>
+                <a href="{{ url_for('tenant_hotel.floors') }}" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl text-center transition">
+                    <div class="text-xl mb-1">🏢</div>
+                    <div class="text-[10px] font-bold">الطوابق</div>
+                </a>
+                <a href="{{ url_for('tenant_contracts.new_manual') if stats.hotel_mode == 'monthly' else (url_for('tenant_bookings.create_manual') if 'tenant_bookings' in g.blueprints else '#') }}" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl text-center transition">
+                    <div class="text-xl mb-1">📝</div>
+                    <div class="text-[10px] font-bold">{{ 'عقد جديد' if stats.hotel_mode == 'monthly' else 'حجز جديد' }}</div>
+                </a>
+                <a href="{{ url_for('tenant_hotel.mode_settings') }}" class="bg-white/10 hover:bg-white/20 p-3 rounded-xl text-center transition">
+                    <div class="text-xl mb-1">⚙️</div>
+                    <div class="text-[10px] font-bold">الإعدادات</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="statusModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden p-6">
+        <div class="text-center mb-6">
+            <h3 class="text-xl font-black text-gray-900" id="modalTitle">تحديث الحالة</h3>
+            <p class="text-sm text-gray-500 mt-1">الوحدة رقم <span id="modalUnitNumber" class="font-bold text-blue-600"></span></p>
+        </div>
+        <form id="statusForm" onsubmit="submitStatusUpdate(event)">
+            <input type="hidden" id="modalUnitId" name="unit_id">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="grid grid-cols-1 gap-2 mb-6">
+                {% for val, label in status_options.items() %}
+                <label class="flex items-center p-4 border-2 border-gray-50 rounded-2xl cursor-pointer hover:bg-blue-50 transition-all">
+                    <input type="radio" name="status" value="{{ val }}" class="w-4 h-4 text-blue-600 mr-3">
+                    <span class="text-sm font-bold text-gray-700">{{ label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="flex flex-col gap-2">
+                <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black hover:bg-blue-700 transition">حفظ</button>
+                <button type="button" onclick="closeStatusModal()" class="w-full text-gray-400 py-2 text-sm font-bold">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openStatusModal(unitId, unitNumber, currentStatus) {
+        document.getElementById('modalUnitId').value = unitId;
+        document.getElementById('modalUnitNumber').innerText = unitNumber;
+        const radios = document.querySelectorAll('#statusForm input[name="status"]');
+        radios.forEach(r => { r.checked = (r.value === currentStatus); });
+        document.getElementById('statusModal').classList.remove('hidden');
+    }
+    function closeStatusModal() { document.getElementById('statusModal').classList.add('hidden'); }
+    async function submitStatusUpdate(e) {
+        e.preventDefault();
+        const form = e.target;
+        const unitId = document.getElementById('modalUnitId').value;
+        const status = form.status.value;
+        const csrfToken = form.csrf_token.value;
+        try {
+            const formData = new FormData();
+            formData.append('status', status);
+            formData.append('csrf_token', csrfToken);
+            const res = await fetch(`/app/hotel/units/${unitId}/status`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                const card = document.getElementById(`unit-card-${unitId}`);
+                card.className = `group relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${data.color_class}`;
+                card.querySelector('span[id^="unit-label-"]').innerText = data.status_label;
+                card.setAttribute('onclick', `openStatusModal(${unitId}, '${document.getElementById('modalUnitNumber').innerText}', '${data.new_status}')`);
+                closeStatusModal();
+            }
+        } catch (err) { console.error(err); }
+    }
+</script>
+
+{% endblock %}

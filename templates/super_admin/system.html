@@ -1,0 +1,218 @@
+{% extends "super_admin/_admin_base.html" %}
+{% block title %}مفاتيح النظام — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+    <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">🔑 مفاتيح النظام</h1>
+        <p class="text-gray-500 text-sm mt-1">اختر المزوّد، أدخِل المفتاح، يتفعّل فوراً مع تحقّق ذكي. كل التغييرات تُطبّق بدون لمس الكود.</p>
+    </div>
+    <a href="{{ url_for('super_admin.dashboard') }}" class="text-blue-600 text-sm">← رجوع للوحة</a>
+</div>
+
+{% if security_issues %}
+<div class="bg-rose-50 border border-rose-200 rounded-2xl p-5 mb-6">
+    <h3 class="font-bold text-rose-800 mb-2">🚨 تنبيهات أمنية ({{ security_issues|length }})</h3>
+    <ul class="space-y-1 text-rose-800 text-sm">
+        {% for issue in security_issues %}<li>• {{ issue }}</li>{% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 mb-6 text-sm text-emerald-800">
+    ✅ لا توجد تنبيهات أمنية حالياً.
+</div>
+{% endif %}
+
+<!-- Tabs -->
+<div class="flex gap-1 mb-4 overflow-x-auto text-sm">
+    <button data-tab="ai"        class="tab-btn px-4 py-2 rounded-t-xl bg-blue-700 text-white">🧠 الذكاء الاصطناعي</button>
+    <button data-tab="cloudinary"class="tab-btn px-4 py-2 rounded-t-xl bg-gray-100 text-gray-700">☁️ التخزين السحابي</button>
+    <button data-tab="whatsapp"  class="tab-btn px-4 py-2 rounded-t-xl bg-gray-100 text-gray-700">💬 واتساب (System)</button>
+    <button data-tab="email"     class="tab-btn px-4 py-2 rounded-t-xl bg-gray-100 text-gray-700">📧 البريد</button>
+    <button data-tab="account"   class="tab-btn px-4 py-2 rounded-t-xl bg-gray-100 text-gray-700">🔐 حسابي</button>
+</div>
+
+<!-- AI Tab -->
+<section id="tab-ai" class="tab-content">
+    <form method="POST" action="{{ url_for('admin_system.update_bulk') }}"
+          class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="category" value="ai">
+
+        <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-xl bg-[#0b1f3a] text-cyan-300 flex items-center justify-center text-2xl">🧠</div>
+            <div>
+                <h2 class="font-bold text-lg text-gray-900">مفاتيح مزوّدي الذكاء الاصطناعي</h2>
+                <p class="text-xs text-gray-500">عند الحفظ يُجرى فحص خفيف للمفتاح للتأكد من صحته فوراً. النموذج الافتراضي يتحدّد من <a href="{{ url_for('admin_pricing.index') }}" class="text-blue-700 underline">تسعير الخدمات</a>.</p>
+            </div>
+        </div>
+
+        {% set provider_meta = {
+            'AI_OPENAI_KEY':   ('OpenAI (ChatGPT)',  'sk-...',           '🟢'),
+            'AI_ANTHROPIC_KEY':('Anthropic (Claude)','sk-ant-...',       '🟣'),
+            'AI_GOOGLE_KEY':   ('Google Gemini',     'AIza...',          '🔵'),
+            'AI_DEFAULT_MODEL':('النموذج الافتراضي', 'مثال: gpt-4o-mini','⚙️'),
+        } %}
+
+        <div class="grid md:grid-cols-2 gap-4">
+        {% for s in settings_by_cat.ai %}
+            {% set meta = provider_meta.get(s.key, (s.key, 'أدخل القيمة', '🔑')) %}
+            <div class="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="font-bold text-sm text-gray-900">{{ meta[2] }} {{ meta[0] }}</div>
+                    {% if s.is_secret and s.value %}<span class="text-[11px] text-emerald-700">✓ مضبوط</span>{% endif %}
+                </div>
+                {% if s.description %}<p class="text-xs text-gray-500 mb-2">{{ s.description }}</p>{% endif %}
+                <input type="{{ 'password' if s.is_secret else 'text' }}"
+                       name="val_{{ s.key }}"
+                       value="{{ '' if s.is_secret else s.value }}"
+                       placeholder="{{ '••••••• (احتفظ فارغاً للإبقاء)' if s.is_secret and s.value else meta[1] }}"
+                       dir="ltr"
+                       class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                {% if s.updated_by %}<p class="text-[11px] text-gray-400 mt-1">آخر تحديث: {{ s.updated_by }}{% if s.updated_at %} · {{ s.updated_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}</p>{% endif %}
+            </div>
+        {% endfor %}
+        </div>
+
+        <div class="flex items-center justify-between border-t pt-4">
+            <p class="text-xs text-gray-500">يكفي إدخال مفتاح واحد لتفعيل الذكاء الاصطناعي على المنصة.</p>
+            <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold">💾 حفظ مع تحقق</button>
+        </div>
+    </form>
+</section>
+
+<!-- Cloudinary Tab -->
+<section id="tab-cloudinary" class="tab-content hidden">
+    <form method="POST" action="{{ url_for('admin_system.update_bulk') }}"
+          class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="category" value="cloudinary">
+
+        <h2 class="font-bold text-lg text-gray-900">☁️ التخزين السحابي (Cloudinary)</h2>
+        <p class="text-xs text-gray-500">للصور والشعارات. احصل على المفاتيح من
+            <a class="text-blue-700 underline" href="https://cloudinary.com/console" target="_blank" rel="noopener">Cloudinary Console</a>.</p>
+
+        {% for s in settings_by_cat.cloudinary %}
+        <div>
+            <label class="block text-sm font-bold mb-1">{{ s.key }}</label>
+            {% if s.description %}<p class="text-xs text-gray-500 mb-1">{{ s.description }}</p>{% endif %}
+            <input type="{{ 'password' if s.is_secret else 'text' }}"
+                   name="val_{{ s.key }}"
+                   value="{{ '' if s.is_secret else s.value }}"
+                   placeholder="{{ '••••••• (محفوظ — اتركه فارغاً للإبقاء)' if s.is_secret and s.value else 'أدخل القيمة' }}"
+                   dir="ltr"
+                   class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold">💾 حفظ</button>
+    </form>
+</section>
+
+<!-- WhatsApp (System level) -->
+<section id="tab-whatsapp" class="tab-content hidden">
+    <form method="POST" action="{{ url_for('admin_system.update_bulk') }}"
+          class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="category" value="whatsapp">
+
+        <h2 class="font-bold text-lg text-gray-900">💬 واتساب — على مستوى المنصة</h2>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
+            هذه إعدادات على مستوى المنصة (App Secret + Verify Token الافتراضي). إعدادات كل تاجر تكون من لوحته الخاصة.
+        </div>
+
+        {% for s in settings_by_cat.whatsapp %}
+        <div>
+            <label class="block text-sm font-bold mb-1">{{ s.key }}</label>
+            {% if s.description %}<p class="text-xs text-gray-500 mb-1">{{ s.description }}</p>{% endif %}
+            <input type="{{ 'password' if s.is_secret else 'text' }}"
+                   name="val_{{ s.key }}"
+                   value="{{ '' if s.is_secret else s.value }}"
+                   placeholder="{{ '••••••• (محفوظ)' if s.is_secret and s.value else 'أدخل القيمة' }}"
+                   dir="ltr"
+                   class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold">💾 حفظ</button>
+    </form>
+</section>
+
+<!-- Email Tab -->
+<section id="tab-email" class="tab-content hidden">
+    <form method="POST" action="{{ url_for('admin_system.update_bulk') }}"
+          class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="category" value="email">
+
+        <h2 class="font-bold text-lg text-gray-900">📧 إعدادات البريد (SMTP)</h2>
+
+        {% for s in settings_by_cat.email %}
+        <div>
+            <label class="block text-sm font-bold mb-1">{{ s.key }}</label>
+            {% if s.description %}<p class="text-xs text-gray-500 mb-1">{{ s.description }}</p>{% endif %}
+            <input type="{{ 'password' if s.is_secret else 'text' }}"
+                   name="val_{{ s.key }}"
+                   value="{{ '' if s.is_secret else s.value }}"
+                   placeholder="{{ '••••••• (محفوظ)' if s.is_secret and s.value else 'أدخل القيمة' }}"
+                   dir="ltr"
+                   class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold">💾 حفظ</button>
+    </form>
+</section>
+
+<!-- Account Tab -->
+<section id="tab-account" class="tab-content hidden">
+    <div class="grid md:grid-cols-2 gap-4">
+        <form method="POST" action="{{ url_for('admin_system.change_password') }}"
+              class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <h2 class="font-bold text-lg text-gray-900 mb-1">🔑 تغيير كلمة المرور</h2>
+            <p class="text-xs text-gray-500 mb-4">المستخدم الحالي: <strong>{{ sa_user.username }}</strong></p>
+            <div class="space-y-3">
+                <input type="password" name="current_password" placeholder="كلمة المرور الحالية" required
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="password" name="new_password" placeholder="كلمة المرور الجديدة (10+ أحرف)" required minlength="10"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="password" name="confirm_password" placeholder="تأكيد كلمة المرور" required minlength="10"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+            </div>
+            <button type="submit" class="mt-4 bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold w-full">تغيير كلمة المرور</button>
+        </form>
+
+        <form method="POST" action="{{ url_for('admin_system.change_username') }}"
+              class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <h2 class="font-bold text-lg text-gray-900 mb-4">👤 تغيير اسم المستخدم</h2>
+            <div class="space-y-3">
+                <input type="text" name="new_username" required minlength="4" value="{{ sa_user.username }}"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="password" name="current_password" placeholder="كلمة المرور (تأكيد)" required
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+            </div>
+            <button type="submit" class="mt-4 bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold w-full">حفظ</button>
+        </form>
+    </div>
+</section>
+
+<script>
+(function () {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    function show(name) {
+        contents.forEach(el => el.classList.toggle('hidden', el.id !== 'tab-' + name));
+        tabs.forEach(b => {
+            const active = b.dataset.tab === name;
+            b.classList.toggle('bg-blue-700', active);
+            b.classList.toggle('text-white', active);
+            b.classList.toggle('bg-gray-100', !active);
+            b.classList.toggle('text-gray-700', !active);
+        });
+    }
+    tabs.forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
+})();
+</script>
+{% endblock %}

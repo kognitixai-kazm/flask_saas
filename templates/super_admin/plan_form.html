@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% block title %}إدارة باقة الاشتراك{% endblock %}
+{% block body_class %}bg-gray-900{% endblock %}
+{% block head %}
+  <!-- Alpine.js is assumed to be loaded in base.html. If not, include it here -->
+{% endblock %}
+
+{% block body %}
+<div class="flex min-h-screen">
+  <aside class="w-60 bg-gray-800 text-gray-300 flex-shrink-0">
+    <div class="p-6 border-b border-gray-700"><div class="font-bold text-white">👑 إدارة المنصة</div></div>
+    <nav class="p-4 space-y-1">
+      <a href="{{ url_for('super_admin.dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📊 الرئيسية</a>
+      <a href="{{ url_for('super_admin.tenants_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🏢 المستأجرون</a>
+      <a href="{{ url_for('super_admin.plans_list') }}" class="block px-4 py-2 rounded-lg bg-gray-700 text-white font-bold text-sm">💰 الباقات</a>
+      <hr class="border-gray-700 my-3">
+      <form method="POST" action="{{ url_for('super_admin.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="block w-full text-right px-4 py-2 rounded-lg text-red-400 hover:bg-gray-700 text-sm">🚪 خروج</button>
+      </form>
+    </nav>
+  </aside>
+  
+  <main class="flex-1 bg-gray-50 p-8" x-data="planBuilder({{ plan.id if plan else 'null' }})">
+    <div class="max-w-6xl mx-auto">
+      
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800" x-text="planId ? 'تعديل باقة: ' + formData.name_ar : 'إنشاء باقة جديدة'"></h1>
+        <div class="flex space-x-2 space-x-reverse">
+          <button @click="savePlan()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition flex items-center">
+            <svg x-show="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            حفظ الباقة
+          </button>
+          <button x-show="planId && formData.status !== 'active'" @click="publishPlan()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold transition">نشر فوراً</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex space-x-2 space-x-reverse mb-6 border-b border-gray-300">
+        <template x-for="tab in tabs" :key="tab.id">
+          <button 
+            @click="activeTab = tab.id"
+            :class="{'border-b-2 border-blue-600 text-blue-600 font-bold': activeTab === tab.id, 'text-gray-500 hover:text-gray-700': activeTab !== tab.id}"
+            class="px-4 py-3 outline-none transition"
+            x-text="tab.name"
+          ></button>
+        </template>
+      </div>
+
+      <!-- Content -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        
+        <!-- Tab: Basic Info -->
+        <div x-show="activeTab === 'basic'" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">رمز الباقة (Code) *</label>
+              <input type="text" x-model="formData.code" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="مثال: basic, pro, enterprise">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
+              <select x-model="formData.status" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="draft">مسودة (Draft)</option>
+                <option value="active">نشطة (Active)</option>
+                <option value="inactive">غير نشطة (Inactive)</option>
+                <option value="archived">مؤرشفة (Archived)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">الاسم (عربي) *</label>
+              <input type="text" x-model="formData.name_ar" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">الاسم (إنجليزي) *</label>
+              <input type="text" x-model="formData.name_en" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">الوصف (عربي)</label>
+              <textarea x-model="formData.description_ar" rows="3" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">الوصف (إنجليزي)</label>
+              <textarea x-model="formData.description_en" rows="3" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">ترتيب العرض</label>
+              <input type="number" x-model.number="formData.sort_order" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">فترة التجربة (أيام)</label>
+              <input type="number" x-model.number="formData.trial_days" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="flex items-center space-x-2 space-x-reverse mt-4">
+              <input type="checkbox" id="is_popular" x-model="formData.is_popular" class="rounded text-blue-600 focus:ring-blue-500 h-5 w-5">
+              <label for="is_popular" class="text-sm font-medium text-gray-700">باقة مميزة / الأكثر شعبية؟</label>
+            </div>
+            <div x-show="formData.is_popular">
+              <label class="block text-sm font-medium text-gray-700 mb-1">نص الشارة (Badge Text)</label>
+              <input type="text" x-model="formData.badge_text" placeholder="Most Popular" class="w-full border-gray-300 rounded-lg shadow-sm">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Pricing -->
+        <div x-show="activeTab === 'pricing'" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">السعر الشهري</label>
+              <input type="number" step="0.01" x-model.number="formData.pricing.price_monthly" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">السعر السنوي</label>
+              <input type="number" step="0.01" x-model.number="formData.pricing.price_yearly" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">العملة</label>
+              <input type="text" x-model="formData.pricing.currency" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="col-span-2 pt-4 border-t border-gray-200">
+              <h3 class="text-lg font-bold mb-4">معرفات بوابات الدفع (Stripe)</h3>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Price ID (Monthly)</label>
+              <input type="text" x-model="formData.pricing.stripe_price_id_monthly" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Price ID (Yearly)</label>
+              <input type="text" x-model="formData.pricing.stripe_price_id_yearly" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Limits -->
+        <div x-show="activeTab === 'limits'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <template x-for="(val, key) in formData.limits" :key="key">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1 uppercase" x-text="key.replace(/_/g, ' ')"></label>
+              <input type="number" x-model.number="formData.limits[key]" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+          </template>
+        </div>
+
+        <!-- Tab: Modules -->
+        <div x-show="activeTab === 'modules'">
+          <div class="mb-4 flex gap-2">
+            <input type="text" x-model="newModule" placeholder="اسم النظام (مثال: hotel_management)" class="border-gray-300 rounded-lg shadow-sm flex-1">
+            <button @click="addModule()" class="bg-gray-800 text-white px-4 py-2 rounded-lg">إضافة</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <template x-for="(mod, idx) in formData.modules" :key="idx">
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <span class="font-medium text-gray-700" x-text="mod.module_name"></span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" x-model="mod.is_enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Tab: Agents -->
+        <div x-show="activeTab === 'agents'">
+          <div class="mb-4 grid grid-cols-4 gap-2">
+            <input type="text" x-model="newAgent.type" placeholder="نوع الوكيل (مثال: customer_service)" class="border-gray-300 rounded-lg shadow-sm">
+            <input type="number" x-model.number="newAgent.limit" placeholder="حد الاستخدام" class="border-gray-300 rounded-lg shadow-sm">
+            <input type="number" x-model.number="newAgent.convs" placeholder="محادثات" class="border-gray-300 rounded-lg shadow-sm">
+            <button @click="addAgent()" class="bg-gray-800 text-white px-4 py-2 rounded-lg">إضافة وكيل</button>
+          </div>
+          <div class="space-y-4">
+            <template x-for="(ag, idx) in formData.agents" :key="idx">
+              <div class="p-4 border border-gray-200 rounded-lg flex items-center justify-between bg-gray-50">
+                <div class="flex items-center gap-4">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" x-model="ag.is_enabled" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                  </label>
+                  <span class="font-bold text-gray-800 text-lg" x-text="ag.agent_type"></span>
+                </div>
+                <div class="flex gap-4">
+                  <div>
+                    <span class="text-xs text-gray-500 block">حد الاستخدام</span>
+                    <input type="number" x-model.number="ag.monthly_usage_limit" class="w-24 p-1 border-gray-300 rounded text-sm">
+                  </div>
+                  <div>
+                    <span class="text-xs text-gray-500 block">المحادثات</span>
+                    <input type="number" x-model.number="ag.max_conversations" class="w-24 p-1 border-gray-300 rounded text-sm">
+                  </div>
+                  <div>
+                    <span class="text-xs text-gray-500 block">المكالمات</span>
+                    <input type="number" x-model.number="ag.max_voice_calls" class="w-24 p-1 border-gray-300 rounded text-sm">
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Tab: Integrations -->
+        <div x-show="activeTab === 'integrations'">
+          <div class="mb-4 flex gap-2">
+            <input type="text" x-model="newIntegration" placeholder="التكامل (مثال: whatsapp, stripe)" class="border-gray-300 rounded-lg shadow-sm flex-1">
+            <button @click="addIntegration()" class="bg-gray-800 text-white px-4 py-2 rounded-lg">إضافة</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <template x-for="(integ, idx) in formData.integrations" :key="idx">
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <span class="font-medium text-gray-700 uppercase" x-text="integ.integration_name"></span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" x-model="integ.is_enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Tab: Permissions -->
+        <div x-show="activeTab === 'permissions'">
+          <div class="mb-4 flex gap-2">
+            <input type="text" x-model="newPermission.key" placeholder="الميزة (Feature Key)" class="border-gray-300 rounded-lg shadow-sm flex-1">
+            <select x-model="newPermission.vis" class="border-gray-300 rounded-lg shadow-sm">
+              <option value="visible">مرئي (Visible)</option>
+              <option value="hidden">مخفي (Hidden)</option>
+              <option value="coming_soon">قريباً (Coming Soon)</option>
+            </select>
+            <button @click="addPermission()" class="bg-gray-800 text-white px-4 py-2 rounded-lg">إضافة</button>
+          </div>
+          <table class="min-w-full divide-y divide-gray-200 border mt-4">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الميزة</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الرؤية (Visibility)</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجراء</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <template x-for="(perm, idx) in formData.permissions" :key="idx">
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="perm.feature_key"></td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <select x-model="perm.visibility" class="border-gray-300 rounded-lg shadow-sm text-sm p-1">
+                      <option value="visible">مرئي (Visible)</option>
+                      <option value="hidden">مخفي (Hidden)</option>
+                      <option value="coming_soon">قريباً (Coming Soon)</option>
+                    </select>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <button @click="formData.permissions.splice(idx, 1)" class="text-red-600 hover:text-red-900">حذف</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('planBuilder', (initialPlanId) => ({
+        planId: initialPlanId,
+        loading: false,
+        activeTab: 'basic',
+        tabs: [
+            { id: 'basic', name: 'الأساسيات' },
+            { id: 'pricing', name: 'الأسعار' },
+            { id: 'limits', name: 'الحدود الرقمية' },
+            { id: 'modules', name: 'الأنظمة التشغيلية' },
+            { id: 'agents', name: 'الوكلاء الذكيون' },
+            { id: 'integrations', name: 'التكاملات' },
+            { id: 'permissions', name: 'الصلاحيات' }
+        ],
+        newModule: '',
+        newAgent: { type: '', limit: 0, convs: 0 },
+        newIntegration: '',
+        newPermission: { key: '', vis: 'visible' },
+        formData: {
+            code: '', name_ar: '', name_en: '', description_ar: '', description_en: '',
+            status: 'draft', sort_order: 0, is_popular: false, badge_color: '', badge_text: '', trial_days: 14,
+            pricing: { price_monthly: 0, price_yearly: 0, currency: 'SAR', stripe_price_id_monthly: '', stripe_price_id_yearly: '' },
+            limits: { max_branches: 1, max_users: 1, max_employees: 1, max_clients: 0, max_whatsapp_msgs: 0, max_sms: 0, max_emails: 0, max_push_notifications: 0, max_contracts_per_month: 0, storage_limit_gb: 1 },
+            modules: [
+              {module_name: 'accounting', is_enabled: false},
+              {module_name: 'real_estate', is_enabled: false},
+              {module_name: 'hotels', is_enabled: false},
+              {module_name: 'restaurants', is_enabled: false}
+            ],
+            agents: [
+              {agent_type: 'customer_service', is_enabled: false, monthly_usage_limit: 1000, max_conversations: 100, max_voice_calls: 0},
+              {agent_type: 'sales', is_enabled: false, monthly_usage_limit: 500, max_conversations: 50, max_voice_calls: 0}
+            ],
+            integrations: [
+              {integration_name: 'whatsapp', is_enabled: false},
+              {integration_name: 'sms', is_enabled: false},
+              {integration_name: 'stripe', is_enabled: false}
+            ],
+            permissions: []
+        },
+
+        init() {
+            if (this.planId) {
+                this.loadPlan();
+            }
+        },
+
+        async loadPlan() {
+            try {
+                const res = await fetch(`/api/sa/plans/${this.planId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    this.formData = { ...this.formData, ...data };
+                }
+            } catch (e) {
+                console.error("Failed to load plan", e);
+            }
+        },
+
+        async savePlan() {
+            this.loading = true;
+            try {
+                const method = this.planId ? 'PUT' : 'POST';
+                const url = this.planId ? `/api/sa/plans/${this.planId}` : '/api/sa/plans/';
+                
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    },
+                    body: JSON.stringify(this.formData)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('تم حفظ الباقة بنجاح!');
+                    if (!this.planId && result.plan_id) {
+                        window.location.href = `/sa/plans/${result.plan_id}/edit`;
+                    }
+                } else {
+                    alert('حدث خطأ أثناء الحفظ');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('فشل الاتصال بالخادم');
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async publishPlan() {
+            if (!confirm('هل أنت متأكد من نشر الباقة وجعلها متاحة للعملاء؟')) return;
+            try {
+                const res = await fetch(`/api/sa/plans/${this.planId}/publish`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('تم نشر الباقة بنجاح!');
+                    this.formData.status = 'active';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        addModule() {
+            if (this.newModule.trim()) {
+                this.formData.modules.push({ module_name: this.newModule.trim(), is_enabled: true });
+                this.newModule = '';
+            }
+        },
+        addAgent() {
+            if (this.newAgent.type.trim()) {
+                this.formData.agents.push({ agent_type: this.newAgent.type.trim(), is_enabled: true, monthly_usage_limit: this.newAgent.limit, max_conversations: this.newAgent.convs, max_voice_calls: 0 });
+                this.newAgent = { type: '', limit: 0, convs: 0 };
+            }
+        },
+        addIntegration() {
+            if (this.newIntegration.trim()) {
+                this.formData.integrations.push({ integration_name: this.newIntegration.trim(), is_enabled: true });
+                this.newIntegration = '';
+            }
+        },
+        addPermission() {
+            if (this.newPermission.key.trim()) {
+                this.formData.permissions.push({ feature_key: this.newPermission.key.trim(), visibility: this.newPermission.vis });
+                this.newPermission = { key: '', vis: 'visible' };
+            }
+        }
+    }));
+});
+</script>
+{% endblock %}

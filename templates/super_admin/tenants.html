@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}المستأجرون — إدارة المنصة{% endblock %}
+{% block body_class %}bg-gray-900{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+<aside class="w-60 bg-gray-800 text-gray-300 flex-shrink-0">
+<div class="p-6 border-b border-gray-700"><div class="font-bold text-white">👑 إدارة المنصة</div></div>
+<nav class="p-4 space-y-1">
+<a href="{{ url_for('super_admin.dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📊 الرئيسية</a>
+<a href="{{ url_for('super_admin.tenants_list') }}" class="block px-4 py-2 rounded-lg bg-gray-700 text-white text-sm">🏢 المستأجرون</a>
+<a href="{{ url_for('super_admin.tenants_list') }}#bot-settings" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🤖 إعدادات البوت</a>
+<a href="{{ url_for('super_admin.plans_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">💰 الباقات</a>
+<a href="{{ url_for('super_admin.activities_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🧩 الأنشطة</a>
+<a href="{{ url_for('super_admin.audit_logs') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📋 السجلات</a>
+<a href="{{ url_for('admin_integrations.list_all') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🔗 التكاملات</a>
+<a href="{{ url_for('super_admin.system_info') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">⚙️ النظام</a>
+<a href="{{ url_for('super_admin.account_change_password') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🔐 تغيير كلمة المرور</a>
+<hr class="border-gray-700 my-3"><form method="POST" action="{{ url_for('super_admin.logout') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<button class="block w-full text-right px-4 py-2 rounded-lg text-red-400 hover:bg-gray-700 text-sm">🚪 خروج</button>
+</form></nav></aside>
+<main class="flex-1 bg-gray-50 p-8"><div class="max-w-6xl mx-auto">
+<h1 class="text-2xl font-bold mb-2">🏢 المستأجرون</h1>
+<p class="text-gray-500 text-sm mb-6">عمود <span id="bot-settings" class="font-medium text-gray-700">إعدادات البوت</span> يفتح تعليمات البوت ومفاتيح الصور والصوت والاتصال لكل نشاط.</p>
+{% set _pending_count = tenants|selectattr('subscription')|selectattr('subscription.status','equalto','pending_approval')|list|length %}
+{% if _pending_count %}
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 flex items-center justify-between">
+<div class="text-amber-900 font-bold text-sm">🕒 يوجد {{ _pending_count }} طلب اشتراك بانتظار موافقتك</div>
+</div>
+{% endif %}
+<div class="flex flex-wrap gap-2 text-sm mb-6">
+<a href="{{ url_for('super_admin.tenants_list') }}" class="px-3 py-1 rounded-full {{ 'bg-gray-800 text-white' if not status_filter else 'bg-gray-200' }}">الكل</a>
+<a href="{{ url_for('super_admin.tenants_list', status='pending') }}" class="px-3 py-1 rounded-full {{ 'bg-amber-600 text-white' if status_filter=='pending' else 'bg-gray-200' }}">طلبات بانتظار الموافقة</a>
+<a href="{{ url_for('super_admin.tenants_list', status='active') }}" class="px-3 py-1 rounded-full {{ 'bg-green-600 text-white' if status_filter=='active' else 'bg-gray-200' }}">فعّال</a>
+<a href="{{ url_for('super_admin.tenants_list', status='suspended') }}" class="px-3 py-1 rounded-full {{ 'bg-red-600 text-white' if status_filter=='suspended' else 'bg-gray-200' }}">موقوف</a>
+<a href="{{ url_for('super_admin.tenants_list', status='cancelled') }}" class="px-3 py-1 rounded-full {{ 'bg-gray-600 text-white' if status_filter=='cancelled' else 'bg-gray-200' }}">مرفوض</a>
+</div>
+{% if tenants %}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+<thead class="bg-gray-100 text-gray-600">
+<tr>
+<th class="text-right py-3 px-4 whitespace-nowrap">النشاط</th>
+<th class="text-right py-3 px-4 whitespace-nowrap">الاسم التجاري</th>
+<th class="text-right py-3 px-4 whitespace-nowrap">البريد</th>
+<th class="text-right py-3 px-4 whitespace-nowrap">الحالة</th>
+<th class="text-right py-3 px-4 whitespace-nowrap">التاريخ</th>
+<th class="text-right py-3 px-4 whitespace-nowrap" id="bot-settings-col">إعدادات البوت</th>
+</tr>
+</thead>
+<tbody>
+{% for t in tenants %}
+<tr class="border-b border-gray-100 hover:bg-gray-50">
+<td class="py-3 px-4 whitespace-nowrap">{% if t.activity %}{{ t.activity.icon }}{% endif %}</td>
+<td class="py-3 px-4 whitespace-nowrap"><a href="{{ url_for('super_admin.tenant_detail', id=t.id) }}" class="text-blue-600 font-medium hover:underline">{{ t.business_name }}</a></td>
+<td class="py-3 px-4 text-gray-500 whitespace-nowrap" dir="ltr">{{ t.owner_email }}</td>
+<td class="py-3 px-4 whitespace-nowrap">
+<span class="px-2 py-0.5 rounded-full text-xs
+{% if t.status == 'active' %}bg-green-100 text-green-700
+{% elif t.status == 'pending' %}bg-yellow-100 text-yellow-700
+{% elif t.status == 'suspended' %}bg-red-100 text-red-700
+{% else %}bg-gray-100 text-gray-700{% endif %}">{{ t.status }}</span>
+</td>
+<td class="py-3 px-4 text-gray-400 whitespace-nowrap">{{ t.created_at.strftime('%Y-%m-%d') }}</td>
+<td class="py-3 px-4 whitespace-nowrap">
+<a href="{{ url_for('admin_bot.settings', tenant_id=t.id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700">🤖 البوت</a>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400 bg-white rounded-xl"><p>لا يوجد مستأجرون بهذا الفلتر.</p></div>
+{% endif %}
+</div></main></div>
+{% endblock %}

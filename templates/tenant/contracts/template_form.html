@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل قالب' if template else 'قالب جديد' }}{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+{% include 'tenant/_sidebar.html' ignore missing %}
+
+<main class="flex-1 p-6 md:p-8">
+<div class="max-w-3xl mx-auto">
+
+<a href="{{ url_for('tenant_contracts.index') }}" class="text-blue-600 text-sm mb-4 block">← رجوع</a>
+<h1 class="text-2xl font-bold mb-2">📄 {{ 'تعديل قالب' if template else 'قالب عقد جديد' }}</h1>
+<p class="text-sm text-gray-500 mb-6">
+  حدد طريقة توليد العقد، ثم اضبط الشروط والميزات والبيانات المطلوبة من العميل.
+</p>
+
+<form method="POST" class="space-y-5">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <!-- الأساسيات -->
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <h3 class="font-bold mb-3">📋 المعلومات الأساسية</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="block text-sm font-medium mb-1">اسم القالب *</label>
+        <input name="name" required value="{{ template.name if template else '' }}" placeholder="عقد إيجار شهري"
+          class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">نوع العقد</label>
+        <select name="contract_type" class="w-full border rounded-lg px-3 py-2 text-sm">
+          <option value="monthly_rental" {{ 'selected' if not template or template.contract_type == 'monthly_rental' }}>إيجار شهري</option>
+          <option value="daily_rental" {{ 'selected' if template and template.contract_type == 'daily_rental' }}>إيجار يومي</option>
+          <option value="service" {{ 'selected' if template and template.contract_type == 'service' }}>خدمة</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="flex items-center gap-2">
+      <input type="checkbox" name="is_active" {{ 'checked' if not template or template.is_active }}>
+      <span class="text-sm">القالب مفعّل</span>
+    </label>
+  </div>
+
+  <!-- بيانات المؤجر (الطرف الأول) -->
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <h3 class="font-bold mb-3">🏢 بيانات المؤجر (الطرف الأول)</h3>
+    <p class="text-xs text-gray-500 mb-4">هذه البيانات ستظهر في جميع العقود التي تُصدر بهذا القالب بشكل تلقائي كطرف أول (المؤجر).</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="block text-sm font-medium mb-1">اسم المؤجر / الشركة</label>
+        <input name="lessor_name" value="{{ template.lessor_name if template else '' }}" placeholder="شركة فلان العقارية" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">رقم الهوية / السجل التجاري</label>
+        <input name="lessor_id_number" value="{{ template.lessor_id_number if template else '' }}" placeholder="10xxxxxxxx" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">رقم الجوال للتواصل</label>
+        <input name="lessor_phone" value="{{ template.lessor_phone if template else '' }}" placeholder="05xxxxxxxx" class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">العنوان الوطني / المدينة</label>
+        <input name="lessor_address" value="{{ template.lessor_address if template else '' }}" placeholder="الرياض، حي الياسمين..." class="w-full border rounded-lg px-3 py-2 text-sm">
+      </div>
+    </div>
+  </div>
+
+  <!-- اختيار طريقة التوليد -->
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <h3 class="font-bold mb-3">⚙️ كيف تُريد توليد العقد؟</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="provider-cards">
+      <label class="provider-card flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer hover:bg-blue-50"
+             data-provider="internal">
+        <input type="radio" name="provider" value="internal" class="mt-1"
+               {{ 'checked' if not template or template.provider == 'internal' }}>
+        <div>
+          <div class="font-bold text-sm mb-1">🏢 قالب المنصة</div>
+          <p class="text-xs text-gray-500">
+            تصميم جذاب جاهز يستخدم شعار نشاطك ولونك، وتكتب أنت فقط الشروط والميزات.
+          </p>
+        </div>
+      </label>
+
+      <label class="provider-card flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer hover:bg-blue-50"
+             data-provider="external">
+        <input type="radio" name="provider" value="external" class="mt-1"
+               {{ 'checked' if template and template.provider == 'external' }}>
+        <div>
+          <div class="font-bold text-sm mb-1">🔗 نظام التاجر الخارجي</div>
+          <p class="text-xs text-gray-500">
+            ربط نظامك الخاص بمفاتيح API، نرسل البيانات وتعيد لنا رابط العقد.
+          </p>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- خيارات internal -->
+  <div id="block-internal" class="bg-white rounded-xl p-5 shadow-sm">
+    <h3 class="font-bold mb-3">📝 محتوى العقد (قالب المنصة)</h3>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">الميزات / الخدمات المشمولة</label>
+      <textarea name="features_text" rows="4"
+        placeholder="مكيّف&#10;واي فاي مجاني&#10;خدمة تنظيف أسبوعية&#10;..."
+        class="w-full border rounded-lg px-3 py-2 text-sm">{{ template.features_text if template else '' }}</textarea>
+      <p class="text-xs text-gray-400 mt-1">سطر واحد لكل ميزة — تظهر كقائمة منقطة في PDF</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">الشروط والأحكام</label>
+      <textarea name="terms_text" rows="6"
+        placeholder="١. لا يحق للمستأجر التنازل عن العقد دون موافقة خطية.&#10;٢. التزام المستأجر بسداد المبلغ المتفق عليه قبل بدء الإيجار.&#10;..."
+        class="w-full border rounded-lg px-3 py-2 text-sm">{{ template.terms_text if template else '' }}</textarea>
+      <p class="text-xs text-gray-400 mt-1">تظهر في القسم الأخير من PDF بشكل منسّق</p>
+    </div>
+
+    <div class="mt-4 border-t pt-4">
+      <label class="block text-sm font-medium mb-1">رسالة التذكير بالدفع</label>
+      <textarea name="reminder_message" rows="3"
+        placeholder="نود تذكيركم باقتراب موعد الدفع للإيجار. شاكرين ومقدرين حسن تعاونكم."
+        class="w-full border rounded-lg px-3 py-2 text-sm">{{ template.reminder_message if template else 'نود تذكيركم باقتراب موعد الدفع للإيجار. شاكرين ومقدرين حسن تعاونكم.' }}</textarea>
+      <p class="text-xs text-gray-400 mt-1">تُرسل للعميل عبر الواتساب أو الإيميل للتذكير بالدفع قبل انتهاء العقد بـ 3 أيام.</p>
+    </div>
+  </div>
+
+  <!-- خيارات external -->
+  <div id="block-external" class="bg-white rounded-xl p-5 shadow-sm hidden">
+    <h3 class="font-bold mb-3">🔗 إعدادات API نظامك</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+      <div class="md:col-span-2">
+        <label class="block text-xs text-gray-500 mb-1">رابط API</label>
+        <input type="url" name="external_api_url" value="{{ template.external_api_url if template else '' }}"
+          placeholder="https://your-system.com/api/contracts" dir="ltr"
+          class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Method</label>
+        <select name="external_api_method" class="w-full border rounded-lg px-3 py-2 text-sm">
+          <option value="POST" {{ 'selected' if not template or template.external_api_method == 'POST' }}>POST</option>
+          <option value="PUT" {{ 'selected' if template and template.external_api_method == 'PUT' }}>PUT</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="block text-xs text-gray-500 mb-1">Authorization Header</label>
+      <input type="text" name="external_api_auth" value="{{ template.external_api_auth if template else '' }}"
+        placeholder="Bearer xxx..." dir="ltr"
+        class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+    </div>
+
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Headers إضافية (JSON)</label>
+      <textarea name="external_api_headers_json" rows="3" dir="ltr"
+        class="w-full border rounded-lg px-3 py-2 text-xs font-mono">{{ template.external_api_headers|tojson if template and template.external_api_headers else '{}' }}</textarea>
+    </div>
+  </div>
+
+  <!-- الحقول المطلوبة من العميل -->
+  <div class="bg-white rounded-xl p-5 shadow-sm">
+    <h3 class="font-bold mb-1">📥 البيانات المطلوبة من العميل</h3>
+    <p class="text-xs text-gray-500 mb-3">
+      المساعد الذكي سيجمع هذه البيانات تلقائياً قبل إنشاء العقد.
+    </p>
+
+    <textarea name="required_fields_json" rows="9" dir="ltr"
+      class="w-full border rounded-lg px-3 py-2 text-xs font-mono bg-gray-50">{{ (template.required_fields if template and template.required_fields else default_fields)|tojson(indent=2) }}</textarea>
+    <p class="text-xs text-gray-400 mt-2">
+      الأنواع المتاحة:
+      <code class="bg-gray-100 px-1">text</code>,
+      <code class="bg-gray-100 px-1">phone</code>,
+      <code class="bg-gray-100 px-1">email</code>,
+      <code class="bg-gray-100 px-1">id_number</code>,
+      <code class="bg-gray-100 px-1">image</code>,
+      <code class="bg-gray-100 px-1">date</code>,
+      <code class="bg-gray-100 px-1">number</code>
+    </p>
+  </div>
+
+  <div class="flex gap-3">
+    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm hover:bg-blue-700 font-bold">💾 حفظ القالب</button>
+    <a href="{{ url_for('tenant_contracts.index') }}" class="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg text-sm hover:bg-gray-200">إلغاء</a>
+  </div>
+</form>
+
+</div>
+</main>
+</div>
+
+<script>
+(function() {
+  const internalBlock = document.getElementById('block-internal');
+  const externalBlock = document.getElementById('block-external');
+  const cards = document.querySelectorAll('#provider-cards .provider-card');
+
+  function refresh() {
+    const provider = document.querySelector('input[name="provider"]:checked').value;
+    internalBlock.classList.toggle('hidden', provider !== 'internal');
+    externalBlock.classList.toggle('hidden', provider !== 'external');
+    cards.forEach(c => {
+      c.classList.toggle('border-blue-500', c.dataset.provider === provider);
+      c.classList.toggle('bg-blue-50', c.dataset.provider === provider);
+    });
+  }
+
+  document.querySelectorAll('input[name="provider"]').forEach(r =>
+    r.addEventListener('change', refresh));
+  refresh();
+})();
+</script>
+{% endblock %}

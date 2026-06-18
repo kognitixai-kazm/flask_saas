@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>{{ tenant.business_name }} — دخول الشات</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root { --brand: {{ tenant.primary_color or '#2563eb' }}; }
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Tajawal',sans-serif; }
+body { background:#f3f4f6; min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:16px; }
+.card { background:#fff; border-radius:20px; padding:32px 24px; max-width:380px; width:100%; box-shadow:0 4px 24px rgba(0,0,0,0.08); }
+.logo { width:64px; height:64px; background:var(--brand); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 16px; color:#fff; }
+h1 { font-size:20px; text-align:center; margin-bottom:4px; }
+.sub { text-align:center; color:#9ca3af; font-size:13px; margin-bottom:24px; }
+label { display:block; font-size:13px; font-weight:500; margin-bottom:4px; color:#374151; }
+input { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:14px; outline:none; transition:.2s; }
+input:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+.btn { width:100%; background:var(--brand); color:#fff; border:none; border-radius:10px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; transition:.2s; }
+.btn:hover { opacity:.9; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+.error { background:#fef2f2; color:#dc2626; border-radius:8px; padding:10px; font-size:13px; margin-bottom:14px; display:none; text-align:center; }
+.success { background:#f0fdf4; color:#16a34a; border-radius:8px; padding:10px; font-size:13px; margin-bottom:14px; display:none; text-align:center; }
+#step2 { display:none; }
+.code-input { font-size:24px; text-align:center; letter-spacing:12px; font-weight:700; direction:ltr; }
+.back { text-align:center; margin-top:16px; }
+.back a { color:var(--brand); font-size:13px; cursor:pointer; text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">{{ tenant.activity.icon if tenant.activity else '🤖' }}</div>
+  <h1>{{ tenant.business_name }}</h1>
+  <p class="sub">سجّل بياناتك للبدء بالمحادثة</p>
+
+  <div id="error" class="error"></div>
+  <div id="success" class="success"></div>
+
+  <!-- خطوة 1: الاسم والبريد -->
+  <div id="step1">
+    <label>الاسم الكامل</label>
+    <input type="text" id="name" placeholder="مثال: محمد أحمد" autofocus>
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="email" placeholder="example@email.com" dir="ltr">
+    <label>رقم الجوال (اختياري)</label>
+    <input type="tel" id="phone" placeholder="+966..." dir="ltr">
+    <button class="btn" id="btn1" onclick="sendCode()">إرسال رمز التحقق</button>
+  </div>
+
+  <!-- خطوة 2: كود التحقق -->
+  <div id="step2">
+    <p class="sub" style="margin-bottom:16px">أدخل الرمز المرسل إلى <strong id="sent-email"></strong></p>
+    <input type="text" id="code" class="code-input" maxlength="6" placeholder="______">
+    <button class="btn" id="btn2" onclick="verifyCode()">تحقق ودخول</button>
+    <div class="back"><a onclick="document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none'">← رجوع</a></div>
+  </div>
+</div>
+
+<script>
+const SLUG = '{{ slug }}';
+const errorEl = document.getElementById('error');
+const successEl = document.getElementById('success');
+
+function showError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; successEl.style.display = 'none'; }
+function showSuccess(msg) { successEl.textContent = msg; successEl.style.display = 'block'; errorEl.style.display = 'none'; }
+function hideAll() { errorEl.style.display = 'none'; successEl.style.display = 'none'; }
+
+async function sendCode() {
+  hideAll();
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+
+  if (!name || !email) { showError('الاسم والبريد مطلوبين'); return; }
+
+  document.getElementById('btn1').disabled = true;
+  document.getElementById('btn1').textContent = 'جاري الإرسال...';
+
+  try {
+    const resp = await fetch(`/c/${SLUG}/register`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, email, phone}),
+    });
+    const raw = await resp.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (parseErr) {
+      showError('رد غير متوقع من الخادم (' + resp.status + '). جرّب تحديث الصفحة.');
+      return;
+    }
+    if (data.success) {
+      showSuccess('تم إرسال رمز التحقق إلى بريدك ✉️');
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+      document.getElementById('sent-email').textContent = email;
+      document.getElementById('code').focus();
+    } else {
+      showError(data.error || 'حدث خطأ');
+    }
+  } catch(e) {
+    showError('خطأ في الاتصال');
+  }
+  document.getElementById('btn1').disabled = false;
+  document.getElementById('btn1').textContent = 'إرسال رمز التحقق';
+}
+
+async function verifyCode() {
+  hideAll();
+  const email = document.getElementById('email').value.trim();
+  const code = document.getElementById('code').value.trim();
+  if (!code || code.length < 6) { showError('أدخل الرمز كاملاً (6 أرقام)'); return; }
+
+  document.getElementById('btn2').disabled = true;
+  try {
+    const resp = await fetch(`/c/${SLUG}/verify`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, code}),
+    });
+    const raw = await resp.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (parseErr) {
+      showError('رد غير متوقع من الخادم (' + resp.status + ').');
+      return;
+    }
+    if (data.success) {
+      window.location.href = data.redirect;
+    } else {
+      showError(data.error || 'الرمز غير صحيح');
+    }
+  } catch(e) {
+    showError('خطأ في الاتصال');
+  }
+  document.getElementById('btn2').disabled = false;
+}
+
+document.getElementById('code').addEventListener('keydown', e => { if(e.key==='Enter') verifyCode(); });
+document.getElementById('email').addEventListener('keydown', e => { if(e.key==='Enter') sendCode(); });
+</script>
+</body>
+</html>

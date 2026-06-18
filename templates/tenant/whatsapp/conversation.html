@@ -1,0 +1,37 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}محادثة واتساب — {{ g.current_tenant.business_name }}{% endblock %}
+{% block panel_content %}
+<a href="{{ url_for('tenant_whatsapp.index') }}" class="text-sm text-gray-500 hover:text-blue-600 mb-4 inline-block">← كل محادثات واتساب</a>
+
+<h1 class="text-xl font-bold mb-1">{{ conversation.visitor_name or 'عميل' }}</h1>
+<p class="text-sm text-gray-500 dir-ltr mb-6">{{ wa_phone or conversation.visitor_id }}</p>
+
+{% if not has_integration %}
+<div class="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl p-4 mb-4">الربط التقني غير مفعّل — لا يمكن إرسال ردود حتى يُكمل منصة العمل الإعداد.</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-gray-100 p-4 mb-6 max-h-[420px] overflow-y-auto space-y-3">
+  {% for m in messages %}
+  <div class="{% if m.sender_type == 'visitor' %}text-right{% else %}text-left{% endif %}">
+    <div class="inline-block max-w-[85%] rounded-2xl px-4 py-2 text-sm
+      {% if m.sender_type == 'visitor' %}bg-gray-100 text-gray-900{% elif m.sender_type == 'agent' %}bg-blue-600 text-white{% else %}bg-emerald-50 text-emerald-900 border border-emerald-100{% endif %}">
+      <div class="whitespace-pre-wrap">{{ m.content }}</div>
+      <div class="text-[10px] opacity-70 mt-1">
+        {% if m.sender_type == 'visitor' %}عميل{% elif m.sender_type == 'agent' %}أنت{% else %}بوت{% endif %}
+        · {{ m.created_at.strftime('%H:%M') if m.created_at else '' }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% if not messages %}
+  <p class="text-gray-400 text-sm">لا رسائل بعد.</p>
+  {% endif %}
+</div>
+
+<form method="post" action="{{ url_for('tenant_whatsapp.reply', conv_id=conversation.id) }}" class="bg-white rounded-xl border border-gray-100 p-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="block text-sm font-medium text-gray-700 mb-2">رسالتك عبر واتساب</label>
+  <textarea name="message" rows="3" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3" placeholder="اكتب الرد..." {% if not has_integration %}disabled{% endif %}></textarea>
+  <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50" {% if not has_integration %}disabled{% endif %}>إرسال</button>
+</form>
+{% endblock %}
