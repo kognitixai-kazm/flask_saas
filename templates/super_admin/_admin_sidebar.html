@@ -3,7 +3,7 @@
 
 {# زر القائمة للجوال #}
 <button type="button"
-        onclick="document.getElementById('sa-drawer').classList.toggle('-translate-x-full');document.getElementById('sa-backdrop').classList.toggle('hidden');"
+        onclick="document.getElementById('sa-drawer').classList.toggle('translate-x-full');document.getElementById('sa-backdrop').classList.toggle('hidden');"
         class="md:hidden fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#0b1f3a]">
         <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -13,14 +13,14 @@
 {# خلفية Backdrop للجوال #}
 <div id="sa-backdrop"
      class="hidden md:hidden fixed inset-0 bg-black/40 z-30 transition-all"
-     onclick="document.getElementById('sa-drawer').classList.add('-translate-x-full');this.classList.add('hidden');">
+     onclick="document.getElementById('sa-drawer').classList.add('translate-x-full');this.classList.add('hidden');">
 </div>
 
 {# القائمة الجانبية الرئيسية #}
 <aside id="sa-drawer"
        class="fixed md:sticky top-0 right-0 h-screen w-72 z-40 flex-shrink-0
               bg-gradient-to-b from-[#0b1f3a] to-[#0e2a4d] text-white border-l border-white/10
-              transform translate-x-0 -translate-x-full md:translate-x-0 transition-transform duration-300 overflow-y-auto">
+              transform translate-x-full md:translate-x-0 transition-transform duration-300 overflow-y-auto">
 
     {# رأس القائمة: KOGNITIX #}
     <div class="sticky top-0 px-5 pt-5 pb-4 border-b border-white/10 bg-gradient-to-b from-[#0b1f3a] to-transparent">
