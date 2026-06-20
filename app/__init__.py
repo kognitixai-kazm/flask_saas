@@ -147,7 +147,10 @@ def _register_blueprints(app):
     app.register_blueprint(admin_plans_api_bp, url_prefix='/api/sa/plans')
     app.register_blueprint(public_plans_api_bp, url_prefix='/api/public/pricing')
 
-    app.logger.info('✓ Blueprints registered (+ AI Agents & Plans)')
+    from .blueprints.notifications_api import bp as notifications_api_bp
+    app.register_blueprint(notifications_api_bp, url_prefix='/api/notifications')
+
+    app.logger.info('✓ Blueprints registered (+ AI Agents & Plans & Notifications)')
 
 
 def _register_error_handlers(app):
@@ -193,9 +196,24 @@ def _register_security_headers(app):
 def _register_context_processors(app):
     @app.context_processor
     def inject_globals():
+        from flask import g, session
+        notif_count = 0
+        try:
+            from .utils.notification_service import NotificationService
+            if hasattr(g, 'current_tenant') and g.current_tenant:
+                notif_count = NotificationService.get_unread_count('tenant', g.current_tenant.id)
+            else:
+                sa = g.get('current_admin') or g.get('current_super_admin')
+                if sa:
+                    notif_count = NotificationService.get_unread_count('admin', sa.id)
+        except Exception:
+            pass
+
         return {
             'SITE_NAME': app.config.get('SITE_NAME'),
             'SITE_URL': app.config.get('SITE_URL'),
+            'VAPID_PUBLIC_KEY': app.config.get('VAPID_PUBLIC_KEY', ''),
+            'notification_count': notif_count,
         }
 
 

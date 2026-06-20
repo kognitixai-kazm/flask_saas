@@ -689,6 +689,20 @@ class IntentEngine:
         db.session.add(booking)
         db.session.commit()
 
+        # ===== إشعار للتاجر =====
+        try:
+            from app.utils.notification_service import NotificationService
+            NotificationService.notify_tenant(
+                tenant_id=self.tenant_id,
+                category='booking',
+                title=f'حجز جديد #{booking.booking_number}',
+                body=f'{booking.customer_name} — {booking.type_label}',
+                action_url=f'/app/bookings/{booking.id}',
+                icon='📅',
+            )
+        except Exception as e:
+            import logging; logging.getLogger(__name__).warning(f'[Notification] booking notify error: {e}')
+
         # رسالة موجّهة حسب نمط الفندق
         tenant_obj = getattr(self, 'tenant', None)
         mode = getattr(tenant_obj, 'hotel_mode', 'both') if tenant_obj else 'both'
@@ -1095,6 +1109,20 @@ class IntentEngine:
             db.session.add(booking)
             db.session.commit()
 
+            # ===== إشعار للتاجر =====
+            try:
+                from app.utils.notification_service import NotificationService
+                NotificationService.notify_tenant(
+                    tenant_id=self.tenant_id,
+                    category='booking',
+                    title=f'حجز جديد #{booking.booking_number}',
+                    body=f'{booking.customer_name} — {booking.type_label}',
+                    action_url=f'/app/bookings/{booking.id}',
+                    icon='📅',
+                )
+            except Exception as e:
+                import logging; logging.getLogger(__name__).warning(f'[Notification] booking notify error: {e}')
+
             lines = [f"تم تسجيل طلب حجزك برقم {booking.booking_number}.\n"]
             if unit_hint_id:
                 lines.append('ربطنا طلبك بآخر وحدة كانت ضمن عرضنا لك (يمكنك تصحيح الرقم لو لزم).')
@@ -1337,6 +1365,20 @@ class IntentEngine:
                 )
                 db.session.add(booking)
                 db.session.commit()
+
+                # ===== إشعار للتاجر =====
+                try:
+                    from app.utils.notification_service import NotificationService
+                    NotificationService.notify_tenant(
+                        tenant_id=self.tenant_id,
+                        category='booking',
+                        title=f'حجز جديد #{booking.booking_number}',
+                        body=f'{booking.customer_name} — {booking.type_label}',
+                        action_url=f'/app/bookings/{booking.id}',
+                        icon='🍽️',
+                    )
+                except Exception as e:
+                    import logging; logging.getLogger(__name__).warning(f'[Notification] restaurant booking notify error: {e}')
 
                 lines.append(f"تم تسجيل طلب حجزك برقم {booking.booking_number}.\n")
                 lines.append("يرجى تزويدنا بالتالي:")

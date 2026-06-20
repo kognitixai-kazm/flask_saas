@@ -166,6 +166,20 @@ class TenantService:
         current_app.logger.info(
             f'[TenantService] subscription request slug={slug} email={owner_email}'
         )
+
+        # ===== إشعار للسوبر أدمن =====
+        try:
+            from app.utils.notification_service import NotificationService
+            NotificationService.notify_admin(
+                category='new_tenant',
+                title='طلب اشتراك جديد 🏢',
+                body=f'{business_name} — {owner_full_name} ({owner_email})',
+                action_url='/sa/',
+                icon='🏢',
+            )
+        except Exception as e:
+            current_app.logger.warning(f'[Notification] new tenant notify error: {e}')
+
         return tenant
 
     @staticmethod

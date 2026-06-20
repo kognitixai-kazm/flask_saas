@@ -96,5 +96,174 @@
     {% endwith %}
 
     {% block extra_scripts %}{% endblock %}
+
+<!-- ========== نظام الإشعارات (Service Worker + Push + Sound) ========== -->
+<audio id="notif-sound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQDAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQADAABkAGkAbABnAGcAYgBZAE0APQAtAB0ADgABAPoA9gD2APYA9wD7AAEACAARABoAIgAqADEANwA8AD8AQQA/ADwANwAwACgAHwAVAAoAAAA=" type="audio/wav">
+</audio>
+
+<script>
+(function(){
+    // ---- Service Worker Registration ----
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/service-worker.js', { scope: '/' })
+            .then(function(reg) {
+                console.log('[SW] Registered:', reg.scope);
+                // طلب إذن الإشعارات + الاشتراك في Push
+                if ('Notification' in window && 'PushManager' in window) {
+                    if (Notification.permission === 'default') {
+                        Notification.requestPermission().then(function(permission) {
+                            if (permission === 'granted') {
+                                subscribePush(reg);
+                            }
+                        });
+                    } else if (Notification.permission === 'granted') {
+                        subscribePush(reg);
+                    }
+                }
+            })
+            .catch(function(err) { console.warn('[SW] Registration failed:', err); });
+    }
+
+    function subscribePush(reg) {
+        var vapidKey = '{{ VAPID_PUBLIC_KEY }}';
+        if (!vapidKey) return;
+
+        reg.pushManager.getSubscription().then(function(sub) {
+            if (sub) {
+                sendSubToServer(sub);
+                return;
+            }
+            var key = urlBase64ToUint8Array(vapidKey);
+            reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
+                .then(function(sub) { sendSubToServer(sub); })
+                .catch(function(err) { console.warn('[Push] Subscribe error:', err); });
+        });
+    }
+
+    function sendSubToServer(sub) {
+        var json = sub.toJSON();
+        fetch('/api/notifications/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                endpoint: json.endpoint,
+                keys: json.keys,
+            })
+        }).catch(function(err) { console.warn('[Push] Send sub error:', err); });
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        var padding = '='.repeat((4 - base64String.length % 4) % 4);
+        var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        var rawData = atob(base64);
+        var outputArray = new Uint8Array(rawData.length);
+        for (var i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // ---- Polling for in-page notification badge ----
+    var lastCount = {{ notification_count|default(0) }};
+    function pollNotifications() {
+        fetch('/api/notifications/unread-count')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var count = data.count || 0;
+                // Update all bell badges
+                document.querySelectorAll('.notif-badge').forEach(function(el) {
+                    if (count > 0) {
+                        el.textContent = count > 99 ? '99+' : count;
+                        el.classList.remove('hidden');
+                    } else {
+                        el.classList.add('hidden');
+                    }
+                });
+                // Play sound if count increased
+                if (count > lastCount && lastCount >= 0) {
+                    try {
+                        var audio = document.getElementById('notif-sound');
+                        if (audio) { audio.currentTime = 0; audio.play().catch(function(){}); }
+                        // Also show browser notification if page is hidden
+                        if (document.hidden && Notification.permission === 'granted') {
+                            new Notification('إشعار جديد — KOGNITIX', {
+                                body: 'لديك ' + count + ' إشعار غير مقروء',
+                                icon: '/static/img/logo.png',
+                                dir: 'rtl',
+                                lang: 'ar',
+                            });
+                        }
+                    } catch(e) {}
+                }
+                lastCount = count;
+            })
+            .catch(function(){});
+    }
+    // Poll every 15 seconds
+    setInterval(pollNotifications, 15000);
+
+    // ---- Notification dropdown toggle ----
+    window.toggleNotifPanel = function() {
+        var panel = document.getElementById('notif-panel');
+        if (!panel) return;
+        if (panel.classList.contains('hidden')) {
+            panel.classList.remove('hidden');
+            // Load notifications
+            fetch('/api/notifications/list')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var list = document.getElementById('notif-list');
+                    if (!list) return;
+                    if (!data.notifications || data.notifications.length === 0) {
+                        list.innerHTML = '<div class="p-6 text-center text-gray-400 text-sm">لا توجد إشعارات</div>';
+                        return;
+                    }
+                    var html = '';
+                    data.notifications.forEach(function(n) {
+                        var readClass = n.is_read ? 'opacity-60' : 'bg-blue-50/60';
+                        html += '<a href="' + (n.action_url || '#') + '" onclick="markNotifRead(' + n.id + ')" '
+                              + 'class="block px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition ' + readClass + '">'
+                              + '<div class="flex items-start gap-2">'
+                              + '<span class="text-lg">' + n.icon + '</span>'
+                              + '<div class="flex-1 min-w-0">'
+                              + '<div class="text-sm font-bold text-gray-900 truncate">' + n.title + '</div>'
+                              + '<div class="text-xs text-gray-500 truncate">' + (n.body || '') + '</div>'
+                              + '<div class="text-[10px] text-gray-400 mt-1">' + n.time_ago + '</div>'
+                              + '</div>'
+                              + (!n.is_read ? '<div class="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>' : '')
+                              + '</div></a>';
+                    });
+                    list.innerHTML = html;
+                });
+        } else {
+            panel.classList.add('hidden');
+        }
+    };
+
+    window.markNotifRead = function(id) {
+        fetch('/api/notifications/read/' + id, { method: 'POST' }).catch(function(){});
+    };
+
+    window.markAllNotifsRead = function() {
+        fetch('/api/notifications/read-all', { method: 'POST' })
+            .then(function() {
+                document.querySelectorAll('.notif-badge').forEach(function(el) { el.classList.add('hidden'); });
+                toggleNotifPanel();
+            })
+            .catch(function(){});
+    };
+
+    // Close panel when clicking outside
+    document.addEventListener('click', function(e) {
+        var panel = document.getElementById('notif-panel');
+        var bell = document.getElementById('notif-bell');
+        if (panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) {
+            panel.classList.add('hidden');
+        }
+    });
+})();
+</script>
 </body>
 </html>
+

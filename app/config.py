@@ -154,6 +154,13 @@ class BaseConfig:
     # ============================================
     CHAT_HISTORY_LIMIT = 20  # عدد الرسائل المحفوظة في context الـ AI
 
+    # ============================================
+    # Web Push Notifications (VAPID Keys)
+    # ============================================
+    VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY', '')
+    VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY', '')
+    VAPID_CLAIMS_EMAIL = os.getenv('VAPID_CLAIMS_EMAIL', os.getenv('MAIL_DEFAULT_SENDER', 'admin@kognitixai.com'))
+
 
 class DevelopmentConfig(BaseConfig):
     """بيئة التطوير."""

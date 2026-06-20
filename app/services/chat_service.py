@@ -524,6 +524,21 @@ class ChatService:
             f'email_sent={inquiry.email_sent} to={target_email}'
         )
 
+        # ===== إشعار للتاجر =====
+        try:
+            from app.utils.notification_service import NotificationService
+            kind_ar = 'شكوى' if kind == 'complaint' else 'استفسار'
+            NotificationService.notify_tenant(
+                tenant_id=tenant.id,
+                category='complaint' if kind == 'complaint' else 'inquiry',
+                title=f'{kind_ar} جديد #{inquiry.id}',
+                body=(question[:100] + '...') if len(question) > 100 else question,
+                action_url=f'/app/inquiries/',
+                icon='📩' if kind == 'general' else '⚠️',
+            )
+        except Exception as e:
+            current_app.logger.warning(f'[Notification] inquiry notify error: {e}')
+
     @staticmethod
     def deliver_inquiry_agent_response(tenant: Tenant, inquiry: Inquiry, answer: str) -> None:
         """يوصّل رد صاحب النشاط للزائر: رسالة في المحادثة + إيميل + واتساب حسب التوفر."""

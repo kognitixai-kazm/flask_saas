@@ -21,6 +21,8 @@ from .contract_template import ContractTemplate
 from .contract import Contract
 from .tenant_integrations import TenantIntegration
 from .accounting import Account, JournalEntry, JournalEntryLine, Expense
+from .notification import Notification
+from .push_subscription import PushSubscription
 
 __all__ = [
     'SuperAdmin', 'Activity', 'Plan', 'PlanPricing', 'PlanLimit', 'PlanModule', 
@@ -31,5 +33,7 @@ __all__ = [
     'BotConfig', 'CustomReply',
     'Conversation', 'Message', 'AuditLog', 'TenantDeletionCode', 'PasswordResetToken',
     'ContractTemplate', 'Contract', 'TenantIntegration',
-    'Account', 'JournalEntry', 'JournalEntryLine', 'Expense'
+    'Account', 'JournalEntry', 'JournalEntryLine', 'Expense',
+    'Notification', 'PushSubscription',
 ]
+
