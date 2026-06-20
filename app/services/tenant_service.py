@@ -184,7 +184,11 @@ class TenantService:
 
     @staticmethod
     def approve_request(tenant_id: int) -> tuple[bool, str]:
-        """يوافق الأدمن على طلب الاشتراك → يُفعّل التجربة ويُرسل رابط الإعداد."""
+        """يوافق الأدمن على طلب الاشتراك → يُفعّل التجربة ويُنشئ حساب المالك ويُرسل بيانات الدخول."""
+        from app.services.auth_service import AuthService
+        import secrets
+        from flask import url_for
+
         tenant = Tenant.query.get(tenant_id)
         if not tenant:
             return False, 'المستأجر غير موجود'
@@ -218,14 +222,45 @@ class TenantService:
         ad.pop('pending_admin_approval', None)
         ad['approved_at'] = now.isoformat()
         tenant.activity_data = ad
+        
+        # إنشاء حساب مالك المنشأة إذا لم يكن موجوداً
+        from app.models.tenant_user import TenantUser
+        existing_owner = TenantUser.query.filter_by(tenant_id=tenant.id, role='owner').first()
+        
+        username = tenant.slug.replace('-', '_')
+        password = secrets.token_urlsafe(8)
+        
+        if not existing_owner:
+            # التحقق من عدم تكرار اسم المستخدم، إذا كان مكرراً نضيف أرقام
+            base_username = username
+            counter = 1
+            while TenantUser.query.filter_by(tenant_id=tenant.id, username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            AuthService.create_tenant_user(
+                tenant_id=tenant.id,
+                username=username,
+                email=tenant.owner_email,
+                password=password,
+                full_name=tenant.owner_full_name,
+                phone=tenant.owner_phone,
+                role='owner',
+            )
+
+        # استكمال إعداد التاجر
+        tenant.status = 'active'
+        tenant.setup_completed = True
         db.session.commit()
 
-        setup_url = SetupTokenManager.build_setup_url(tenant.id)
-        sent = EmailService.send_tenant_setup_link(
+        login_url = current_app.config.get('SITE_URL', '').rstrip('/') + '/app/login'
+        sent = EmailService.send_tenant_approval_credentials(
             to_email=tenant.owner_email,
             owner_name=tenant.owner_full_name,
             business_name=tenant.business_name,
-            setup_url=setup_url,
+            username=username,
+            password=password,
+            login_url=login_url,
         )
 
         AuditService.log(
@@ -233,9 +268,9 @@ class TenantService:
             action='tenant_subscription_approved',
             tenant_id=tenant.id,
             target=f'tenant:{tenant.id}',
-            extra_data={'email_sent': bool(sent), 'setup_url': setup_url},
+            extra_data={'email_sent': bool(sent), 'login_url': login_url},
         )
-        return True, setup_url
+        return True, login_url
 
     @staticmethod
     def reject_request(tenant_id: int, reason: str = '') -> bool:

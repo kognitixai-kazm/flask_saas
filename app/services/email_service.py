@@ -63,16 +63,17 @@ class EmailService:
         return EmailService._send(to_email, subject, body_html)
 
     @staticmethod
-    def send_tenant_setup_link(
+    def send_tenant_approval_credentials(
         to_email: str,
         owner_name: str,
         business_name: str,
-        setup_url: str,
+        username: str,
+        password: str,
+        login_url: str,
     ) -> bool:
         """
-        إرسال رابط إعداد الحساب للمالك.
+        إرسال بيانات الدخول للتاجر بعد موافقة الإدارة.
         يرجع True فقط عند MAIL_ENABLED ونجاح SMTP.
-        إذا البريد غير مفعّل: لا يُعتبر إرسالاً — يرجع False (لعرض الرابط في صفحة النجاح).
         """
         if not current_app.config.get('MAIL_ENABLED', False):
             return False
@@ -82,21 +83,64 @@ class EmailService:
         )
         safe_owner = html_module.escape((owner_name or '').strip())
         safe_biz = html_module.escape((business_name or '').strip())
-        safe_url = html_module.escape(setup_url or '', quote=True)
+        safe_url = html_module.escape(login_url or '', quote=True)
+        safe_username = html_module.escape((username or '').strip())
+        safe_password = html_module.escape((password or '').strip())
 
-        subject = f'إكمال إعداد حسابك — {business_name}'
+        subject = f'تمت الموافقة على حسابك — {business_name}'
         body_html = f"""
         <div dir="rtl" style="font-family:Tahoma,Arial;padding:20px;background:#f8f9fa;border-radius:12px;">
             <h2 style="color:#2563eb;">مرحباً {safe_owner}</h2>
-            <p>تم إنشاء حساب <strong>{safe_biz}</strong> على {site_name}.</p>
-            <p>اضغط الزر أدناه لإكمال الإعداد (الرابط صالح لفترة محدودة):</p>
+            <p>تمت الموافقة على إنشاء حساب نشاطك <strong>{safe_biz}</strong> في {site_name} بنجاح.</p>
+            <p>يمكنك تسجيل الدخول الآن للبدء في استخدام لوحة التحكم باستخدام بيانات الدخول التالية:</p>
+            <div style="background:#fff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:16px 0;">
+                <p><strong>اسم المستخدم:</strong> <span dir="ltr" style="display:inline-block;">{safe_username}</span></p>
+                <p><strong>كلمة المرور:</strong> <span dir="ltr" style="display:inline-block;">{safe_password}</span></p>
+            </div>
+            <p style="color:#b45309;font-size:14px;margin-bottom:16px;"><strong>ملاحظة هامة:</strong> نوصي بشدة بتغيير معلومات الدخول (اسم المستخدم وكلمة المرور) فور دخولك إلى لوحة التحكم من خلال صفحة الملف الشخصي.</p>
             <a href="{safe_url}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">
-                إكمال الإعداد
+                تسجيل الدخول للوحة التحكم
             </a>
             <p style="color:#6b7280;font-size:13px;margin-top:16px;">إذا لم يعمل الزر، انسخ الرابط والصقه في المتصفح:<br><span style="word-break:break-all;">{safe_url}</span></p>
         </div>
         """
         return EmailService._send(to_email, subject, body_html)
+
+    @staticmethod
+    def send_system_error_alert(
+        error_title: str,
+        error_details: str,
+    ) -> bool:
+        """إرسال تنبيه بالأخطاء لمدير المنصة (سوبر أدمن)."""
+        import html as _html
+        
+        # إذا لم يكن الإرسال مفعلا، نكتفي بالطباعة
+        if not current_app.config.get('MAIL_ENABLED', False):
+            current_app.logger.error(f"[SYSTEM_ERROR_ALERT] {error_title} - {error_details}")
+            return False
+
+        # جلب بريد مدير المنصة (من الإعدادات أو الافتراضي)
+        admin_email = current_app.config.get('MAIL_DEFAULT_SENDER')
+        if not admin_email:
+            return False
+
+        safe_title = _html.escape((error_title or '').strip())
+        safe_details = _html.escape((error_details or '').strip()).replace('\\n', '<br>')
+        
+        subject = f"⚠️ خطأ في النظام: {safe_title}"
+        body_html = f"""
+        <div dir="rtl" style="font-family:Tahoma,Arial;padding:20px;background:#f8f9fa;border-left:4px solid #ef4444;">
+            <h2 style="color:#ef4444;">تنبيه بوجود خلل في النظام</h2>
+            <p><strong>نوع الخطأ:</strong> {safe_title}</p>
+            <div style="background:#fff;padding:14px;border-radius:8px;border:1px solid #fca5a5;margin:16px 0;color:#333;">
+                <p><strong>تفاصيل الخطأ:</strong></p>
+                <p dir="ltr" style="text-align:left;font-family:monospace;">{safe_details}</p>
+            </div>
+            <p style="color:#6b7280;font-size:12px;">هذا التنبيه مرسل تلقائياً من نظام المراقبة.</p>
+        </div>
+        """
+        
+        return EmailService._send(admin_email, subject, body_html)
 
     @staticmethod
     def send_visitor_inquiry_answer(

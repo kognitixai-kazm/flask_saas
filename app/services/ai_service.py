@@ -273,10 +273,23 @@ class AIService:
             result.model_id = model.id
             result.provider = model.provider
             result.model_name = model.display_name
+            
+            if not result.success:
+                from app.services.email_service import EmailService
+                EmailService.send_system_error_alert(
+                    error_title=f"خطأ استدعاء الذكاء الاصطناعي ({result.provider})",
+                    error_details=f"Tenant ID: {tenant_id}\nModel: {result.model_name}\nError: {result.error}"
+                )
+                
             return result
 
         except requests.exceptions.Timeout:
             current_app.logger.warning(f'[AIService] timeout for {model.provider}')
+            from app.services.email_service import EmailService
+            EmailService.send_system_error_alert(
+                error_title=f"انتهاء مهلة الاتصال بالذكاء الاصطناعي ({model.provider})",
+                error_details=f"Tenant ID: {tenant_id}\nModel: {model.display_name}"
+            )
             return AIResult(
                 success=False,
                 error='انتهت مهلة الاستجابة من AI',
@@ -286,6 +299,11 @@ class AIService:
             )
         except Exception as e:
             current_app.logger.exception(f'[AIService] {model.provider} error: {e}')
+            from app.services.email_service import EmailService
+            EmailService.send_system_error_alert(
+                error_title=f"خطأ استثنائي في الذكاء الاصطناعي ({model.provider})",
+                error_details=f"Tenant ID: {tenant_id}\nModel: {model.display_name}\nException: {str(e)}"
+            )
             return AIResult(
                 success=False,
                 error=f'خطأ: {str(e)[:100]}',

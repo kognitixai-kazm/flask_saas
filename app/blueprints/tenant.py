@@ -151,6 +151,11 @@ def forgot_password():
             .limit(8)
             .all()
         )
+        
+        if not users:
+            flash('البريد الإلكتروني غير صحيح أو غير مسجل في النظام.', 'danger')
+            return render_template('tenant/forgot_password.html')
+
         site = (current_app.config.get('SITE_URL') or '').rstrip('/')
         for u in users[:5]:
             tenant = Tenant.query.get(u.tenant_id)
@@ -164,7 +169,7 @@ def forgot_password():
             )
             EmailService.send_password_reset_link(u.email, intro, url)
         flash(
-            'إذا كان البريد مسجلاً لدينا، ستصلك رسالة تحتوي على رابط إعادة التعيين.',
+            'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.',
             'info',
         )
         return redirect(url_for('tenant.login'))

@@ -149,6 +149,11 @@ class ContractService:
 
         except Exception as e:
             current_app.logger.exception(f'[ContractService] PDF gen error: {e}')
+            from app.services.email_service import EmailService
+            EmailService.send_system_error_alert(
+                error_title="خطأ في توليد عقد PDF داخلي",
+                error_details=f"Tenant ID: {contract.tenant_id}\nContract: {contract.contract_number}\nError: {str(e)}"
+            )
             return {'success': False, 'error': str(e)[:200]}
 
     # ========================================
@@ -607,6 +612,11 @@ class ContractService:
 
         except Exception as e:
             current_app.logger.exception(f'[ContractService] external API error: {e}')
+            from app.services.email_service import EmailService
+            EmailService.send_system_error_alert(
+                error_title="خطأ في استدعاء API خارجي للعقود",
+                error_details=f"Tenant ID: {contract.tenant_id}\nContract: {contract.contract_number}\nError: {str(e)}"
+            )
             return {'success': False, 'error': str(e)[:200]}
 
     @staticmethod
