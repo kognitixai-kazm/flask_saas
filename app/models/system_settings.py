@@ -103,6 +103,11 @@ class SystemSetting(db.Model):
             ('SMTP_PASSWORD', 'email', True, 'كلمة مرور التطبيق'),
             ('SMTP_FROM_NAME', 'email', False, 'الاسم الظاهر للمرسِل'),
             ('MAIL_ENABLED', 'email', False, 'true/false'),
+
+            # SEO & Tracking
+            ('SEO_GOOGLE_ANALYTICS', 'seo', False, 'مثل: G-XXXXXXX (Google Analytics Measurement ID)'),
+            ('SEO_GTM', 'seo', False, 'مثل: GTM-XXXXXXX (Google Tag Manager ID)'),
+            ('SEO_SEARCH_CONSOLE', 'seo', False, 'كود التحقق من ملكية الموقع لـ Search Console (المعرف فقط)'),
         ]
         for key, cat, is_sec, desc in defaults:
             existing = SystemSetting.query.filter_by(key=key).first()

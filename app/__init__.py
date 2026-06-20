@@ -214,6 +214,9 @@ def _register_context_processors(app):
             'SITE_URL': app.config.get('SITE_URL'),
             'VAPID_PUBLIC_KEY': app.config.get('VAPID_PUBLIC_KEY', ''),
             'notification_count': notif_count,
+            'seo_google_analytics': SystemSetting.get('SEO_GOOGLE_ANALYTICS', ''),
+            'seo_gtm': SystemSetting.get('SEO_GTM', ''),
+            'seo_search_console': SystemSetting.get('SEO_SEARCH_CONSOLE', ''),
         }
 
 

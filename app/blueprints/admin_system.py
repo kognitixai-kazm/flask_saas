@@ -27,6 +27,7 @@ def index():
         'whatsapp': SystemSetting.get_all_by_category('whatsapp'),
         'ai': SystemSetting.get_all_by_category('ai'),
         'cloudinary': SystemSetting.get_all_by_category('cloudinary'),
+        'seo': SystemSetting.get_all_by_category('seo'),
         'email': SystemSetting.get_all_by_category('email'),
     }
 
@@ -61,7 +62,30 @@ def update_setting():
         flash('المفتاح غير موجود', 'danger')
         return redirect(url_for('admin_system.index'))
 
-    setting.value = value.strip()
+    value = value.strip()
+    # تحقق فوري لمفاتيح الذكاء الاصطناعي
+    ai_provider_map = {
+        'AI_OPENAI_KEY': 'openai',
+        'AI_ANTHROPIC_KEY': 'anthropic',
+        'AI_GOOGLE_KEY': 'google',
+    }
+    if setting.category == 'ai' and setting.key in ai_provider_map and value:
+        prov = ai_provider_map[setting.key]
+        try:
+            from app.services.ai_service import AIService
+            AIService.invalidate_key_cache(prov, value)
+            ok, reason = AIService.validate_api_key(prov, value, force=True)
+            if not ok:
+                flash(f'❌ مفتاح {prov.upper()} غير صالح ({reason}). لم يتم حفظه.', 'danger')
+                return redirect(url_for('admin_system.index'))
+            else:
+                flash(f'✅ مفتاح {prov.upper()} تم التحقق منه.', 'success')
+        except Exception as e:
+            current_app.logger.warning(f'[admin_system] AI validate error: {e}')
+            flash(f'⚠️ تعذر فحص مفتاح {prov.upper()} بسبب خطأ اتصال.', 'warning')
+            return redirect(url_for('admin_system.index'))
+
+    setting.value = value
     setting.updated_by = g.current_admin.username
     try:
         db.session.commit()
