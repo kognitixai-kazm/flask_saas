@@ -23,6 +23,9 @@ bp = Blueprint('admin_system', __name__, template_folder='../../templates/super_
 @super_admin_required
 def index():
     """لوحة الإعدادات العامة — مفاتيح API."""
+    # فرض البذور التلقائية لضمان وجود كافة المفاتيح في قاعدة البيانات دائماً
+    SystemSetting.seed_defaults()
+    
     settings_by_cat = {
         'whatsapp': SystemSetting.get_all_by_category('whatsapp'),
         'ai': SystemSetting.get_all_by_category('ai'),
@@ -31,8 +34,10 @@ def index():
         'google': SystemSetting.get_all_by_category('google'),
     }
 
-    # جلب جميع نماذج الذكاء الاصطناعي المتاحة
+    # جلب جميع نماذج الذكاء الاصطناعي المتاحة (مع البذور التلقائية إذا كانت فارغة)
     from app.models.ai_model import AIModel
+    if AIModel.query.count() == 0:
+        AIModel.seed_defaults()
     ai_models = AIModel.query.order_by(AIModel.sort_order).all()
 
     # فحص الأمان

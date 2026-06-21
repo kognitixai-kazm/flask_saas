@@ -209,11 +209,23 @@ def _register_context_processors(app):
         except Exception:
             pass
 
+        # جلب إعدادات Google للتحقق والتتبع من قاعدة البيانات
+        google_site_verification = ''
+        google_analytics_id = ''
+        try:
+            from .models.system_settings import SystemSetting
+            google_site_verification = SystemSetting.get('GOOGLE_SITE_VERIFICATION', '')
+            google_analytics_id = SystemSetting.get('GOOGLE_ANALYTICS_ID', '')
+        except Exception:
+            pass
+
         return {
             'SITE_NAME': app.config.get('SITE_NAME'),
             'SITE_URL': app.config.get('SITE_URL'),
             'VAPID_PUBLIC_KEY': app.config.get('VAPID_PUBLIC_KEY', ''),
             'notification_count': notif_count,
+            'google_site_verification': google_site_verification,
+            'google_analytics_id': google_analytics_id,
         }
 
 

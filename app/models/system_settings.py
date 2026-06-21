@@ -95,6 +95,8 @@ class SystemSetting(db.Model):
             ('GOOGLE_MAPS_API_KEY', 'google', True, 'مفتاح Google Maps API العام للمنصة (للخرائط والعناوين)'),
             ('GOOGLE_CLIENT_ID', 'google', False, 'معرّف عميل Google OAuth (Client ID)'),
             ('GOOGLE_CLIENT_SECRET', 'google', True, 'مفتاح عميل Google OAuth السري (Client Secret)'),
+            ('GOOGLE_SITE_VERIFICATION', 'google', False, 'كود التحقق من ملكية الموقع لجوجل (Google Site Verification Meta Tag)'),
+            ('GOOGLE_ANALYTICS_ID', 'google', False, 'معرّف تتبع إحصائيات جوجل (Google Analytics ID - G-XXXXXX)'),
 
             # Cloudinary
             ('CLOUDINARY_CLOUD_NAME', 'cloudinary', False, 'Cloudinary Cloud Name'),
