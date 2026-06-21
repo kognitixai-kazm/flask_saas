@@ -91,6 +91,11 @@ class SystemSetting(db.Model):
             ('AI_GOOGLE_KEY', 'ai', True, 'Google Gemini API Key العام'),
             ('AI_DEFAULT_MODEL', 'ai', False, 'النموذج الافتراضي (مثل: gpt-4o-mini)'),
 
+            # Google Services
+            ('GOOGLE_MAPS_API_KEY', 'google', True, 'مفتاح Google Maps API العام للمنصة (للخرائط والعناوين)'),
+            ('GOOGLE_CLIENT_ID', 'google', False, 'معرّف عميل Google OAuth (Client ID)'),
+            ('GOOGLE_CLIENT_SECRET', 'google', True, 'مفتاح عميل Google OAuth السري (Client Secret)'),
+
             # Cloudinary
             ('CLOUDINARY_CLOUD_NAME', 'cloudinary', False, 'Cloudinary Cloud Name'),
             ('CLOUDINARY_API_KEY', 'cloudinary', True, 'Cloudinary API Key'),

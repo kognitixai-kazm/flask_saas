@@ -1,19 +1,10 @@
 {# Sidebar السوبر أدمن — هوية KOGNITIX + Drawer للجوال #}
 {% set _sa_user = g.get('current_admin') or g.get('current_super_admin') %}
 
-{# زر القائمة للجوال #}
-<button type="button" id="sa-menu-btn"
-        onclick="document.getElementById('sa-drawer').classList.remove('hidden'); document.getElementById('sa-backdrop').classList.remove('hidden'); this.classList.add('hidden');"
-        class="md:hidden fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#0b1f3a]">
-        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-    </svg>
-</button>
-
 {# خلفية Backdrop للجوال #}
 <div id="sa-backdrop"
      class="hidden md:hidden fixed inset-0 bg-black/40 z-30 transition-all"
-     onclick="document.getElementById('sa-drawer').classList.add('hidden'); this.classList.add('hidden'); document.getElementById('sa-menu-btn').classList.remove('hidden');">
+     onclick="toggleSidebar()">
 </div>
 
 {# القائمة الجانبية الرئيسية #}
@@ -33,7 +24,7 @@
                     <div class="text-[10px] uppercase tracking-[0.18em] text-cyan-300/90">Admin Console</div>
                 </div>
             </div>
-            <button type="button" onclick="document.getElementById('sa-drawer').classList.add('hidden'); document.getElementById('sa-backdrop').classList.add('hidden'); document.getElementById('sa-menu-btn').classList.remove('hidden');" class="md:hidden text-blue-200 hover:text-white transition-colors mt-1">
+            <button type="button" onclick="toggleSidebar()" class="md:hidden text-blue-200 hover:text-white transition-colors mt-1">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>

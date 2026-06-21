@@ -26,6 +26,7 @@
 <!-- Tabs -->
 <div class="flex gap-1 mb-4 overflow-x-auto text-sm">
     <button data-tab="ai"        class="tab-btn px-4 py-2 rounded-t-xl bg-blue-700 text-white">🧠 الذكاء الاصطناعي</button>
+    <button data-tab="google"    class="tab-btn px-4 py-2 rounded-t-xl bg-gray-100 text-gray-700">🌐 خدمات Google</button>
     <button data-tab="cloudinary"class="tab-btn px-4 py-2 rounded-t-xl bg-gray-100 text-gray-700">☁️ التخزين السحابي</button>
     <button data-tab="whatsapp"  class="tab-btn px-4 py-2 rounded-t-xl bg-gray-100 text-gray-700">💬 واتساب (System)</button>
     <button data-tab="email"     class="tab-btn px-4 py-2 rounded-t-xl bg-gray-100 text-gray-700">📧 البريد</button>
@@ -35,7 +36,7 @@
 <!-- AI Tab -->
 <section id="tab-ai" class="tab-content">
     <form method="POST" action="{{ url_for('admin_system.update_bulk') }}"
-          class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
+          class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="category" value="ai">
 
@@ -43,40 +44,158 @@
             <div class="w-12 h-12 rounded-xl bg-[#0b1f3a] text-cyan-300 flex items-center justify-center text-2xl">🧠</div>
             <div>
                 <h2 class="font-bold text-lg text-gray-900">مفاتيح مزوّدي الذكاء الاصطناعي</h2>
-                <p class="text-xs text-gray-500">عند الحفظ يُجرى فحص خفيف للمفتاح للتأكد من صحته فوراً. النموذج الافتراضي يتحدّد من <a href="{{ url_for('admin_pricing.index') }}" class="text-blue-700 underline">تسعير الخدمات</a>.</p>
+                <p class="text-xs text-gray-500">اختر المنصة لإدخال المفتاح وإعداد النموذج المفضل لها.</p>
             </div>
         </div>
 
-        {% set provider_meta = {
-            'AI_OPENAI_KEY':   ('OpenAI (ChatGPT)',  'sk-...',           '🟢'),
-            'AI_ANTHROPIC_KEY':('Anthropic (Claude)','sk-ant-...',       '🟣'),
-            'AI_GOOGLE_KEY':   ('Google Gemini',     'AIza...',          '🔵'),
-            'AI_DEFAULT_MODEL':('النموذج الافتراضي', 'مثال: gpt-4o-mini','⚙️'),
-        } %}
-
-        <div class="grid md:grid-cols-2 gap-4">
-        {% for s in settings_by_cat.ai %}
-            {% set meta = provider_meta.get(s.key, (s.key, 'أدخل القيمة', '🔑')) %}
-            <div class="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="font-bold text-sm text-gray-900">{{ meta[2] }} {{ meta[0] }}</div>
-                    {% if s.is_secret and s.value %}<span class="text-[11px] text-emerald-700">✓ مضبوط</span>{% endif %}
-                </div>
-                {% if s.description %}<p class="text-xs text-gray-500 mb-2">{{ s.description }}</p>{% endif %}
-                <input type="{{ 'password' if s.is_secret else 'text' }}"
-                       name="val_{{ s.key }}"
-                       value="{{ '' if s.is_secret else s.value }}"
-                       placeholder="{{ '••••••• (احتفظ فارغاً للإبقاء)' if s.is_secret and s.value else meta[1] }}"
-                       dir="ltr"
-                       class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
-                {% if s.updated_by %}<p class="text-[11px] text-gray-400 mt-1">آخر تحديث: {{ s.updated_by }}{% if s.updated_at %} · {{ s.updated_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}</p>{% endif %}
+        <!-- AI Provider Selection Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+            <!-- OpenAI Card -->
+            <div id="card-prov-openai" onclick="selectAIProvider('openai')" 
+                 class="ai-prov-card border-2 rounded-2xl p-4 cursor-pointer text-center hover:border-emerald-400 transition bg-gray-50/50">
+                <div class="text-3xl mb-2">🟢</div>
+                <div class="font-bold text-sm text-gray-900">OpenAI</div>
+                <div class="text-xs text-gray-500 mt-1">ChatGPT</div>
+                <span id="badge-prov-openai" class="inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700">غير نشط</span>
             </div>
-        {% endfor %}
+
+            <!-- Anthropic Card -->
+            <div id="card-prov-anthropic" onclick="selectAIProvider('anthropic')" 
+                 class="ai-prov-card border-2 rounded-2xl p-4 cursor-pointer text-center hover:border-purple-400 transition bg-gray-50/50">
+                <div class="text-3xl mb-2">🟣</div>
+                <div class="font-bold text-sm text-gray-900">Anthropic</div>
+                <div class="text-xs text-gray-500 mt-1">Claude</div>
+                <span id="badge-prov-anthropic" class="inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700">غير نشط</span>
+            </div>
+
+            <!-- Google Gemini Card -->
+            <div id="card-prov-google" onclick="selectAIProvider('google')" 
+                 class="ai-prov-card border-2 rounded-2xl p-4 cursor-pointer text-center hover:border-blue-400 transition bg-gray-50/50">
+                <div class="text-3xl mb-2">🔵</div>
+                <div class="font-bold text-sm text-gray-900">Google Gemini</div>
+                <div class="text-xs text-gray-500 mt-1">Gemini Pro/Flash</div>
+                <span id="badge-prov-google" class="inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700">غير نشط</span>
+            </div>
+
+            <!-- MiniMax Card -->
+            <div id="card-prov-minimax" onclick="selectAIProvider('minimax')" 
+                 class="ai-prov-card border-2 rounded-2xl p-4 cursor-pointer text-center hover:border-amber-400 transition bg-gray-50/50">
+                <div class="text-3xl mb-2">🟡</div>
+                <div class="font-bold text-sm text-gray-900">MiniMax</div>
+                <div class="text-xs text-gray-500 mt-1">Chinese AI</div>
+                <span id="badge-prov-minimax" class="inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700">غير نشط</span>
+            </div>
+        </div>
+
+        <!-- Provider Settings Fields -->
+        <div class="border border-gray-100 rounded-2xl p-5 bg-gray-50/40 space-y-4">
+            
+            <!-- OpenAI Section -->
+            <div id="fields-openai" class="prov-fields hidden space-y-3">
+                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟢 إعدادات OpenAI (ChatGPT)</h3>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ OpenAI</label>
+                    <input type="password" name="val_AI_OPENAI_KEY" id="input_AI_OPENAI_KEY"
+                           placeholder="sk-..." dir="ltr"
+                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                </div>
+            </div>
+
+            <!-- Anthropic Section -->
+            <div id="fields-anthropic" class="prov-fields hidden space-y-3">
+                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟣 إعدادات Anthropic (Claude)</h3>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ Anthropic</label>
+                    <input type="password" name="val_AI_ANTHROPIC_KEY" id="input_AI_ANTHROPIC_KEY"
+                           placeholder="sk-ant-..." dir="ltr"
+                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                </div>
+            </div>
+
+            <!-- Google Gemini Section -->
+            <div id="fields-google" class="prov-fields hidden space-y-3">
+                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🔵 إعدادات Google Gemini</h3>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ Google Gemini</label>
+                    <input type="password" name="val_AI_GOOGLE_KEY" id="input_AI_GOOGLE_KEY"
+                           placeholder="AIza..." dir="ltr"
+                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                </div>
+            </div>
+
+            <!-- MiniMax Section -->
+            <div id="fields-minimax" class="prov-fields hidden space-y-3">
+                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟡 إعدادات MiniMax AI</h3>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ MiniMax</label>
+                    <input type="password" name="val_AI_MINIMAX_KEY" id="input_AI_MINIMAX_KEY"
+                           placeholder="أدخل المفتاح" dir="ltr"
+                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                </div>
+            </div>
+
+            <!-- Default Model Selector -->
+            <div class="border-t pt-4 space-y-2">
+                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">⚙️ النموذج الافتراضي للمنصة</h3>
+                <p class="text-xs text-gray-500">اختر النموذج الافتراضي الذي سيتم تفعيله تلقائياً للمشتركين الجدد.</p>
+                
+                <select name="val_AI_DEFAULT_MODEL" id="select_AI_DEFAULT_MODEL" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+                    {% for model in ai_models %}
+                        <option value="{{ model.model_id }}" {% if model.is_default or settings_by_cat.ai|selectattr('key', 'equalto', 'AI_DEFAULT_MODEL')|map(attribute='value')|first == model.model_id %}selected{% endif %}>
+                            {{ model.icon }} {{ model.display_name }} ({{ model.model_id }}) — [{{ model.provider|upper }}]
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
         </div>
 
         <div class="flex items-center justify-between border-t pt-4">
             <p class="text-xs text-gray-500">يكفي إدخال مفتاح واحد لتفعيل الذكاء الاصطناعي على المنصة.</p>
-            <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold">💾 حفظ مع تحقق</button>
+            <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold">💾 حفظ كل إعدادات الذكاء الاصطناعي</button>
+        </div>
+    </form>
+</section>
+
+<!-- Google Services Tab -->
+<section id="tab-google" class="tab-content hidden">
+    <form method="POST" action="{{ url_for('admin_system.update_bulk') }}"
+          class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="category" value="google">
+
+        <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl">🌐</div>
+            <div>
+                <h2 class="font-bold text-lg text-gray-900">🌐 خدمات Google (خرائط وتسجيل دخول)</h2>
+                <p class="text-xs text-gray-500">إعداد خدمات Google العامة للمنصة مثل خرائط Google وتسجيل الدخول عبر Google OAuth.</p>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 pt-2">
+            {% for s in settings_by_cat.google %}
+            <div class="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="font-bold text-sm text-gray-900">
+                        {% if 'MAPS' in s.key %}🗺️{% else %}🔐{% endif %} {{ s.key }}
+                    </div>
+                    {% if s.is_secret and s.value %}<span class="text-[11px] text-emerald-700">✓ مضبوط</span>{% endif %}
+                </div>
+                <p class="text-xs text-gray-500 mb-2">{{ s.description or s.key }}</p>
+                <input type="{{ 'password' if s.is_secret else 'text' }}"
+                       name="val_{{ s.key }}"
+                       value="{{ '' if s.is_secret else s.value }}"
+                       placeholder="{{ '••••••• (احتفظ فارغاً للإبقاء)' if s.is_secret and s.value else 'أدخل القيمة' }}"
+                       dir="ltr"
+                       class="w-full border rounded-lg px-3 py-2 text-sm font-mono bg-white">
+                {% if s.updated_by %}<p class="text-[11px] text-gray-400 mt-1">آخر تحديث: {{ s.updated_by }}{% if s.updated_at %} · {{ s.updated_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="flex items-center justify-between border-t pt-4">
+            <p class="text-xs text-gray-500">تُستخدم هذه الإعدادات افتراضياً لكافة المستأجرين على المنصة.</p>
+            <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold">💾 حفظ إعدادات Google</button>
         </div>
     </form>
 </section>
@@ -200,6 +319,7 @@
 
 <script>
 (function () {
+    // ---- Tab Switching ----
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
     function show(name) {
@@ -213,6 +333,60 @@
         });
     }
     tabs.forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
+
+    // ---- AI Provider Setup ----
+    const aiKeys = {
+        openai: "{{ settings_by_cat.ai|selectattr('key', 'equalto', 'AI_OPENAI_KEY')|map(attribute='value')|first or '' }}",
+        anthropic: "{{ settings_by_cat.ai|selectattr('key', 'equalto', 'AI_ANTHROPIC_KEY')|map(attribute='value')|first or '' }}",
+        google: "{{ settings_by_cat.ai|selectattr('key', 'equalto', 'AI_GOOGLE_KEY')|map(attribute='value')|first or '' }}",
+        minimax: "{{ settings_by_cat.ai|selectattr('key', 'equalto', 'AI_MINIMAX_KEY')|map(attribute='value')|first or '' }}"
+    };
+
+    window.selectAIProvider = function(provider) {
+        // Hide all provider field divs
+        document.querySelectorAll('.prov-fields').forEach(el => el.classList.add('hidden'));
+        // Remove active styling from all provider cards
+        document.querySelectorAll('.ai-prov-card').forEach(el => {
+            el.classList.remove('border-blue-600', 'bg-blue-50/50');
+            el.classList.add('border-gray-200', 'bg-gray-50/50');
+        });
+        
+        // Show fields of the selected provider
+        const fieldsDiv = document.getElementById('fields-' + provider);
+        if (fieldsDiv) fieldsDiv.classList.remove('hidden');
+        
+        // Add active style to the selected card
+        const cardDiv = document.getElementById('card-prov-' + provider);
+        if (cardDiv) {
+            cardDiv.classList.remove('border-gray-200', 'bg-gray-50/50');
+            cardDiv.classList.add('border-blue-600', 'bg-blue-50/50');
+        }
+    };
+
+    // Initialize badges and placeholders
+    Object.keys(aiKeys).forEach(prov => {
+        const val = aiKeys[prov];
+        const badge = document.getElementById('badge-prov-' + prov);
+        const input = document.getElementById('input_AI_' + prov.toUpperCase() + '_KEY');
+        
+        if (val && val !== 'None' && val.trim() !== '') {
+            if (badge) {
+                badge.innerText = 'نشط ✅';
+                badge.className = 'inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-emerald-100 text-emerald-800 font-bold';
+            }
+            if (input) {
+                input.placeholder = '••••••• (محفوظ - اتركه فارغاً للإبقاء)';
+            }
+        } else {
+            if (badge) {
+                badge.innerText = 'غير مفعّل ⏸️';
+                badge.className = 'inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-100 text-gray-500';
+            }
+        }
+    });
+
+    // Default select OpenAI
+    selectAIProvider('openai');
 })();
 </script>
 {% endblock %}

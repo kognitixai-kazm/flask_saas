@@ -28,7 +28,12 @@ def index():
         'ai': SystemSetting.get_all_by_category('ai'),
         'cloudinary': SystemSetting.get_all_by_category('cloudinary'),
         'email': SystemSetting.get_all_by_category('email'),
+        'google': SystemSetting.get_all_by_category('google'),
     }
+
+    # جلب جميع نماذج الذكاء الاصطناعي المتاحة
+    from app.models.ai_model import AIModel
+    ai_models = AIModel.query.order_by(AIModel.sort_order).all()
 
     # فحص الأمان
     from app.utils.security import check_production_safety
@@ -37,6 +42,7 @@ def index():
     return render_template(
         'super_admin/system.html',
         settings_by_cat=settings_by_cat,
+        ai_models=ai_models,
         security_issues=security_issues,
         sa_user=g.current_admin,
     )

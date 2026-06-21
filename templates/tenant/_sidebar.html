@@ -4,19 +4,10 @@
 {% set new_bookings = g.current_tenant.bookings.filter_by(status='new').count() %}
 {% set new_inq = g.current_tenant.inquiries.filter_by(status='new').count() %}
 
-<!-- زر فتح القائمة (يظهر فقط على الجوال) -->
-<button type="button" id="tenant-menu-btn"
-        onclick="document.getElementById('tenant-drawer').classList.remove('hidden'); document.getElementById('drawer-backdrop').classList.remove('hidden'); this.classList.add('hidden');"
-        class="md:hidden fixed top-3 right-3 z-50 bg-white border border-gray-200 rounded-xl p-2.5 shadow-md transition-opacity">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-700">
-        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-    </svg>
-</button>
-
-<!-- خلفية شفافة عند فتح Drawer -->
+<!-- خلفية شفافة عند فتح Drawer للجوال -->
 <div id="drawer-backdrop"
      class="hidden md:hidden fixed inset-0 bg-black/40 z-30"
-     onclick="document.getElementById('tenant-drawer').classList.add('hidden'); this.classList.add('hidden'); document.getElementById('tenant-menu-btn').classList.remove('hidden');">
+     onclick="toggleSidebar()">
 </div>
 
 <aside id="tenant-drawer"
@@ -27,7 +18,7 @@
         <a href="/" class="flex items-center">
             {% with size='small', tagline=True %}{% include "_brand.html" %}{% endwith %}
         </a>
-        <button type="button" onclick="document.getElementById('tenant-drawer').classList.add('hidden'); document.getElementById('drawer-backdrop').classList.add('hidden'); document.getElementById('tenant-menu-btn').classList.remove('hidden');" class="md:hidden text-gray-400 hover:text-red-500 transition-colors p-1 -mr-2">
+        <button type="button" onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-red-500 transition-colors p-1 -mr-2">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
     </div>
