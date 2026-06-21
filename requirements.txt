@@ -40,7 +40,7 @@ Jinja2==3.1.3
 # AI (Both providers, switchable)
 # ============================================
 openai>=1.54.0
-anthropic==0.18.0
+anthropic>=0.18.0
 
 # ============================================
 # AI Agents (LangChain Framework)
