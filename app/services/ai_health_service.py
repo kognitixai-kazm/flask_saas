@@ -39,7 +39,8 @@ class AIHealthService:
 
             # 1) تاجر اختار provider خاص فيه
             tenant_provider = (bot.ai_provider or '').strip().lower() if bot else ''
-            tenant_key = (bot.ai_api_key or '').strip() if bot else ''
+            from app.utils.encryption import decrypt_value
+            tenant_key = decrypt_value((bot.ai_api_key or '')).strip() if bot else ''
 
             if tenant_provider and tenant_provider not in ('', 'none'):
                 if not tenant_key:

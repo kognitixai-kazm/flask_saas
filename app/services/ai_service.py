@@ -180,7 +180,8 @@ class AIService:
                     bp = 'google'
                 # If the tenant hasn't specified a provider, assume the key is for the current provider
                 if not bp or bp == provider.lower():
-                    return bot_config.ai_api_key.strip()
+                    from app.utils.encryption import decrypt_value
+                    return decrypt_value(bot_config.ai_api_key).strip()
 
         # المفتاح العام من SystemSetting
         key_map = {

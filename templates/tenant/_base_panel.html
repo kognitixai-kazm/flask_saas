@@ -2,9 +2,9 @@
 {% block body %}
 <div class="flex min-h-screen" id="main-layout">
     {% include "tenant/_sidebar.html" %}
-    <main class="flex-1 p-4 md:p-8 bg-gray-50 min-h-screen transition-all duration-300">
+    <main class="flex-1 w-full min-w-0 p-4 md:p-8 bg-gray-50 min-h-screen transition-all duration-300">
         <!-- شريط الإشعارات والتحكم العلوي -->
-        <div class="max-w-6xl mx-auto mb-6 flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm border border-gray-100/50">
+        <div class="relative z-40 max-w-6xl mx-auto mb-6 flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm border border-gray-100/50">
             <div class="flex items-center gap-3">
                 <!-- زر القائمة الجانبية الذكي -->
                 <button type="button" onclick="toggleSidebar()"
@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <div class="max-w-6xl mx-auto">
+        <div class="max-w-6xl mx-auto w-full overflow-x-auto relative z-10">
             {% block panel_content %}{% endblock %}
         </div>
     </main>

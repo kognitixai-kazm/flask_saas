@@ -61,7 +61,11 @@ class ActivityService:
     @staticmethod
     def get_active_activities():
         """الأنشطة المتاحة للتسجيل."""
-        return Activity.query.filter_by(is_active=True).order_by(Activity.sort_order).all()
+        activities = Activity.query.filter_by(is_active=True).order_by(Activity.sort_order).all()
+        if not activities:
+            ActivityService.seed_defaults()
+            activities = Activity.query.filter_by(is_active=True).order_by(Activity.sort_order).all()
+        return activities
 
     @staticmethod
     def get_activity_by_code(code: str) -> Activity | None:

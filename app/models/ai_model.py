@@ -22,8 +22,11 @@ class AIModel(db.Model):
     # الاسم المعروض (Claude Sonnet 4.5)
     display_name = db.Column(db.String(100), nullable=False)
 
-    # المزوّد: anthropic | openai | google
-    provider = db.Column(db.String(30), nullable=False, index=True)
+    # المزوّد: anthropic | openai | google (deprecated, use provider_id instead)
+    provider = db.Column(db.String(30), nullable=True, index=True)
+    
+    # ربط بشركة الذكاء الاصطناعي
+    provider_id = db.Column(db.Integer, db.ForeignKey('ai_providers.id'), nullable=True, index=True)
 
     # معرّف النموذج عند المزوّد
     # مثل: claude-sonnet-4-5 | gpt-4o-mini | gemini-pro
@@ -152,7 +155,25 @@ class AIModel(db.Model):
             },
         ]
 
+        from .ai_provider import AIProvider
+        
+        providers = [
+            {'slug': 'openai', 'name': 'OpenAI', 'icon': '🟢'},
+            {'slug': 'anthropic', 'name': 'Anthropic', 'icon': '🟣'},
+            {'slug': 'google', 'name': 'Google Gemini', 'icon': '🔵'},
+            {'slug': 'minimax', 'name': 'MiniMax', 'icon': '🟡'}
+        ]
+        
+        for p in providers:
+            if not AIProvider.query.filter_by(slug=p['slug']).first():
+                db.session.add(AIProvider(**p))
+        db.session.commit()
+
         for data in defaults:
+            p_slug = data.get('provider')
+            prov = AIProvider.query.filter_by(slug=p_slug).first()
+            if prov:
+                data['provider_id'] = prov.id
             existing = AIModel.query.filter_by(
                 provider=data['provider'],
                 model_id=data['model_id'],

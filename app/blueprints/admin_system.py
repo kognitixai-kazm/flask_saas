@@ -111,6 +111,14 @@ def update_bulk():
             # لو سرّي وفاضي، لا نعدّل (نحافظ على القديم)
             if s.is_secret and not new_value:
                 continue
+                
+            # Extract content from google site verification if user pasted a meta tag
+            if s.key == 'GOOGLE_SITE_VERIFICATION' and 'meta' in new_value.lower() and 'content' in new_value.lower():
+                import re
+                match = re.search(r'content=["\']([^"\']+)["\']', new_value, re.IGNORECASE)
+                if match:
+                    new_value = match.group(1)
+
             if s.value != new_value:
                 # تحقق فوري لمفاتيح الذكاء الاصطناعي
                 if category == 'ai' and s.key in ai_provider_map and new_value:

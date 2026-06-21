@@ -46,7 +46,12 @@ class SystemSetting(db.Model):
     def get(key: str, default: str = '') -> str:
         """جلب قيمة مفتاح."""
         s = SystemSetting.query.filter_by(key=key).first()
-        return s.value if s else default
+        if not s:
+            return default
+        if s.is_secret and s.value:
+            from app.utils.encryption import decrypt_value
+            return decrypt_value(s.value)
+        return s.value
 
     @staticmethod
     def set(key: str, value: str, category: str = 'general',
@@ -54,13 +59,19 @@ class SystemSetting(db.Model):
             updated_by: str = ''):
         """تعيين/تحديث قيمة."""
         s = SystemSetting.query.filter_by(key=key).first()
+        
+        value_to_save = value
+        if is_secret and value:
+            from app.utils.encryption import encrypt_value
+            value_to_save = encrypt_value(value)
+            
         if s:
-            s.value = value
+            s.value = value_to_save
             if updated_by:
                 s.updated_by = updated_by
         else:
             s = SystemSetting(
-                key=key, value=value,
+                key=key, value=value_to_save,
                 category=category, is_secret=is_secret,
                 description=description, updated_by=updated_by,
             )

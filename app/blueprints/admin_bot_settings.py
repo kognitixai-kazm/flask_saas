@@ -34,12 +34,14 @@ def settings(tenant_id):
     learned_count = CustomReply.query.filter_by(tenant_id=tenant_id, source='learned').count()
 
     from app.models.ai_model import AIModel
+    from app.models.ai_provider import AIProvider
     ai_models = AIModel.query.filter_by(is_active=True).all()
+    ai_providers = AIProvider.query.filter_by(is_active=True).all()
 
     return render_template('super_admin/bot_settings.html',
         tenant=tenant, config=config, replies=replies,
         manual_count=manual_count, learned_count=learned_count,
-        ai_models=ai_models)
+        ai_models=ai_models, ai_providers=ai_providers)
 
 
 # ==================== حفظ الإعدادات ====================
@@ -82,8 +84,9 @@ def save_settings(tenant_id):
             ok, reason = AIService.validate_api_key(new_ai_provider, new_ai_api_key, force=True)
             if ok:
                 flash('تم التحقق من مفتاح الذكاء الاصطناعي بنجاح.', 'success')
+                from app.utils.encryption import encrypt_value
                 config.ai_provider = new_ai_provider
-                config.ai_api_key = new_ai_api_key
+                config.ai_api_key = encrypt_value(new_ai_api_key)
                 config.ai_model = new_ai_model
             else:
                 flash(f'فشل التحقق من مفتاح الذكاء الاصطناعي ({reason}). لم يتم حفظ المفتاح الجديد.', 'danger')
@@ -91,8 +94,11 @@ def save_settings(tenant_id):
             current_app.logger.warning(f'[admin_bot] ai key validate error: {e}')
             flash('حدث خطأ أثناء التحقق من المفتاح.', 'danger')
     else:
+        from app.utils.encryption import encrypt_value
         config.ai_provider = new_ai_provider
-        config.ai_api_key = new_ai_api_key
+        # Only re-encrypt if the key actually changed to prevent double encrypting
+        if ai_key_changed:
+            config.ai_api_key = encrypt_value(new_ai_api_key)
         config.ai_model = new_ai_model
 
     # اتصال
@@ -123,6 +129,26 @@ def save_settings(tenant_id):
     db.session.commit()
     flash('✅ تم حفظ إعدادات البوت', 'success')
     return redirect(url_for('admin_bot.settings', tenant_id=tenant_id))
+
+
+@bp.route('/test-ai-key', methods=['POST'])
+@super_admin_required
+def test_ai_key():
+    """Test AI API key validity without saving it."""
+    provider = request.form.get('provider', '').strip()
+    api_key = request.form.get('api_key', '').strip()
+    
+    if not provider or not api_key:
+        return {'success': False, 'message': 'الرجاء إدخال المزوّد والمفتاح'}
+        
+    from app.services.ai_service import AIService
+    # Always force test for this endpoint
+    ok, reason = AIService.validate_api_key(provider, api_key, force=True)
+    
+    if ok:
+        return {'success': True, 'message': 'تم الاتصال بالذكاء الاصطناعي بنجاح ✅'}
+    else:
+        return {'success': False, 'message': f'فشل الاتصال: {reason} ❌'}
 
 
 @bp.route('/<int:tenant_id>/call-test', methods=['POST'])

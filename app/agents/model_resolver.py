@@ -62,10 +62,13 @@ class ModelResolver:
                 is_active=True,
             ).first()
 
+            from app.utils.encryption import decrypt_value
+            decrypted_key = decrypt_value(bot_config.ai_api_key)
+
             return ResolvedModel(
                 provider=bot_config.ai_provider,
                 model_id=model_id,
-                api_key=bot_config.ai_api_key.strip(),
+                api_key=decrypted_key.strip(),
                 display_name=db_model.display_name if db_model else model_id,
                 ai_model_db_id=db_model.id if db_model else None,
                 price_per_message=float(db_model.price_per_message) if db_model else 0.0,

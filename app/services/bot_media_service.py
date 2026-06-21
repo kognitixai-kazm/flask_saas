@@ -24,7 +24,8 @@ def _openai_key_for_media(bot: Optional[BotConfig]) -> str:
         if (bot.voice_provider or '').strip() == 'openai_whisper' and (bot.voice_api_key or '').strip():
             return bot.voice_api_key.strip()
         if (bot.ai_provider or '').strip().lower() in ('openai', '') and (bot.ai_api_key or '').strip():
-            return bot.ai_api_key.strip()
+            from app.utils.encryption import decrypt_value
+            return decrypt_value(bot.ai_api_key).strip()
     return (current_app.config.get('OPENAI_API_KEY') or '').strip()
 
 
@@ -32,7 +33,8 @@ def _gemini_key_for_media(bot: Optional[BotConfig]) -> str:
     if bot and (bot.ai_provider or '').strip().lower() in ('google_gemini', 'google'):
         k = (bot.ai_api_key or '').strip()
         if k:
-            return k
+            from app.utils.encryption import decrypt_value
+            return decrypt_value(k).strip()
     return (current_app.config.get('GOOGLE_API_KEY') or '').strip()
 
 

@@ -116,17 +116,22 @@
           <div><label class="block text-xs text-gray-500 mb-1">المزوّد</label>
           <select name="ai_provider" id="ai_provider_select" class="w-full border rounded-lg px-3 py-2 text-sm">
             <option value="">المفتاح العام للمنصة (حسب إعداد السيرفر)</option>
-            <option value="openai" {{ 'selected' if config.ai_provider == 'openai' }}>OpenAI</option>
-            <option value="anthropic" {{ 'selected' if config.ai_provider == 'anthropic' }}>Anthropic (Claude)</option>
-            <option value="google_gemini" {{ 'selected' if config.ai_provider in ('google_gemini', 'google') }}>Google Gemini</option>
+            {% for p in ai_providers %}
+            <option value="{{ p.slug }}" {{ 'selected' if config.ai_provider == p.slug or (config.ai_provider == 'google_gemini' and p.slug == 'google') }}>{{ p.name }}</option>
+            {% endfor %}
           </select></div>
           <div><label class="block text-xs text-gray-500 mb-1">API Key</label>
-          <input name="ai_api_key" value="{{ config.ai_api_key }}" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm font-mono" placeholder="حسب المزوّد"></div>
+          <div class="flex gap-2">
+            <input name="ai_api_key" id="ai_api_key_input" value="{{ config.ai_api_key }}" dir="ltr" class="flex-1 w-full border rounded-lg px-3 py-2 text-sm font-mono" placeholder="حسب المزوّد">
+            <button type="button" id="btn_test_ai" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-bold border">اختبار الاتصال</button>
+          </div>
+          <div id="ai_test_result" class="text-xs mt-1 font-bold"></div>
+          </div>
           <div><label class="block text-xs text-gray-500 mb-1">اسم الموديل</label>
           <select name="ai_model" id="ai_model_select" class="w-full border rounded-lg px-3 py-2 text-sm" dir="ltr">
             <option value="" data-provider="">الافتراضي / تلقائي</option>
             {% for m in ai_models %}
-            <option value="{{ m.model_id }}" data-provider="{{ m.provider }}" {{ 'selected' if config.ai_model == m.model_id }}>
+            <option value="{{ m.model_id }}" data-provider="{{ m.provider if m.provider else (m.ai_provider_rel.slug if m.ai_provider_rel else '') }}" {{ 'selected' if config.ai_model == m.model_id }}>
               {{ m.icon }} {{ m.display_name }}
             </option>
             {% endfor %}
@@ -265,8 +270,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function filterModels() {
       const provider = providerSelect.value;
-      // Google's provider name in DB is 'google', but the dropdown might send 'google_gemini'.
-      // We map google_gemini to google for filtering matching data-provider.
       const matchProvider = (provider === 'google_gemini') ? 'google' : provider;
       const currentVal = modelSelect.value;
       
@@ -291,6 +294,58 @@ document.addEventListener('DOMContentLoaded', function() {
     
     providerSelect.addEventListener('change', filterModels);
     filterModels();
+  }
+  
+  // Test AI Key Logic
+  const btnTestAI = document.getElementById('btn_test_ai');
+  const aiKeyInput = document.getElementById('ai_api_key_input');
+  const aiProviderSelect = document.getElementById('ai_provider_select');
+  const testResultDiv = document.getElementById('ai_test_result');
+  
+  if (btnTestAI) {
+      btnTestAI.addEventListener('click', async function() {
+          const provider = aiProviderSelect.value;
+          const apiKey = aiKeyInput.value.trim();
+          
+          if (!provider || !apiKey) {
+              testResultDiv.textContent = 'أدخل المزوّد والمفتاح أولاً';
+              testResultDiv.className = 'text-xs mt-1 font-bold text-red-600';
+              return;
+          }
+          
+          btnTestAI.disabled = true;
+          btnTestAI.textContent = 'جاري الفحص...';
+          testResultDiv.textContent = '';
+          
+          const formData = new FormData();
+          formData.append('provider', provider);
+          formData.append('api_key', apiKey);
+          
+          try {
+              const response = await fetch("{{ url_for('admin_bot.test_ai_key') }}", {
+                  method: 'POST',
+                  headers: {
+                      'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                  },
+                  body: formData
+              });
+              
+              const data = await response.json();
+              if (data.success) {
+                  testResultDiv.textContent = data.message;
+                  testResultDiv.className = 'text-xs mt-1 font-bold text-green-600';
+              } else {
+                  testResultDiv.textContent = data.message;
+                  testResultDiv.className = 'text-xs mt-1 font-bold text-red-600';
+              }
+          } catch (error) {
+              testResultDiv.textContent = 'حدث خطأ في الاتصال بالسيرفر';
+              testResultDiv.className = 'text-xs mt-1 font-bold text-red-600';
+          } finally {
+              btnTestAI.disabled = false;
+              btnTestAI.textContent = 'اختبار الاتصال';
+          }
+      });
   }
 });
 </script>

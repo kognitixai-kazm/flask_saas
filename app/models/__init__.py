@@ -23,6 +23,8 @@ from .tenant_integrations import TenantIntegration
 from .accounting import Account, JournalEntry, JournalEntryLine, Expense
 from .notification import Notification
 from .push_subscription import PushSubscription
+from .ai_provider import AIProvider
+from .ai_model import AIModel
 
 __all__ = [
     'SuperAdmin', 'Activity', 'Plan', 'PlanPricing', 'PlanLimit', 'PlanModule', 
@@ -35,5 +37,6 @@ __all__ = [
     'ContractTemplate', 'Contract', 'TenantIntegration',
     'Account', 'JournalEntry', 'JournalEntryLine', 'Expense',
     'Notification', 'PushSubscription',
+    'AIProvider', 'AIModel'
 ]
 
