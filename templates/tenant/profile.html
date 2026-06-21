@@ -46,6 +46,10 @@
       <div><label class="block text-sm font-medium mb-1">اسم النشاط</label>
       <input name="business_name" value="{{ g.current_tenant.business_name }}" required class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
 
+      <div><label class="block text-sm font-medium mb-1">اسم المستخدم (تسجيل الدخول)</label>
+      <input name="username" value="{{ g.current_user.username }}" required class="w-full border rounded-lg px-4 py-2.5 text-sm" dir="ltr">
+      <p class="text-xs text-gray-400 mt-1">يمكنك استخدام هذا الاسم بدلاً من البريد الإلكتروني لتسجيل الدخول.</p></div>
+
       <div><label class="block text-sm font-medium mb-1">البريد الإلكتروني</label>
       <input type="email" value="{{ g.current_tenant.owner_email }}" disabled class="w-full border rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-gray-500" dir="ltr">
       <p class="text-xs text-gray-400 mt-1">لا يمكن تغيير البريد</p></div>

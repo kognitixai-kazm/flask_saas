@@ -151,6 +151,10 @@ def forgot_password():
             .limit(8)
             .all()
         )
+        if not users:
+            flash('البريد الإلكتروني المدخل غير مسجل لدينا.', 'danger')
+            return render_template('tenant/forgot_password.html')
+
         site = (current_app.config.get('SITE_URL') or '').rstrip('/')
         for u in users[:5]:
             tenant = Tenant.query.get(u.tenant_id)
@@ -337,6 +341,22 @@ def profile():
         tenant.business_name = request.form.get('business_name', tenant.business_name)
         tenant.owner_phone = request.form.get('phone', tenant.owner_phone)
         tenant.primary_color = request.form.get('primary_color', tenant.primary_color)
+
+        # تحديث اسم المستخدم للدخول
+        if 'username' in request.form:
+            new_username = (request.form.get('username') or '').strip()
+            if new_username and new_username != g.current_user.username:
+                if len(new_username) < 3:
+                    flash('اسم المستخدم يجب أن يكون 3 أحرف على الأقل', 'danger')
+                    return redirect(url_for('tenant.profile'))
+                existing = TenantUser.query.filter_by(tenant_id=tenant.id, username=new_username).first()
+                if existing:
+                    flash('اسم المستخدم مستخدم مسبقاً', 'danger')
+                    return redirect(url_for('tenant.profile'))
+                
+                old_username = g.current_user.username
+                g.current_user.username = new_username
+                current_app.logger.info(f'[TenantUser] Username changed: {old_username} -> {new_username} (tenant_id={tenant.id})')
 
         # حقول الحساب البنكي (تظهر للعميل عند التحويل)
         if 'bank_name' in request.form:

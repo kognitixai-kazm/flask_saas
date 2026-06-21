@@ -99,6 +99,45 @@ class EmailService:
         return EmailService._send(to_email, subject, body_html)
 
     @staticmethod
+    def send_tenant_credentials(
+        to_email: str,
+        owner_name: str,
+        business_name: str,
+        username: str,
+        password: str,
+    ) -> bool:
+        """
+        إرسال معلومات الدخول الافتراضية للمالك بعد الموافقة.
+        """
+        if not current_app.config.get('MAIL_ENABLED', False):
+            return False
+
+        site_name = html_module.escape(
+            (current_app.config.get('SITE_NAME') or '').strip() or 'المنصة'
+        )
+        safe_owner = html_module.escape((owner_name or '').strip())
+        safe_biz = html_module.escape((business_name or '').strip())
+        safe_user = html_module.escape(username)
+        safe_pass = html_module.escape(password)
+        login_url = f"{current_app.config['SITE_URL'].rstrip('/')}/app/login"
+
+        subject = f'معلومات دخول حسابك — {business_name}'
+        body_html = f"""
+        <div dir="rtl" style="font-family:Tahoma,Arial;padding:20px;background:#f8f9fa;border-radius:12px;">
+            <h2 style="color:#2563eb;">مرحباً {safe_owner}</h2>
+            <p>تمت الموافقة على طلب انضمام <strong>{safe_biz}</strong> إلى منصة {site_name}.</p>
+            <p>تم إنشاء حسابك بنجاح، وإليك معلومات الدخول الافتراضية لتتمكن من الوصول للوحة التحكم الخاصة بك:</p>
+            <div style="background:#fff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:16px 0; max-width: 450px;">
+                <p style="margin: 4px 0;"><strong>رابط تسجيل الدخول:</strong> <a href="{login_url}">{login_url}</a></p>
+                <p style="margin: 4px 0;"><strong>اسم المستخدم:</strong> <span style="font-family: monospace; font-size: 15px; font-weight: bold; color: #1e3a8a;">{safe_user}</span></p>
+                <p style="margin: 4px 0;"><strong>كلمة المرور:</strong> <span style="font-family: monospace; font-size: 15px; font-weight: bold; color: #b91c1c;">{safe_pass}</span></p>
+            </div>
+            <p style="color:#ef4444; font-weight:bold; font-size:13px;">تنبيه: يمكنك تعديل اسم المستخدم وكلمة المرور في أي وقت بعد الدخول من خلال لوحة التحكم (الملف الشخصي).</p>
+        </div>
+        """
+        return EmailService._send(to_email, subject, body_html)
+
+    @staticmethod
     def send_visitor_inquiry_answer(
         to_email: str,
         business_name: str,

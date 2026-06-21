@@ -343,10 +343,10 @@ def tenant_activate(id):
 @bp.route('/tenants/<int:id>/approve_request', methods=['POST'])
 @super_admin_required
 def tenant_approve_request(id):
-    """قبول طلب الاشتراك → إرسال رابط الإعداد بالبريد + تفعيل التجربة."""
+    """قبول طلب الاشتراك."""
     ok, info = TenantService.approve_request(id)
     if ok:
-        flash('تمت الموافقة على الطلب وإرسال رابط الإعداد للمالك.', 'success')
+        flash(info, 'success')
     else:
         flash(f'تعذّرت الموافقة: {info}', 'danger')
     return redirect(url_for('super_admin.tenant_detail', id=id))

@@ -22,7 +22,7 @@
 <main class="flex-1 bg-gray-50 p-8"><div class="max-w-6xl mx-auto">
 <h1 class="text-2xl font-bold mb-2">🏢 المستأجرون</h1>
 <p class="text-gray-500 text-sm mb-6">عمود <span id="bot-settings" class="font-medium text-gray-700">إعدادات البوت</span> يفتح تعليمات البوت ومفاتيح الصور والصوت والاتصال لكل نشاط.</p>
-{% set _pending_count = tenants|selectattr('subscription')|selectattr('subscription.status','equalto','pending_approval')|list|length %}
+{% set _pending_count = tenants|selectattr('subscription')|map(attribute='subscription')|selectattr('status','equalto','pending_approval')|list|length %}
 {% if _pending_count %}
 <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 flex items-center justify-between">
 <div class="text-amber-900 font-bold text-sm">🕒 يوجد {{ _pending_count }} طلب اشتراك بانتظار موافقتك</div>

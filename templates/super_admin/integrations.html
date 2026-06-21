@@ -29,7 +29,7 @@
 <div class="bg-white rounded-xl shadow-sm p-6 mb-4">
   <div class="flex justify-between items-center mb-4">
     <div>
-      <h3 class="font-bold text-lg">{{ t.activity.icon }} {{ t.business_name }}</h3>
+      <h3 class="font-bold text-lg">{% if t.activity %}{{ t.activity.icon }} {% endif %}{{ t.business_name }}</h3>
       <span class="text-xs text-gray-400">{{ t.slug }}</span>
     </div>
   </div>

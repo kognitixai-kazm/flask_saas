@@ -184,10 +184,13 @@ class TenantService:
 
     @staticmethod
     def approve_request(tenant_id: int) -> tuple[bool, str]:
-        """يوافق الأدمن على طلب الاشتراك → يُفعّل التجربة ويُرسل رابط الإعداد."""
+        """يوافق الأدمن على طلب الاشتراك → يُفعّل الاشتراك، يُنشئ حساب المالك ببيانات افتراضية، ويرسلها بالبريد."""
         tenant = Tenant.query.get(tenant_id)
         if not tenant:
             return False, 'المستأجر غير موجود'
+
+        if tenant.setup_completed:
+            return False, 'هذا الحساب تم إعداده مسبقاً'
 
         sub = tenant.subscription
         plan = (sub.plan if sub else None) or _resolve_default_plan()
@@ -218,24 +221,73 @@ class TenantService:
         ad.pop('pending_admin_approval', None)
         ad['approved_at'] = now.isoformat()
         tenant.activity_data = ad
+
+        # توليد معلومات الدخول الافتراضية
+        import re
+        import secrets
+        import string
+        from app.models.tenant_user import TenantUser
+        from app.services.auth_service import AuthService
+
+        # تنظيف اسم المنشأة ليكون اسم مستخدم مناسب
+        username_base = re.sub(r'[^\w]', '', tenant.business_name).strip().replace(' ', '_')
+        if len(username_base) < 3:
+            username_base = f"user_{tenant.slug}"
+
+        username = username_base
+        counter = 1
+        while TenantUser.query.filter_by(username=username).first():
+            username = f"{username_base}_{counter}"
+            counter += 1
+
+        # توليد كلمة مرور عشوائية آمنة
+        alphabet = string.ascii_letters + string.digits
+        password = ''.join(secrets.choice(alphabet) for _ in range(10))
+
+        # إنشاء مستخدم المالك (Owner)
+        AuthService.create_tenant_user(
+            tenant_id=tenant.id,
+            username=username,
+            email=tenant.owner_email,
+            password=password,
+            full_name=tenant.owner_full_name,
+            phone=tenant.owner_phone,
+            role='owner',
+        )
+
+        tenant.status = 'active'
+        tenant.setup_completed = True
         db.session.commit()
 
-        setup_url = SetupTokenManager.build_setup_url(tenant.id)
-        sent = EmailService.send_tenant_setup_link(
+        # إرسال البريد الإلكتروني المحتوي على معلومات الدخول
+        sent = EmailService.send_tenant_credentials(
             to_email=tenant.owner_email,
             owner_name=tenant.owner_full_name,
             business_name=tenant.business_name,
-            setup_url=setup_url,
+            username=username,
+            password=password,
         )
+
+        if not sent:
+            current_app.logger.info(
+                f'\n'
+                f'╔══════════════════════════════════════════╗\n'
+                f'║  ✉️  CREDENTIALS (عرض يدوي / بريد معطّل)  ║\n'
+                f'║  Tenant:   {tenant.business_name:<28s}  ║\n'
+                f'║  Username: {username:<28s}  ║\n'
+                f'║  Password: {password:<28s}  ║\n'
+                f'║  Login URL: {current_app.config["SITE_URL"].rstrip("/") + "/app/login"}\n'
+                f'╚══════════════════════════════════════════╝'
+            )
 
         AuditService.log(
             actor_type='super_admin',
             action='tenant_subscription_approved',
             tenant_id=tenant.id,
             target=f'tenant:{tenant.id}',
-            extra_data={'email_sent': bool(sent), 'setup_url': setup_url},
+            extra_data={'email_sent': bool(sent), 'username': username},
         )
-        return True, setup_url
+        return True, "تمت الموافقة بنجاح وإنشاء حساب المالك وإرسال بيانات الدخول."
 
     @staticmethod
     def reject_request(tenant_id: int, reason: str = '') -> bool:

@@ -22,33 +22,10 @@ class NotificationService:
     def notify_tenant(tenant_id: int, category: str, title: str,
                       body: str = '', action_url: str = '', icon: str = '🔔'):
         """إنشاء إشعار للتاجر + إرسال Web Push."""
-        notif = Notification(
-            recipient_type='tenant',
-            recipient_id=tenant_id,
-            category=category,
-            title=title,
-            body=body,
-            action_url=action_url,
-            icon=icon,
-        )
-        db.session.add(notif)
-        db.session.commit()
-
-        # إرسال Push في الخلفية
-        NotificationService._send_push('tenant', tenant_id, notif)
-        return notif
-
-    @staticmethod
-    def notify_admin(category: str, title: str,
-                     body: str = '', action_url: str = '', icon: str = '🔔'):
-        """إنشاء إشعار لجميع مدراء المنصة + إرسال Web Push."""
-        from app.models.super_admin import SuperAdmin
-        admins = SuperAdmin.query.filter_by(is_active=True).all()
-        notifications = []
-        for admin in admins:
+        try:
             notif = Notification(
-                recipient_type='admin',
-                recipient_id=admin.id,
+                recipient_type='tenant',
+                recipient_id=tenant_id,
                 category=category,
                 title=title,
                 body=body,
@@ -56,14 +33,47 @@ class NotificationService:
                 icon=icon,
             )
             db.session.add(notif)
-            notifications.append((admin.id, notif))
+            db.session.commit()
 
-        db.session.commit()
+            # إرسال Push في الخلفية
+            NotificationService._send_push('tenant', tenant_id, notif)
+            return notif
+        except Exception as e:
+            db.session.rollback()
+            logger.warning(f'[NotificationService] notify_tenant failed: {e}')
+            return None
 
-        for admin_id, notif in notifications:
-            NotificationService._send_push('admin', admin_id, notif)
+    @staticmethod
+    def notify_admin(category: str, title: str,
+                     body: str = '', action_url: str = '', icon: str = '🔔'):
+        """إنشاء إشعار لجميع مدراء المنصة + إرسال Web Push."""
+        try:
+            from app.models.super_admin import SuperAdmin
+            admins = SuperAdmin.query.filter_by(is_active=True).all()
+            notifications = []
+            for admin in admins:
+                notif = Notification(
+                    recipient_type='admin',
+                    recipient_id=admin.id,
+                    category=category,
+                    title=title,
+                    body=body,
+                    action_url=action_url,
+                    icon=icon,
+                )
+                db.session.add(notif)
+                notifications.append((admin.id, notif))
 
-        return notifications
+            db.session.commit()
+
+            for admin_id, notif in notifications:
+                NotificationService._send_push('admin', admin_id, notif)
+
+            return notifications
+        except Exception as e:
+            db.session.rollback()
+            logger.warning(f'[NotificationService] notify_admin failed: {e}')
+            return []
 
     # =====================
     # إرسال Web Push Notification
