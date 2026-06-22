@@ -137,36 +137,37 @@ def forgot_password():
         return redirect(url_for('tenant.dashboard'))
     if request.method == 'POST':
         email = (request.form.get('email') or '').strip().lower()
-        if '@' not in email or len(email) < 5:
+        username = (request.form.get('username') or '').strip()
+        if not email or '@' not in email or len(email) < 5:
             flash('أدخل بريداً إلكترونياً صحيحاً.', 'danger')
             return render_template('tenant/forgot_password.html')
+        if not username:
+            flash('الرجاء إدخال اسم المستخدم.', 'danger')
+            return render_template('tenant/forgot_password.html')
+            
         from app.services.password_reset_service import issue_token, PURPOSE_TENANT_USER
         from app.services.email_service import EmailService
 
-        users = (
-            TenantUser.query.filter(
-                func.lower(TenantUser.email) == email,
-                TenantUser.is_active.is_(True),
-            )
-            .limit(8)
-            .all()
-        )
-        if not users:
-            flash('البريد الإلكتروني المدخل غير مسجل لدينا.', 'danger')
+        user = TenantUser.query.filter(
+            func.lower(TenantUser.email) == email,
+            TenantUser.username == username,
+            TenantUser.is_active.is_(True),
+        ).first()
+        
+        if not user:
+            flash('اسم المستخدم والبريد الإلكتروني لا يتطابقان مع أي حساب مسجل، أو الحساب غير متاح.', 'danger')
             return render_template('tenant/forgot_password.html')
 
         site = (current_app.config.get('SITE_URL') or '').rstrip('/')
-        for u in users[:5]:
-            tenant = Tenant.query.get(u.tenant_id)
-            if not tenant:
-                continue
-            raw = issue_token(PURPOSE_TENANT_USER, u.id)
+        tenant = Tenant.query.get(user.tenant_id)
+        if tenant:
+            raw = issue_token(PURPOSE_TENANT_USER, user.id)
             url = f"{site}/app/reset-password?t={raw}"
             intro = (
                 f"طُلبت إعادة تعيين كلمة المرور لحسابك في «{tenant.business_name}» "
-                f"(اسم الدخول: {u.username})."
+                f"(اسم الدخول: {user.username})."
             )
-            EmailService.send_password_reset_link(u.email, intro, url)
+            EmailService.send_password_reset_link(user.email, intro, url)
         flash(
             'إذا كان البريد مسجلاً لدينا، ستصلك رسالة تحتوي على رابط إعادة التعيين.',
             'info',
