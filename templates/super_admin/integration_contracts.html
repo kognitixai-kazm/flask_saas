@@ -13,7 +13,7 @@
       <option value="docusign" {{ 'selected' if config and config.provider == 'docusign' }}>DocuSign</option>
     </select></div>
     <div><label class="block text-sm font-medium mb-1">API Key (اختياري)</label>
-    <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_key" value="{{ config.api_key_decrypted if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div><label class="block text-sm font-medium mb-1">رابط قالب العقد (PDF)</label>
     <input name="template_url" value="{{ (config.extra_config or {}).get('template_url','') if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="https://...contract_template.pdf"></div>
     <label class="flex items-center gap-2"><input type="checkbox" name="auto_send_whatsapp" {{ 'checked' if config and (config.extra_config or {}).get('auto_send_whatsapp') }}><span class="text-sm">إرسال العقد تلقائياً عبر واتساب بعد التأكيد</span></label>

@@ -89,3 +89,100 @@ def new_expense():
         return redirect(url_for('tenant_accounting.list_expenses'))
         
     return render_template('tenant/accounting/new_expense.html')
+
+@bp.route('/journal-entries/new', methods=['GET', 'POST'])
+@tenant_owner_required
+def new_journal_entry():
+    """تسجيل قيد محاسبي يدوي."""
+    tenant = g.current_tenant
+    
+    if request.method == 'POST':
+        description = request.form.get('description', '').strip()
+        debit_account_id = request.form.get('debit_account_id', type=int)
+        credit_account_id = request.form.get('credit_account_id', type=int)
+        amount = request.form.get('amount', type=float, default=0.0)
+        
+        if amount <= 0 or not description or not debit_account_id or not credit_account_id:
+            flash('الرجاء إدخال بيانات صحيحة للقيد.', 'warning')
+            return redirect(request.url)
+            
+        if debit_account_id == credit_account_id:
+            flash('يجب أن يكون الحساب المدين مختلفاً عن الحساب الدائن.', 'warning')
+            return redirect(request.url)
+            
+        lines = [
+            {'account_id': debit_account_id, 'debit': amount, 'credit': 0},
+            {'account_id': credit_account_id, 'debit': 0, 'credit': amount}
+        ]
+        
+        success, msg = create_journal_entry(
+            tenant_id=tenant.id,
+            description=f"قيد يدوي: {description}",
+            reference_id=None,
+            reference_type="manual",
+            lines=lines
+        )
+        if success:
+            flash('✅ تم تسجيل القيد المحاسبي بنجاح.', 'success')
+            return redirect(url_for('tenant_accounting.dashboard'))
+        else:
+            flash(f'فشل توليد القيد: {msg}', 'warning')
+            
+        return redirect(request.url)
+        
+    accounts = Account.query.filter_by(tenant_id=tenant.id).all()
+    return render_template('tenant/accounting/new_journal_entry.html', accounts=accounts)
+
+@bp.route('/maintenance/new', methods=['GET', 'POST'])
+@tenant_owner_required
+def new_maintenance():
+    """تسجيل فاتورة صيانة."""
+    tenant = g.current_tenant
+    
+    if request.method == 'POST':
+        amount = request.form.get('amount', type=float, default=0.0)
+        description = request.form.get('description', '').strip()
+        payment_method = request.form.get('payment_method', 'cash')
+        
+        if amount <= 0 or not description:
+            flash('الرجاء إدخال مبلغ صحيح وبيان واضح للصيانة.', 'warning')
+            return redirect(request.url)
+            
+        expense = Expense(
+            tenant_id=tenant.id,
+            amount=amount,
+            description=f"صيانة: {description}",
+            category="maintenance",
+            created_by=g.current_user.full_name or g.current_user.username
+        )
+        db.session.add(expense)
+        db.session.commit()
+        
+        # حساب المصروف
+        exp_acc = Account.query.filter_by(tenant_id=tenant.id, code='501').first()
+        # حساب الدفع
+        credit_code = '101' if payment_method == 'cash' else '102'
+        cash_acc = Account.query.filter_by(tenant_id=tenant.id, code=credit_code).first()
+        
+        if exp_acc and cash_acc:
+            lines = [
+                {'account_id': exp_acc.id, 'debit': amount, 'credit': 0},
+                {'account_id': cash_acc.id, 'debit': 0, 'credit': amount}
+            ]
+            success, msg = create_journal_entry(
+                tenant_id=tenant.id,
+                description=f"مصروف صيانة: {description}",
+                reference_id=str(expense.id),
+                reference_type="expense",
+                lines=lines
+            )
+            if success:
+                flash('✅ تم تسجيل الصيانة والقيد المحاسبي بنجاح.', 'success')
+            else:
+                flash(f'تم حفظ الصيانة لكن فشل توليد القيد: {msg}', 'warning')
+        else:
+            flash('تم حفظ الصيانة لكن لم نتمكن من توليد القيد لعدم توفر الحسابات الأساسية.', 'warning')
+            
+        return redirect(url_for('tenant_accounting.list_expenses'))
+        
+    return render_template('tenant/accounting/new_maintenance.html')

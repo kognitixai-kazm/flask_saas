@@ -91,3 +91,65 @@ class BotConfig(db.Model):
 
     def __repr__(self):
         return f'<BotConfig tenant={self.tenant_id} tone={self.tone}>'
+
+    # ========== Decrypted Properties ==========
+    @property
+    def image_api_key_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.image_api_key)
+
+    @image_api_key_decrypted.setter
+    def image_api_key_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.image_api_key) != val:
+            self.image_api_key = encrypt_value(val) if val else ''
+
+    @property
+    def voice_api_key_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.voice_api_key)
+
+    @voice_api_key_decrypted.setter
+    def voice_api_key_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.voice_api_key) != val:
+            self.voice_api_key = encrypt_value(val) if val else ''
+
+    @property
+    def ai_api_key_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.ai_api_key)
+
+    @ai_api_key_decrypted.setter
+    def ai_api_key_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.ai_api_key) != val:
+            self.ai_api_key = encrypt_value(val) if val else ''
+
+    @property
+    def call_api_key_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.call_api_key)
+
+    @call_api_key_decrypted.setter
+    def call_api_key_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.call_api_key) != val:
+            self.call_api_key = encrypt_value(val) if val else ''
+
+    @property
+    def call_api_secret_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.call_api_secret)
+
+    @call_api_secret_decrypted.setter
+    def call_api_secret_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.call_api_secret) != val:
+            self.call_api_secret = encrypt_value(val) if val else ''
+

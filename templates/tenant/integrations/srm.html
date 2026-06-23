@@ -23,12 +23,12 @@
 
         <div>
             <label class="block text-sm font-bold text-gray-700 mb-1">API Key</label>
-            <input type="text" name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white transition font-mono text-sm" placeholder="e.g. sk_live_...">
+            <input type="text" name="api_key" value="{{ config.api_key_decrypted if config else '' }}" dir="ltr" class="w-full border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white transition font-mono text-sm" placeholder="e.g. sk_live_...">
         </div>
 
         <div>
             <label class="block text-sm font-bold text-gray-700 mb-1">API Secret</label>
-            <input type="password" name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr" class="w-full border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white transition font-mono text-sm" placeholder="السر (إن وجد)">
+            <input type="password" name="api_secret" value="{{ config.api_secret_decrypted if config else '' }}" dir="ltr" class="w-full border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white transition font-mono text-sm" placeholder="السر (إن وجد)">
         </div>
 
         <div>

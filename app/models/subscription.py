@@ -51,11 +51,31 @@ class Subscription(db.Model):
     @property
     def is_active(self):
         """هل الاشتراك فعّال حالياً."""
+        self.check_limits_and_update_status()
         if self.status not in ('active', 'trial'):
             return False
         if self.ends_at and self.ends_at < datetime.utcnow():
             return False
         return True
+
+    def check_limits_and_update_status(self):
+        """تحديث الحالة إذا انتهى الاشتراك أو تجاوز الحد التجريبي."""
+        changed = False
+        if self.status in ('trial', 'active'):
+            if self.ends_at and self.ends_at < datetime.utcnow():
+                self.status = 'past_due'
+                changed = True
+        
+        if self.status == 'trial':
+            total_usage = (self.chats_used_this_month or 0) + (self.ai_calls_this_month or 0)
+            if total_usage >= 500:
+                self.status = 'past_due'
+                changed = True
+        
+        if changed:
+            db.session.add(self)
+            # Not committing here to avoid breaking transactions, caller should commit or flush
+
 
     @property
     def days_remaining(self):

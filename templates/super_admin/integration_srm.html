@@ -13,9 +13,9 @@
       <option value="custom_srm" {{ 'selected' if config and config.provider == 'custom_srm' }}>مورد مخصص</option>
     </select></div>
     <div><label class="block text-sm font-medium mb-1">API Key</label>
-    <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_key" value="{{ config.api_key_decrypted if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div><label class="block text-sm font-medium mb-1">API Secret</label>
-    <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_secret" value="{{ config.api_secret_decrypted if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div><label class="block text-sm font-medium mb-1">Webhook URL (اختياري)</label>
     <input name="webhook_url" value="{{ (config.extra_config or {}).get('webhook_url','') if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
     <label class="flex items-center gap-2"><input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}><span class="text-sm font-bold">تفعيل</span></label>

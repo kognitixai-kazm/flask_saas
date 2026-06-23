@@ -52,6 +52,7 @@ class TenantDeletionService:
         from app.models.contract import Contract
         from app.models.inquiry import Inquiry
         from app.models.tenant_wallet import WalletTopUp, TenantWallet
+        from app.models.accounting import Account, JournalEntry, JournalEntryLine, Expense
 
         # المرحلة 1 — حذف الحجوزات أولاً (لها FK على conversations و hotel_units)
         Booking.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
@@ -66,7 +67,18 @@ class TenantDeletionService:
         Unit.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         Floor.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
 
-        # المرحلة 4 — بقية الجداول المباشرة
+        # المرحلة 4 — حذف الحسابات والقيود المحاسبية
+        # حذف سطور القيود المحاسبية أولاً لأنها تعتمد على القيود وعلى الحسابات
+        db.session.query(JournalEntryLine).filter(
+            JournalEntryLine.journal_entry_id.in_(
+                db.session.query(JournalEntry.id).filter_by(tenant_id=tenant_id)
+            )
+        ).delete(synchronize_session=False)
+        JournalEntry.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
+        Expense.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
+        Account.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
+
+        # المرحلة 5 — بقية الجداول المباشرة
         WalletTopUp.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         TenantWallet.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)
         AuditLog.query.filter_by(tenant_id=tenant_id).delete(synchronize_session=False)

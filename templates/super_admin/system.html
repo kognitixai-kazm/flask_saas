@@ -95,9 +95,12 @@
                 <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟢 إعدادات OpenAI (ChatGPT)</h3>
                 <div>
                     <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ OpenAI</label>
-                    <input type="password" name="val_AI_OPENAI_KEY" id="input_AI_OPENAI_KEY"
-                           placeholder="sk-..." dir="ltr"
-                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                    <div class="flex gap-2">
+                        <input type="password" name="val_AI_OPENAI_KEY" id="input_AI_OPENAI_KEY"
+                               placeholder="sk-..." dir="ltr"
+                               class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                        <button type="button" onclick="testApiKey('openai', 'input_AI_OPENAI_KEY')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص المفتاح</button>
+                    </div>
                 </div>
             </div>
 
@@ -106,9 +109,12 @@
                 <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟣 إعدادات Anthropic (Claude)</h3>
                 <div>
                     <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ Anthropic</label>
-                    <input type="password" name="val_AI_ANTHROPIC_KEY" id="input_AI_ANTHROPIC_KEY"
-                           placeholder="sk-ant-..." dir="ltr"
-                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                    <div class="flex gap-2">
+                        <input type="password" name="val_AI_ANTHROPIC_KEY" id="input_AI_ANTHROPIC_KEY"
+                               placeholder="sk-ant-..." dir="ltr"
+                               class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                        <button type="button" onclick="testApiKey('anthropic', 'input_AI_ANTHROPIC_KEY')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص المفتاح</button>
+                    </div>
                 </div>
             </div>
 
@@ -117,9 +123,12 @@
                 <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🔵 إعدادات Google Gemini</h3>
                 <div>
                     <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ Google Gemini</label>
-                    <input type="password" name="val_AI_GOOGLE_KEY" id="input_AI_GOOGLE_KEY"
-                           placeholder="AIza..." dir="ltr"
-                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                    <div class="flex gap-2">
+                        <input type="password" name="val_AI_GOOGLE_KEY" id="input_AI_GOOGLE_KEY"
+                               placeholder="AIza..." dir="ltr"
+                               class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                        <button type="button" onclick="testApiKey('google', 'input_AI_GOOGLE_KEY')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص المفتاح</button>
+                    </div>
                 </div>
             </div>
 
@@ -128,9 +137,12 @@
                 <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟡 إعدادات MiniMax AI</h3>
                 <div>
                     <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ MiniMax</label>
-                    <input type="password" name="val_AI_MINIMAX_KEY" id="input_AI_MINIMAX_KEY"
-                           placeholder="أدخل المفتاح" dir="ltr"
-                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                    <div class="flex gap-2">
+                        <input type="password" name="val_AI_MINIMAX_KEY" id="input_AI_MINIMAX_KEY"
+                               placeholder="أدخل المفتاح" dir="ltr"
+                               class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
+                        <button type="button" onclick="testApiKey('minimax', 'input_AI_MINIMAX_KEY')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص المفتاح</button>
+                    </div>
                 </div>
             </div>
 
@@ -141,10 +153,20 @@
                 
                 <select name="val_AI_DEFAULT_MODEL" id="select_AI_DEFAULT_MODEL" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
                     {% for model in ai_models %}
-                        <option value="{{ model.model_id }}" {% if model.is_default or settings_by_cat.ai|selectattr('key', 'equalto', 'AI_DEFAULT_MODEL')|map(attribute='value')|first == model.model_id %}selected{% endif %}>
+                        <option value="{{ model.model_id }}" data-provider="{{ model.provider }}" {% if model.is_default or settings_by_cat.ai|selectattr('key', 'equalto', 'AI_DEFAULT_MODEL')|map(attribute='value')|first == model.model_id %}selected{% endif %}>
                             {{ model.icon }} {{ model.display_name }} ({{ model.model_id }}) — [{{ model.provider|upper }}]
                         </option>
                     {% endfor %}
+                </select>
+            </div>
+
+            <!-- Backup Key Toggle -->
+            <div class="border-t pt-4 space-y-2">
+                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🛡️ تفعيل المفتاح الاحتياطي للمشتركين</h3>
+                <p class="text-xs text-gray-500">إذا كان التاجر مشتركاً ولديه رصيد ولكنه لم يضف مفتاح API خاص به، سيتم استخدام مفتاح المنصة (أعلاه) كاحتياطي.</p>
+                <select name="val_AI_BACKUP_KEY_ENABLED" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+                    <option value="false" {% if settings_by_cat.ai|selectattr('key', 'equalto', 'AI_BACKUP_KEY_ENABLED')|map(attribute='value')|first == 'false' %}selected{% endif %}>تعطيل (يجب على كل تاجر إضافة مفتاحه)</option>
+                    <option value="true" {% if settings_by_cat.ai|selectattr('key', 'equalto', 'AI_BACKUP_KEY_ENABLED')|map(attribute='value')|first == 'true' %}selected{% endif %}>تفعيل (السماح باستخدام مفتاح المنصة للتجار)</option>
                 </select>
             </div>
 
@@ -361,6 +383,28 @@
             cardDiv.classList.remove('border-gray-200', 'bg-gray-50/50');
             cardDiv.classList.add('border-blue-600', 'bg-blue-50/50');
         }
+        
+        // Filter the Default Model Select options to only show the chosen provider
+        const modelSelect = document.getElementById('select_AI_DEFAULT_MODEL');
+        if (modelSelect) {
+            let hasVisibleSelected = false;
+            Array.from(modelSelect.options).forEach(opt => {
+                const optProv = opt.getAttribute('data-provider');
+                if (optProv === provider) {
+                    opt.style.display = '';
+                    if (opt.selected) hasVisibleSelected = true;
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+            // If the current selected option is now hidden, select the first visible option
+            if (!hasVisibleSelected) {
+                const firstVisible = Array.from(modelSelect.options).find(opt => opt.style.display !== 'none');
+                if (firstVisible) {
+                    modelSelect.value = firstVisible.value;
+                }
+            }
+        }
     };
 
     // Initialize badges and placeholders
@@ -375,7 +419,8 @@
                 badge.className = 'inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-emerald-100 text-emerald-800 font-bold';
             }
             if (input) {
-                input.placeholder = '••••••• (محفوظ - اتركه فارغاً للإبقاء)';
+                // If it's already active, put the decrypted placeholder so they know it's there
+                input.value = val;
             }
         } else {
             if (badge) {
@@ -387,6 +432,44 @@
 
     // Default select OpenAI
     selectAIProvider('openai');
+    
+    // AJAX Test API Key
+    window.testApiKey = function(provider, inputId) {
+        const key = document.getElementById(inputId).value.trim();
+        if (!key) {
+            alert('يرجى إدخال المفتاح أولاً لفحصه!');
+            return;
+        }
+        
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = 'جاري الفحص...';
+        btn.disabled = true;
+        
+        fetch('{{ url_for("admin_system.test_ai_key") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ provider: provider, api_key: key })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                alert('✅ ' + data.message);
+            } else {
+                alert('❌ ' + data.message);
+            }
+        })
+        .catch(err => {
+            alert('❌ حدث خطأ في الاتصال بالسيرفر.');
+        })
+        .finally(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        });
+    }
 })();
 </script>
 {% endblock %}

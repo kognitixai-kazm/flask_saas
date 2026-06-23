@@ -1,0 +1,71 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}تسجيل قيد يدوي{% endblock %}
+
+{% block panel_content %}
+<div class="p-6 max-w-3xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">تسجيل قيد محاسبي يدوي</h1>
+        <p class="text-gray-500 mt-1">قم بإدخال تفاصيل القيد اليدوي وتحديد الحسابات المدينة والدائنة.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- الحساب المدين -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">الحساب المدين (من حساب)</label>
+                    <select name="debit_account_id" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                        <option value="" disabled selected>اختر الحساب...</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.code }} - {{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- الحساب الدائن -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">الحساب الدائن (إلى حساب)</label>
+                    <select name="credit_account_id" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                        <option value="" disabled selected>اختر الحساب...</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.code }} - {{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- المبلغ -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
+                    <div class="relative">
+                        <input type="number" step="0.01" name="amount" required min="0.1"
+                            class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">د.م</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- البيان -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">البيان / الوصف</label>
+                    <input type="text" name="description" required placeholder="مثال: تسوية عهدة موظف..."
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 border-t pt-5">
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition">
+                    حفظ القيد
+                </button>
+                <a href="{{ url_for('tenant_accounting.dashboard') }}" class="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                    إلغاء
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

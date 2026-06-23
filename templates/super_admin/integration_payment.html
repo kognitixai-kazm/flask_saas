@@ -14,9 +14,9 @@
       <option value="stripe" {{ 'selected' if config and config.provider == 'stripe' }}>Stripe</option>
     </select></div>
     <div><label class="block text-sm font-medium mb-1">API Key (Public)</label>
-    <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_key" value="{{ config.api_key_decrypted if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div><label class="block text-sm font-medium mb-1">API Secret</label>
-    <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_secret" value="{{ config.api_secret_decrypted if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div class="grid grid-cols-2 gap-4">
       <div><label class="block text-sm font-medium mb-1">الوضع</label>
       <select name="payment_mode" class="w-full border rounded-lg px-4 py-2.5 text-sm">

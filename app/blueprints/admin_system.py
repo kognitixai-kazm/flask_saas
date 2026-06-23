@@ -6,7 +6,7 @@ app/blueprints/admin_system.py — إعدادات النظام (/sa/system)
 - تغيير كلمة مرور السوبر أدمن (بدون لمس .env)
 - فحص الأمان والتحذيرات
 """
-from flask import Blueprint, render_template, request, redirect, url_for, flash, g, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, g, current_app, jsonify
 
 from app.extensions import db
 from app.decorators import super_admin_required
@@ -72,7 +72,7 @@ def update_setting():
         flash('المفتاح غير موجود', 'danger')
         return redirect(url_for('admin_system.index'))
 
-    setting.value = value.strip()
+    setting.value_decrypted = value.strip()
     setting.updated_by = g.current_admin.username
     try:
         db.session.commit()
@@ -119,7 +119,7 @@ def update_bulk():
                 if match:
                     new_value = match.group(1)
 
-            if s.value != new_value:
+            if s.value_decrypted != new_value:
                 # تحقق فوري لمفاتيح الذكاء الاصطناعي
                 if category == 'ai' and s.key in ai_provider_map and new_value:
                     prov = ai_provider_map[s.key]
@@ -137,7 +137,7 @@ def update_bulk():
                         flash(f'⚠️ تعذر فحص مفتاح {prov.upper()} بسبب خطأ اتصال.', 'warning')
                         continue
                 
-                s.value = new_value
+                s.value_decrypted = new_value
                 s.updated_by = g.current_admin.username
                 updated += 1
 
@@ -152,6 +152,27 @@ def update_bulk():
     if updated:
         flash(f'تم تحديث {updated} مفتاح في {category}.', 'success')
     return redirect(url_for('admin_system.index'))
+
+
+@bp.route('/test-ai-key', methods=['POST'])
+@super_admin_required
+def test_ai_key():
+    """Test an AI API key without saving it."""
+    data = request.get_json(silent=True) or {}
+    provider = data.get('provider', '').strip().lower()
+    api_key = data.get('api_key', '').strip()
+
+    if not provider or not api_key:
+        return jsonify({'success': False, 'message': 'المزوّد أو المفتاح مفقود'}), 400
+
+    from app.services.ai_service import AIService
+    ok, reason = AIService.validate_api_key(provider, api_key, force=True)
+    
+    if ok:
+        return jsonify({'success': True, 'message': f'مفتاح {provider.upper()} صحيح ويعمل بنجاح!'})
+    else:
+        return jsonify({'success': False, 'message': f'فشل التحقق: {reason}'})
+
 
 
 # ========================================

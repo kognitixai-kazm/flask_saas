@@ -116,3 +116,53 @@ class Integration(db.Model):
 
     def __repr__(self):
         return f'<Integration {self.service_type}/{self.provider} tenant={self.tenant_id}>'
+
+    # ========== Decrypted Properties ==========
+    @property
+    def api_key_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.api_key)
+
+    @api_key_decrypted.setter
+    def api_key_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.api_key) != val:
+            self.api_key = encrypt_value(val) if val else ''
+
+    @property
+    def api_secret_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.api_secret)
+
+    @api_secret_decrypted.setter
+    def api_secret_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.api_secret) != val:
+            self.api_secret = encrypt_value(val) if val else ''
+
+    @property
+    def access_token_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.access_token)
+
+    @access_token_decrypted.setter
+    def access_token_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.access_token) != val:
+            self.access_token = encrypt_value(val) if val else ''
+
+    @property
+    def webhook_verify_token_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.webhook_verify_token)
+
+    @webhook_verify_token_decrypted.setter
+    def webhook_verify_token_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.webhook_verify_token) != val:
+            self.webhook_verify_token = encrypt_value(val) if val else ''
+

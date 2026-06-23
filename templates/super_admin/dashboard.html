@@ -3,9 +3,9 @@
 {% block panel_content %}
 
 {# Hero / ترحيب + نبضات حيّة #}
-<section class="rounded-2xl p-6 md:p-8 mb-6
+<section class="rounded-2xl p-5 md:p-8 mb-6
                 bg-gradient-to-br from-[#0b1f3a] via-[#13325c] to-[#0e2a4d] text-white shadow-lg">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div class="flex-1">
             <div class="flex items-center gap-3 mb-2">
                 <img src="{{ url_for('static', filename='img/logo.png') }}"
@@ -20,18 +20,18 @@
                 لوحة حيّة تعرض نبض المنصة لحظياً — ومساعد ذكي جاهز يجاوبك بالنص أو الصوت.
             </p>
         </div>
-        <div class="flex flex-wrap gap-2 justify-start md:justify-end">
+        <div class="flex flex-col sm:flex-row flex-wrap gap-3 justify-start md:justify-end w-full md:w-auto">
             <a href="{{ url_for('super_admin.tenants_list', status='pending') }}"
-               class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-sm transition-all">
+               class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2.5 text-sm transition-all min-h-[44px] flex-1 sm:flex-initial text-center">
                 📥 طلبات بانتظار الموافقة
                 {% if stats.pending_tenants %}<span class="bg-amber-400 text-amber-900 text-xs font-bold rounded-full px-2 py-0.5">{{ stats.pending_tenants }}</span>{% endif %}
             </a>
             <a href="{{ url_for('admin_system.index') }}"
-               class="inline-flex items-center gap-2 bg-cyan-400 text-[#0b1f3a] font-bold rounded-xl px-4 py-2 text-sm hover:bg-cyan-300 transition-all">
+               class="inline-flex items-center justify-center gap-2 bg-cyan-400 text-[#0b1f3a] font-bold rounded-xl px-4 py-2.5 text-sm hover:bg-cyan-300 transition-all min-h-[44px] flex-1 sm:flex-initial text-center">
                 🔑 إدارة المفاتيح
             </a>
             <a href="{{ url_for('super_admin.dashboard') }}#usage-per-tenant"
-               class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-sm transition-all">
+               class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-2.5 text-sm transition-all min-h-[44px] flex-1 sm:flex-initial text-center">
                 📊 استهلاك التجار
             </a>
         </div>
@@ -128,16 +128,16 @@
         </div>
 
         <form id="ai-form" class="p-3 border-t border-gray-100 bg-white">
-            <div class="flex items-end gap-2">
+            <div class="flex items-center gap-2">
                 <textarea id="ai-input" rows="1"
                           placeholder="اكتب سؤالك هنا… (مثال: كم طلب بانتظار الموافقة؟)"
-                          class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"></textarea>
+                          class="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all min-h-[44px]"></textarea>
                 <button type="button" id="ai-mic" title="تحدّث"
-                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all">
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all min-h-[44px]">
                     🎙️
                 </button>
                 <button type="submit" id="ai-send"
-                        class="bg-[#0b1f3a] hover:bg-[#13325c] text-white px-4 h-10 rounded-xl text-sm font-bold flex-shrink-0 transition-all">
+                        class="bg-[#0b1f3a] hover:bg-[#13325c] text-white px-4 h-11 rounded-xl text-sm font-bold flex-shrink-0 transition-all min-h-[44px] flex items-center justify-center">
                     إرسال
                 </button>
             </div>
@@ -194,7 +194,44 @@
         <h3 class="font-bold text-gray-900">آخر المستأجرين</h3>
         <a href="{{ url_for('super_admin.tenants_list') }}" class="text-blue-600 text-sm hover:underline">عرض الكل →</a>
     </div>
-    <div class="overflow-x-auto">
+
+    <!-- عرض البطاقات على الجوال -->
+    <div class="block md:hidden space-y-4">
+        {% for t in recent_tenants %}
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-3">
+            <div class="flex justify-between items-center">
+                <a href="{{ url_for('super_admin.tenant_detail', id=t.id) }}" class="text-blue-700 hover:underline font-bold text-sm">
+                    {{ t.business_name }}
+                </a>
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium
+                    {% if t.status == 'active' %}bg-green-100 text-green-700
+                    {% elif t.status == 'pending' %}bg-yellow-100 text-yellow-700
+                    {% elif t.status == 'suspended' %}bg-red-100 text-red-700
+                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {{ t.status }}
+                </span>
+            </div>
+            <div class="text-xs text-gray-500 space-y-1">
+                <div class="flex justify-between">
+                    <span>البريد الإلكتروني:</span>
+                    <span class="font-mono text-gray-700" dir="ltr">{{ t.owner_email }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>تاريخ التسجيل:</span>
+                    <span class="text-gray-700">{{ t.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+            <div class="pt-2 border-t border-gray-200/60 flex justify-end">
+                <a href="{{ url_for('admin_bot.settings', tenant_id=t.id) }}" class="inline-flex items-center justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-xs font-bold min-h-[44px] w-full text-center">
+                    ⚙️ إعدادات البوت
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- عرض الجدول على الشاشات الكبيرة -->
+    <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="text-gray-500 border-b">
                 <tr>
@@ -218,7 +255,7 @@
                             {% else %}bg-gray-100 text-gray-700{% endif %}">{{ t.status }}</span>
                     </td>
                     <td class="py-3 px-2 text-gray-400 text-xs">{{ t.created_at.strftime('%Y-%m-%d') }}</td>
-                    <td class="py-3 px-2"><a href="{{ url_for('admin_bot.settings', tenant_id=t.id) }}" class="text-indigo-600 hover:underline text-xs font-medium">إعدادات</a></td>
+                    <td class="py-3 px-2"><a href="{{ url_for('admin_bot.settings', tenant_id=t.id) }}" class="text-indigo-600 hover:underline text-xs font-medium min-h-[32px] inline-flex items-center">إعدادات</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -229,11 +266,11 @@
 {# Recent Logs — محسّن للجوال #}
 <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all">
     <h3 class="font-bold text-gray-900 mb-4">آخر الأحداث</h3>
-    <div class="space-y-2 max-h-72 overflow-y-auto text-xs">
+    <div class="space-y-2 max-h-72 overflow-y-auto text-sm">
         {% for log in recent_logs %}
-        <div class="flex justify-between items-start border-b last:border-0 pb-2 gap-2">
-            <span class="text-gray-700 flex-1">{{ log.action }} — <span class="text-gray-400">{{ log.actor_type }}</span></span>
-            <span class="text-gray-400 whitespace-nowrap">{{ log.created_at.strftime('%m/%d %H:%M') }}</span>
+        <div class="flex justify-between items-start border-b last:border-0 pb-2.5 gap-2">
+            <span class="text-gray-700 flex-1">{{ log.action }} — <span class="text-gray-500">{{ log.actor_type }}</span></span>
+            <span class="text-gray-400 whitespace-nowrap text-xs">{{ log.created_at.strftime('%m/%d %H:%M') }}</span>
         </div>
         {% else %}
         <div class="text-gray-400 text-center py-4">لا توجد أحداث بعد.</div>

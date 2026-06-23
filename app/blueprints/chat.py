@@ -176,12 +176,6 @@ def send_message(slug):
                 'error': 'الخدمة غير مفعّلة حالياً، يرجى المحاولة لاحقاً',
             }), 503
 
-        if not sub.can_send_chat():
-            return jsonify({
-                'success': False,
-                'error': 'تم الوصول للحد الأقصى من الرسائل لهذا الشهر',
-            }), 429
-
         data = request.get_json(silent=True) or {}
         user_message = (data.get('message') or '').strip()
         conversation_id = data.get('conversation_id')
@@ -241,22 +235,27 @@ def send_message(slug):
         # توليد الرد — محاط بحماية كاملة
         ai_response = None
         delivery = {'text': '', 'images': [], 'extra_data': {}}
-        try:
-            current_app.logger.info(
-                '[Chat/message] before generate_reply conv_id=%s', conversation.id,
-            )
-            from app.services.chat_service import ChatService
-            ai_response = ChatService.generate_reply(tenant, conversation, user_message)
-            current_app.logger.info(
-                '[Chat/message] after generate_reply conv_id=%s reply_len=%s',
-                conversation.id,
-                len(ai_response or ''),
-            )
-        except Exception as e:
-            current_app.logger.exception(f'[Chat] generate_reply failed: {e}')
-            ai_response = (
-                "آسف، حدث خطأ مؤقت في معالجة رسالتك. تم تسجيل المشكلة وسنرد عليك قريباً."
-            )
+        
+        if not sub.can_send_chat():
+            phone_msg = f" عبر الرقم {tenant.owner_phone}" if tenant.owner_phone else ""
+            ai_response = f"عذراً، نواجه ضغطاً في الرسائل حالياً. يرجى التواصل مع إدارة {tenant.business_name}{phone_msg} لخدمتك بشكل أسرع."
+        else:
+            try:
+                current_app.logger.info(
+                    '[Chat/message] before generate_reply conv_id=%s', conversation.id,
+                )
+                from app.services.chat_service import ChatService
+                ai_response = ChatService.generate_reply(tenant, conversation, user_message)
+                current_app.logger.info(
+                    '[Chat/message] after generate_reply conv_id=%s reply_len=%s',
+                    conversation.id,
+                    len(ai_response or ''),
+                )
+            except Exception as e:
+                current_app.logger.exception(f'[Chat] generate_reply failed: {e}')
+                ai_response = (
+                    "آسف، حدث خطأ مؤقت في معالجة رسالتك. تم تسجيل المشكلة وسنرد عليك قريباً."
+                )
 
         # تقسيم الرد إلى عدة فقاعات لو كان الـ IntentEngine طلب ذلك
         from app.services.chat_service import REPLY_SPLIT
@@ -309,7 +308,8 @@ def send_message(slug):
 
             try:
                 # خصم رسالة واحدة فقط رغم تعدد الفقاعات
-                sub.increment_chat_usage(1)
+                if sub.can_send_chat():
+                    sub.increment_chat_usage(1)
             except Exception as e:
                 current_app.logger.warning(f'[Chat] increment_chat_usage failed: {e}')
 

@@ -76,8 +76,9 @@ def initiate_outbound_call(tenant_id: int, to_phone_e164: str) -> dict:
             return {'ok': False, 'error': 'Bland.ai يحتاج تكامل منفصل — استخدم Twilio'}
         return {'ok': False, 'error': 'لم يُحدد مزوّد اتصال'}
 
-    sid = (bot.call_api_key or '').strip()
-    token = (bot.call_api_secret or '').strip()
+    from app.utils.encryption import decrypt_value
+    sid = decrypt_value(bot.call_api_key).strip() if bot.call_api_key else ''
+    token = decrypt_value(bot.call_api_secret).strip() if bot.call_api_secret else ''
     from_num = (bot.call_phone_number or '').strip()
     if not sid or not token or not from_num:
         return {'ok': False, 'error': 'ناقص Account SID أو Auth Token أو رقم الاتصال'}

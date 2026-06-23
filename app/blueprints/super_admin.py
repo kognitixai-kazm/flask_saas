@@ -340,6 +340,41 @@ def tenant_activate(id):
     return redirect(url_for('super_admin.tenant_detail', id=id))
 
 
+@bp.route('/tenants/<int:id>/renew_subscription', methods=['POST'])
+@super_admin_required
+def tenant_renew_subscription(id):
+    tenant = Tenant.query.get_or_404(id)
+    sub = tenant.subscription
+    if not sub:
+        flash('لا يوجد اشتراك لهذا المستأجر', 'danger')
+        return redirect(url_for('super_admin.tenant_detail', id=id))
+        
+    days = int(request.form.get('days', 30))
+    sub.status = 'active'
+    if not sub.ends_at or sub.ends_at < datetime.utcnow():
+        from datetime import timedelta
+        sub.ends_at = datetime.utcnow() + timedelta(days=days)
+    else:
+        from datetime import timedelta
+        sub.ends_at = sub.ends_at + timedelta(days=days)
+        
+    sub.chats_used_this_month = 0
+    sub.ai_calls_this_month = 0
+    sub.usage_reset_date = datetime.utcnow().date()
+    db.session.commit()
+    
+    from app.services.audit_service import AuditService
+    AuditService.log(
+        actor_type='super_admin',
+        action='subscription_renewed',
+        tenant_id=tenant.id,
+        extra_data={'days_added': days}
+    )
+    flash(f'تم تجديد الاشتراك وإعادة تعيين الاستهلاك بنجاح. أضيف {days} يوم.', 'success')
+    return redirect(url_for('super_admin.tenant_detail', id=id))
+
+
+
 @bp.route('/tenants/<int:id>/approve_request', methods=['POST'])
 @super_admin_required
 def tenant_approve_request(id):

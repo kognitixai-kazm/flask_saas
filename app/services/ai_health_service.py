@@ -76,17 +76,28 @@ class AIHealthService:
             if not default_model:
                 continue  # لا توجد نماذج معدّة — مشكلة منصة، لا تاجر
 
-            sys_key = AIService._get_api_key(default_model.provider, tenant_id=None)
+            sys_key = AIService._get_api_key(default_model.provider, tenant_id=tenant.id)
             if not sys_key:
+                from app.models.system_settings import SystemSetting
+                backup_enabled = SystemSetting.get('AI_BACKUP_KEY_ENABLED', 'false').lower() == 'true'
+                
+                if not backup_enabled:
+                    msg = 'لا يملك مفتاحاً خاصاً ومفتاح المنصة الاحتياطي غير مفعّل.'
+                    reason_code = 'backup_key_disabled'
+                elif not tenant.subscription or not tenant.subscription.is_active:
+                    msg = 'لا يملك مفتاحاً خاصاً والاشتراك غير فعال للوصول للمفتاح الاحتياطي.'
+                    reason_code = 'inactive_subscription'
+                else:
+                    msg = f'يعتمد على {default_model.provider} الافتراضي لكن المفتاح العام للمنصة فارغ أو الرصيد غير كافٍ.'
+                    reason_code = 'platform_key_missing_or_no_balance'
+                    
                 problems.append({
                     'tenant_id': tenant.id,
                     'tenant_name': tenant.business_name,
                     'tenant_slug': tenant.slug,
                     'provider': default_model.provider,
-                    'reason': 'platform_key_missing',
-                    'message': (
-                        f'يعتمد على {default_model.provider} الافتراضي لكن المفتاح العام للمنصة فارغ.'
-                    ),
+                    'reason': reason_code,
+                    'message': msg,
                 })
                 continue
             ok, reason = AIService.validate_api_key(default_model.provider, sys_key)

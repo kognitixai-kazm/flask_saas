@@ -46,15 +46,16 @@ def whatsapp_webhook():
 
         if mode == 'subscribe' and token:
             # البحث عن أي tenant عنده هذا الـ verify token
-            vrows = (
-                Integration.query.filter_by(
-                    service_type='whatsapp',
-                    webhook_verify_token=token,
-                    is_active=True,
-                )
-                .order_by(Integration.id)
-                .all()
-            )
+            vrows = []
+            active_whatsapp = Integration.query.filter_by(
+                service_type='whatsapp',
+                is_active=True,
+            ).order_by(Integration.id).all()
+            
+            for integ in active_whatsapp:
+                if integ.webhook_verify_token_decrypted == token:
+                    vrows.append(integ)
+
             if len(vrows) > 1:
                 # ⚠️ ثغرة #6: تحذير عند التعارض
                 current_app.logger.error(

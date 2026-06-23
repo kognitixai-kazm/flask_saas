@@ -22,7 +22,8 @@ def _openai_key_for_media(bot: Optional[BotConfig]) -> str:
     """أولوية: مفتاح الصوت (Whisper) إن وُجد → مفتاح AI إن كان openai → مفتاح المنصة."""
     if bot:
         if (bot.voice_provider or '').strip() == 'openai_whisper' and (bot.voice_api_key or '').strip():
-            return bot.voice_api_key.strip()
+            from app.utils.encryption import decrypt_value
+            return decrypt_value(bot.voice_api_key).strip()
         if (bot.ai_provider or '').strip().lower() in ('openai', '') and (bot.ai_api_key or '').strip():
             from app.utils.encryption import decrypt_value
             return decrypt_value(bot.ai_api_key).strip()

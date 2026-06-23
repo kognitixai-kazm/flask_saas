@@ -30,12 +30,12 @@
     <div>
         <label class="block text-sm font-bold mb-1">Access Token <span class="text-gray-400 font-normal">(Permanent Token)</span></label>
         <textarea name="access_token" rows="3" dir="ltr"
-                  class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono">{{ config.access_token if config else '' }}</textarea>
+                  class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono">{{ config.access_token_decrypted if config else '' }}</textarea>
     </div>
 
     <div>
         <label class="block text-sm font-bold mb-1">Webhook Verify Token <span class="text-gray-400 font-normal">(تختاره أنت)</span></label>
-        <input name="webhook_verify_token" value="{{ config.webhook_verify_token if config else '' }}" dir="ltr"
+        <input name="webhook_verify_token" value="{{ config.webhook_verify_token_decrypted if config else '' }}" dir="ltr"
                class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="my_secret_token_123">
     </div>
 

@@ -25,3 +25,17 @@ class TenantIntegration(db.Model):
 
     def __repr__(self):
         return f'<TenantIntegration SMS {self.provider_name} tenant={self.tenant_id}>'
+
+    # ========== Decrypted Properties ==========
+    @property
+    def api_key_decrypted(self):
+        from app.utils.encryption import decrypt_value
+        return decrypt_value(self.api_key)
+
+    @api_key_decrypted.setter
+    def api_key_decrypted(self, val):
+        from app.utils.encryption import encrypt_value, decrypt_value
+        val = (val or '').strip()
+        if decrypt_value(self.api_key) != val:
+            self.api_key = encrypt_value(val) if val else ''
+

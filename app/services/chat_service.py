@@ -346,6 +346,13 @@ class ChatService:
                 tokens_out=result.tokens_out,
             )
 
+            try:
+                if tenant.subscription:
+                    tenant.subscription.increment_ai_calls(1)
+                    db.session.commit()
+            except Exception as e:
+                current_app.logger.warning(f'[Chat] increment_ai_calls failed: {e}')
+
             return ChatService._sanitize_ai_text(result.text)
 
         except Exception as e:

@@ -60,6 +60,24 @@
 </div>
 {% endif %}
 
+{% if tenant.subscription %}
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <h3 class="font-bold text-gray-800 mb-2">إدارة الاشتراك</h3>
+    <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+        <div><span class="text-gray-500">الاستهلاك الحالي (رسائل):</span> <span class="font-bold">{{ tenant.subscription.chats_used_this_month }}</span></div>
+        <div><span class="text-gray-500">الاستهلاك الحالي (AI):</span> <span class="font-bold">{{ tenant.subscription.ai_calls_this_month }}</span></div>
+        <div><span class="text-gray-500">تاريخ الانتهاء:</span> <span class="font-bold dir-ltr">{{ tenant.subscription.ends_at.strftime('%Y-%m-%d') if tenant.subscription.ends_at else '—' }}</span></div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('super_admin.tenant_renew_subscription', id=tenant.id) }}" class="flex items-center gap-3" onsubmit="return confirm('هل أنت متأكد من تجديد الاشتراك وتصفير العدادات؟')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="text-sm font-medium text-gray-700">تمديد الأيام:</label>
+        <input type="number" name="days" value="30" min="1" class="border border-gray-300 rounded-lg px-3 py-2 w-24 text-sm">
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">تجديد الاشتراك وتصفير العداد</button>
+    </form>
+</div>
+{% endif %}
+
 <div class="flex flex-wrap gap-3 mb-8">
 <a href="{{ url_for('admin_bot.settings', tenant_id=tenant.id) }}" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 shadow-sm">🤖 إعدادات البوت</a>
 <a href="{{ url_for('admin_integrations.list_all') }}" class="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-50">🔗 التكاملات</a>

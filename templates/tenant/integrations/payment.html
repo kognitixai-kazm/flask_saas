@@ -66,14 +66,14 @@
 
     <div>
         <label class="block text-sm font-bold mb-1">Public/API Key</label>
-        <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr"
+        <input name="api_key" value="{{ config.api_key_decrypted if config else '' }}" dir="ltr"
                class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono" placeholder="pk_test_...">
         <p class="text-xs text-gray-500 mt-1">المفتاح العام — يُستخدم لإنشاء روابط الدفع.</p>
     </div>
 
     <div>
         <label class="block text-sm font-bold mb-1">Secret Key</label>
-        <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr"
+        <input name="api_secret" value="{{ config.api_secret_decrypted if config else '' }}" dir="ltr"
                class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono" placeholder="sk_test_...">
         <p class="text-xs text-gray-500 mt-1">المفتاح السري — لا تشاركه مع أحد. النظام يخزّنه آمناً.</p>
     </div>

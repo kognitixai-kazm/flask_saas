@@ -3,13 +3,13 @@
 {% block panel_content %}
 
 <!-- Hero / ترحيب -->
-<div class="rounded-3xl gradient-brand text-white p-6 md:p-10 mb-8 card-shadow relative overflow-hidden">
+<div class="rounded-3xl gradient-brand text-white p-5 md:p-8 mb-6 card-shadow relative overflow-hidden">
     <div class="absolute -top-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
     <div class="absolute top-0 right-0 p-4 opacity-10 text-8xl">🏨</div>
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative">
         <div>
             <p class="text-blue-100/90 text-sm md:text-base font-medium">مرحباً بك في</p>
-            <h1 class="text-3xl md:text-4xl font-black mt-1 tracking-tight">
+            <h1 class="text-2xl md:text-3xl font-black mt-1 tracking-tight">
                 لوحة {{ g.current_tenant.business_name }}
             </h1>
             <div class="flex items-center gap-2 mt-2">
@@ -23,7 +23,7 @@
         </div>
         <div class="flex gap-3 w-full md:w-auto">
             <a href="{{ g.current_tenant.chat_url }}" target="_blank"
-               class="flex-1 md:flex-none bg-white text-blue-700 font-black px-6 py-3 rounded-2xl text-sm hover:bg-blue-50 transition shadow-xl text-center">
+               class="flex-1 md:flex-none bg-white text-blue-700 font-black px-6 py-3 rounded-2xl text-sm hover:bg-blue-50 transition shadow-xl text-center min-h-[44px] flex items-center justify-center">
                 فتح رابط الشات ←
             </a>
         </div>
@@ -32,14 +32,14 @@
 
 <!-- Hotel Performance KPIs -->
 {% if g.current_tenant.activity.code == 'hotel' %}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <!-- Sales -->
-    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
+    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-2xl">💰</div>
             <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full uppercase">المبيعات</span>
         </div>
-        <div class="text-2xl font-black text-gray-900">
+        <div class="text-xl md:text-2xl font-black text-gray-900">
             {{ "{:,.0f}".format((analytics.hotel_sales or 0) + (analytics.contract_sales or 0)) }} 
             <span class="text-xs font-normal text-gray-400">ر.س</span>
         </div>
@@ -47,48 +47,48 @@
     </div>
 
     <!-- Occupancy -->
-    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
+    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl">📊</div>
             <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-full uppercase">الإشغال</span>
         </div>
         {% set occ = (analytics.booked_units / analytics.total_units * 100) if analytics.total_units and analytics.total_units > 0 else 0 %}
-        <div class="text-2xl font-black text-gray-900">{{ occ|round(1) }}%</div>
+        <div class="text-xl md:text-2xl font-black text-gray-900">{{ occ|round(1) }}%</div>
         <div class="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
             <div class="bg-purple-500 h-full rounded-full" style="width: {{ occ }}%"></div>
         </div>
     </div>
 
     <!-- Available Units -->
-    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
+    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">🏠</div>
             <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full uppercase">المتاح</span>
         </div>
-        <div class="text-2xl font-black text-gray-900">{{ analytics.available_units or 0 }}</div>
+        <div class="text-xl md:text-2xl font-black text-gray-900">{{ analytics.available_units or 0 }}</div>
         <div class="text-[10px] text-gray-400 mt-1">وحدات جاهزة للتأجير</div>
     </div>
 
     <!-- New Orders -->
-    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
+    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">🔔</div>
             <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full uppercase">طلبات</span>
         </div>
-        <div class="text-2xl font-black text-gray-900">{{ analytics.recent_bookings or 0 }}</div>
+        <div class="text-xl md:text-2xl font-black text-gray-900">{{ analytics.recent_bookings or 0 }}</div>
         <div class="text-[10px] text-gray-400 mt-1">حجوزات جديدة بانتظارك</div>
     </div>
 </div>
 {% endif %}
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Column -->
     <div class="lg:col-span-2 space-y-6">
         
         <!-- Alerts -->
         {% set new_bookings = g.current_tenant.bookings.filter_by(status='new').count() %}
         {% if new_bookings %}
-        <div class="bg-blue-600 text-white rounded-3xl p-6 shadow-xl shadow-blue-100 flex items-center justify-between">
+        <div class="bg-blue-600 text-white rounded-3xl p-4 md:p-6 shadow-xl shadow-blue-100 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div class="text-3xl">📅</div>
                 <div>
@@ -96,45 +96,45 @@
                     <div class="text-xs text-blue-100">بانتظار مراجعتك وتأكيدك الآن</div>
                 </div>
             </div>
-            <a href="{{ url_for('tenant_bookings.list_bookings', status='new') }}" class="bg-white text-blue-600 px-6 py-2 rounded-xl font-bold text-sm shadow-sm">عرض</a>
+            <a href="{{ url_for('tenant_bookings.list_bookings', status='new') }}" class="bg-white text-blue-600 px-6 py-2 rounded-xl font-bold text-sm shadow-sm min-h-[44px] flex items-center justify-center">عرض</a>
         </div>
         {% endif %}
 
         <!-- Quick Actions Grid -->
         <div>
-            <h3 class="font-black text-xl mb-4 text-gray-900">⚡ إجراءات سريعة</h3>
+            <h3 class="font-black text-lg md:text-xl mb-4 text-gray-900">⚡ إجراءات سريعة</h3>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {% if g.current_tenant.activity.code == 'hotel' %}
-                <a href="{{ url_for('tenant.branches') }}" class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 hover:border-blue-200 transition text-center group">
-                    <div class="text-3xl mb-3 group-hover:scale-110 transition">🏢</div>
+                <a href="{{ url_for('tenant.branches') }}" class="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-50 hover:border-blue-200 transition text-center group min-h-[120px] flex flex-col justify-center items-center">
+                    <div class="text-2xl md:text-3xl mb-2 group-hover:scale-110 transition">🏢</div>
                     <div class="font-bold text-sm text-gray-800">الفروع</div>
                 </a>
-                <a href="{{ url_for('tenant_hotel.units_dashboard') }}" class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 hover:border-blue-200 transition text-center group">
-                    <div class="text-3xl mb-3 group-hover:scale-110 transition">🛌</div>
+                <a href="{{ url_for('tenant_hotel.units_dashboard') }}" class="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-50 hover:border-blue-200 transition text-center group min-h-[120px] flex flex-col justify-center items-center">
+                    <div class="text-2xl md:text-3xl mb-2 group-hover:scale-110 transition">🛌</div>
                     <div class="font-bold text-sm text-gray-800">إدارة الشقق</div>
                 </a>
-                <a href="{{ url_for('tenant_hotel.services') }}" class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 hover:border-blue-200 transition text-center group">
-                    <div class="text-3xl mb-3 group-hover:scale-110 transition">🛎️</div>
+                <a href="{{ url_for('tenant_hotel.services') }}" class="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-50 hover:border-blue-200 transition text-center group min-h-[120px] flex flex-col justify-center items-center">
+                    <div class="text-2xl md:text-3xl mb-2 group-hover:scale-110 transition">🛎️</div>
                     <div class="font-bold text-sm text-gray-800">الخدمات</div>
                 </a>
                 {% endif %}
-                <a href="{{ url_for('tenant_bookings.list_bookings') }}" class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 hover:border-blue-200 transition text-center group">
-                    <div class="text-3xl mb-3 group-hover:scale-110 transition">📅</div>
+                <a href="{{ url_for('tenant_bookings.list_bookings') }}" class="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-50 hover:border-blue-200 transition text-center group min-h-[120px] flex flex-col justify-center items-center">
+                    <div class="text-2xl md:text-3xl mb-2 group-hover:scale-110 transition">📅</div>
                     <div class="font-bold text-sm text-gray-800">الحجوزات</div>
                 </a>
             </div>
         </div>
 
         <!-- Chat Link Card -->
-        <div class="bg-gray-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
+        <div class="bg-gray-900 rounded-3xl p-5 md:p-8 text-white relative overflow-hidden shadow-2xl">
             <div class="absolute top-0 right-0 p-4 opacity-5 text-9xl">🔗</div>
-            <h3 class="font-black text-xl mb-4 flex items-center gap-2 relative">رابط الشات الذكي</h3>
-            <p class="text-gray-400 text-sm mb-6 relative">شارك هذا الرابط مع عملائك لاستقبال الحجوزات آلياً عبر الذكاء الاصطناعي.</p>
+            <h3 class="font-black text-lg md:text-xl mb-3 flex items-center gap-2 relative">رابط الشات الذكي</h3>
+            <p class="text-gray-400 text-sm mb-5 relative">شارك هذا الرابط مع عملائك لاستقبال الحجوزات آلياً عبر الذكاء الاصطناعي.</p>
             <div class="flex flex-col sm:flex-row items-stretch gap-3 relative">
                 <input type="text" value="{{ g.current_tenant.chat_url }}" readonly dir="ltr"
-                       class="flex-1 bg-white/10 border border-white/10 rounded-2xl px-5 py-4 text-sm font-mono text-blue-300 focus:outline-none" id="chat-url">
+                       class="flex-1 bg-white/10 border border-white/10 rounded-2xl px-4 py-3.5 text-sm font-mono text-blue-300 focus:outline-none min-h-[44px]" id="chat-url">
                 <button onclick="navigator.clipboard.writeText(document.getElementById('chat-url').value);this.textContent='✓ تم النسخ';this.classList.add('bg-green-600')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black transition shadow-lg shadow-blue-900/20">نسخ الرابط</button>
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-2xl font-black transition shadow-lg shadow-blue-900/20 min-h-[44px] flex items-center justify-center">نسخ الرابط</button>
             </div>
         </div>
     </div>
@@ -142,12 +142,12 @@
     <!-- Sidebar Column -->
     <div class="space-y-6">
         <!-- AI Stats -->
-        <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-            <h3 class="font-black text-gray-900 mb-6 flex items-center gap-2">🤖 أداء الذكاء الاصطناعي</h3>
+        <div class="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-gray-100">
+            <h3 class="font-black text-lg text-gray-900 mb-5 flex items-center gap-2">🤖 أداء الذكاء الاصطناعي</h3>
             <div class="space-y-6">
                 <div>
                     <div class="flex justify-between text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">رسائل الشات</div>
-                    <div class="text-3xl font-black text-blue-700">{{ stats.subscription.chats_used_this_month }}<span class="text-sm text-gray-300 mx-1">/</span><span class="text-sm text-gray-400 font-normal">{{ stats.subscription.max_chats_per_month or '∞' }}</span></div>
+                    <div class="text-2xl md:text-3xl font-black text-blue-700">{{ stats.subscription.chats_used_this_month }}<span class="text-sm text-gray-300 mx-1">/</span><span class="text-sm text-gray-400 font-normal">{{ stats.subscription.max_chats_per_month or '∞' }}</span></div>
                     <div class="w-full bg-gray-50 h-2 rounded-full mt-3 overflow-hidden">
                         {% set chat_perc = (stats.subscription.chats_used_this_month / stats.subscription.max_chats_per_month * 100) if stats.subscription.max_chats_per_month else 0 %}
                         <div class="bg-blue-600 h-full rounded-full" style="width: {{ chat_perc }}%"></div>
@@ -155,14 +155,14 @@
                 </div>
                 <div class="pt-4 border-t border-gray-50">
                     <div class="flex justify-between text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">استدعاءات AI</div>
-                    <div class="text-3xl font-black text-violet-700">{{ stats.subscription.ai_calls_this_month }}</div>
+                    <div class="text-2xl md:text-3xl font-black text-violet-700">{{ stats.subscription.ai_calls_this_month }}</div>
                     <p class="text-[10px] text-gray-400 mt-2 leading-relaxed">يعمل الذكاء الاصطناعي كخبير مبيعات يرد على عملائك ويغلق الحجوزات بدلاً منك.</p>
                 </div>
             </div>
         </div>
 
         <!-- Subscription Info -->
-        <div class="bg-indigo-50 rounded-3xl p-6 border border-indigo-100">
+        <div class="bg-indigo-50 rounded-3xl p-5 md:p-6 border border-indigo-100">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm">⏳</div>
                 <div>
@@ -170,7 +170,7 @@
                     <div class="text-sm font-black text-indigo-900">باقي {{ stats.subscription.days_remaining or '0' }} يوم</div>
                 </div>
             </div>
-            <a href="#" class="block w-full bg-indigo-600 text-white text-center py-3 rounded-2xl font-bold text-sm hover:bg-indigo-700 transition">تجديد الاشتراك</a>
+            <a href="#" class="block w-full bg-indigo-600 text-white text-center py-3 rounded-2xl font-bold text-sm hover:bg-indigo-700 transition min-h-[44px] flex items-center justify-center">تجديد الاشتراك</a>
         </div>
     </div>
 </div>

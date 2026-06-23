@@ -38,7 +38,7 @@
                 </label>
                 <input type="password" name="access_token" placeholder="رمز الوصول من Meta" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       value="{{ integration.access_token if integration else '' }}" required>
+                       value="{{ integration.access_token_decrypted if integration else '' }}" required>
                 <p class="text-xs text-gray-500 mt-1">
                     احصل على رمز الوصول من <a href="https://developers.facebook.com" target="_blank" class="text-blue-600 hover:underline">Facebook Developers</a>
                 </p>
@@ -59,7 +59,7 @@
                 </label>
                 <input type="text" name="webhook_verify_token" placeholder="رمز التحقق" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       value="{{ integration.webhook_verify_token if integration else '' }}">
+                       value="{{ integration.webhook_verify_token_decrypted if integration else '' }}">
                 <p class="text-xs text-gray-500 mt-1">
                     رمز عشوائي لتأمين الـ webhook
                 </p>
@@ -73,7 +73,7 @@
                 </label>
                 <input type="password" name="api_key" placeholder="مفتاح API من TikTok" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       value="{{ integration.api_key if integration else '' }}" required>
+                       value="{{ integration.api_key_decrypted if integration else '' }}" required>
             </div>
 
             <div class="mb-4">
@@ -82,7 +82,7 @@
                 </label>
                 <input type="password" name="access_token" placeholder="رمز الوصول من TikTok" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       value="{{ integration.access_token if integration else '' }}" required>
+                       value="{{ integration.access_token_decrypted if integration else '' }}" required>
             </div>
 
         {% elif service_type == 'snapchat' %}
@@ -93,7 +93,7 @@
                 </label>
                 <input type="password" name="api_key" placeholder="مفتاح API من Snapchat" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       value="{{ integration.api_key if integration else '' }}" required>
+                       value="{{ integration.api_key_decrypted if integration else '' }}" required>
             </div>
 
             <div class="mb-4">
@@ -102,7 +102,7 @@
                 </label>
                 <input type="password" name="access_token" placeholder="رمز الوصول من Snapchat" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       value="{{ integration.access_token if integration else '' }}" required>
+                       value="{{ integration.access_token_decrypted if integration else '' }}" required>
             </div>
 
             <div class="mb-4">
@@ -122,7 +122,7 @@
                 </label>
                 <input type="password" name="access_token" placeholder="رمز الوصول من LinkedIn" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       value="{{ integration.access_token if integration else '' }}" required>
+                       value="{{ integration.access_token_decrypted if integration else '' }}" required>
             </div>
 
             <div class="mb-4">
@@ -142,7 +142,7 @@
                 </label>
                 <input type="password" name="access_token" placeholder="رمز الوصول من Google" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       value="{{ integration.access_token if integration else '' }}" required>
+                       value="{{ integration.access_token_decrypted if integration else '' }}" required>
             </div>
 
             <div class="mb-4">

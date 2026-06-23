@@ -98,7 +98,14 @@ class AIService:
                     timeout=timeout,
                 )
                 ok = r.status_code == 200
-                reason = '' if ok else f'HTTP {r.status_code}'
+                if ok:
+                    reason = ''
+                else:
+                    try:
+                        err = r.json().get('error', {})
+                        reason = err.get('message') or err.get('code') or f'HTTP {r.status_code}'
+                    except:
+                        reason = f'HTTP {r.status_code}'
             elif prov == 'anthropic':
                 r = requests.get(
                     'https://api.anthropic.com/v1/models',
@@ -109,14 +116,28 @@ class AIService:
                     timeout=timeout,
                 )
                 ok = r.status_code == 200
-                reason = '' if ok else f'HTTP {r.status_code}'
+                if ok:
+                    reason = ''
+                else:
+                    try:
+                        err = r.json().get('error', {})
+                        reason = err.get('message') or err.get('type') or f'HTTP {r.status_code}'
+                    except:
+                        reason = f'HTTP {r.status_code}'
             elif prov == 'google':
                 r = requests.get(
                     f'https://generativelanguage.googleapis.com/v1beta/models?key={key}',
                     timeout=timeout,
                 )
                 ok = r.status_code == 200
-                reason = '' if ok else f'HTTP {r.status_code}'
+                if ok:
+                    reason = ''
+                else:
+                    try:
+                        err = r.json().get('error', {})
+                        reason = err.get('message') or err.get('status') or f'HTTP {r.status_code}'
+                    except:
+                        reason = f'HTTP {r.status_code}'
             else:
                 return False, f'مزوّد غير مدعوم: {prov}'
         except requests.exceptions.Timeout:
@@ -183,7 +204,28 @@ class AIService:
                     from app.utils.encryption import decrypt_value
                     return decrypt_value(bot_config.ai_api_key).strip()
 
-        # المفتاح العام من SystemSetting
+            # No specific key, check if we can fallback to the platform's backup key
+            from app.models.tenant import Tenant
+            tenant = Tenant.query.get(tenant_id)
+            if not tenant:
+                return ''
+            
+            # Check if backup key fallback is enabled
+            backup_enabled = SystemSetting.get('AI_BACKUP_KEY_ENABLED', 'false').lower() == 'true'
+            if not backup_enabled:
+                return ''
+            
+            # Check if tenant has a valid, active subscription with balance
+            if not tenant.subscription or not tenant.subscription.is_active:
+                return ''
+                
+            from app.models.tenant_wallet import TenantWallet
+            wallet = TenantWallet.query.filter_by(tenant_id=tenant_id).first()
+            if not wallet or not wallet.can_use_service:
+                return ''
+
+        # المفتاح العام من SystemSetting أو متغيرات البيئة
+        # يتم استخدامه للـ Admin AI (tenant_id is None) أو للتجار الذين يملكون اشتراكاً ورصيداً
         key_map = {
             'anthropic': 'AI_ANTHROPIC_KEY',
             'openai': 'AI_OPENAI_KEY',

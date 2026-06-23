@@ -20,7 +20,7 @@ class SMSService:
             db.session.add(integration)
 
         integration.provider_name = config_data.get('provider_name', '').strip()
-        integration.api_key = config_data.get('api_key', '').strip()
+        integration.api_key_decrypted = config_data.get('api_key', '').strip()
         integration.sender_id = config_data.get('sender_id', '').strip()
         integration.is_active = config_data.get('is_active', False)
 
@@ -46,8 +46,9 @@ class SMSService:
         if not integration.api_key or not integration.sender_id:
             return {"success": False, "error": "بيانات الربط غير مكتملة (المفتاح أو المرسل مفقود)"}
 
+        from app.utils.encryption import decrypt_value
         provider = integration.provider_name.lower()
-        api_key = integration.api_key
+        api_key = decrypt_value(integration.api_key) if integration.api_key else ''
         sender_id = integration.sender_id
 
         # نموذج أولي للإرسال باستخدام مكتبة requests

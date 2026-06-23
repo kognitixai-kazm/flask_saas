@@ -329,6 +329,10 @@ class WhatsAppService:
         tenant = Tenant.query.get(config.tenant_id)
         if not tenant or tenant.status != 'active':
             return
+            
+        if not tenant.subscription or not tenant.subscription.is_active:
+            current_app.logger.warning(f'[WhatsApp] tenant={tenant.slug} subscription not active')
+            return
 
         # بيانات الرسالة
         sender_phone = msg.get('from', '')

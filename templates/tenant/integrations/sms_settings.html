@@ -22,7 +22,7 @@
 
     <div>
         <label class="block text-sm font-bold mb-1">مفتاح الربط (API Key / Auth Token)</label>
-        <input type="password" name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr"
+        <input type="password" name="api_key" value="{{ config.api_key_decrypted if config else '' }}" dir="ltr"
                class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono" placeholder="أدخل مفتاح الـ API الخاص بك هنا">
         <p class="text-xs text-gray-500 mt-1">يمكنك الحصول على هذا المفتاح من لوحة تحكم مزود الخدمة الخاص بك.</p>
     </div>

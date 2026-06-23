@@ -78,9 +78,10 @@ class FacebookProvider(SocialMediaProvider):
     
     def __init__(self, tenant_id: int, integration: Integration):
         super().__init__(tenant_id, integration)
-        self.access_token = integration.access_token
+        from app.utils.encryption import decrypt_value
+        self.access_token = decrypt_value(integration.access_token)
         self.page_id = integration.extra_config.get('page_id', '')
-        self.verify_token = integration.webhook_verify_token
+        self.verify_token = decrypt_value(integration.webhook_verify_token)
         self.api_version = 'v18.0'
         self.base_url = f'https://graph.facebook.com/{self.api_version}'
     
@@ -220,7 +221,8 @@ class InstagramProvider(SocialMediaProvider):
     
     def __init__(self, tenant_id: int, integration: Integration):
         super().__init__(tenant_id, integration)
-        self.access_token = integration.access_token
+        from app.utils.encryption import decrypt_value
+        self.access_token = decrypt_value(integration.access_token)
         self.instagram_business_account_id = integration.extra_config.get('instagram_business_account_id', '')
         self.api_version = 'v18.0'
         self.base_url = f'https://graph.instagram.com/{self.api_version}'
@@ -337,8 +339,9 @@ class TikTokProvider(SocialMediaProvider):
     
     def __init__(self, tenant_id: int, integration: Integration):
         super().__init__(tenant_id, integration)
-        self.access_token = integration.access_token
-        self.client_key = integration.api_key
+        from app.utils.encryption import decrypt_value
+        self.access_token = decrypt_value(integration.access_token)
+        self.client_key = decrypt_value(integration.api_key)
         self.base_url = 'https://open.tiktokapis.com/v1'
     
     def verify_webhook(self, data: Dict[str, Any]) -> bool:
@@ -437,7 +440,8 @@ class SnapchatProvider(SocialMediaProvider):
     
     def __init__(self, tenant_id: int, integration: Integration):
         super().__init__(tenant_id, integration)
-        self.access_token = integration.access_token
+        from app.utils.encryption import decrypt_value
+        self.access_token = decrypt_value(integration.access_token)
         self.ad_account_id = integration.extra_config.get('ad_account_id', '')
         self.base_url = 'https://adsapi.snapchat.com/v1'
     
@@ -485,7 +489,8 @@ class LinkedInProvider(SocialMediaProvider):
     
     def __init__(self, tenant_id: int, integration: Integration):
         super().__init__(tenant_id, integration)
-        self.access_token = integration.access_token
+        from app.utils.encryption import decrypt_value
+        self.access_token = decrypt_value(integration.access_token)
         self.organization_id = integration.extra_config.get('organization_id', '')
         self.base_url = 'https://api.linkedin.com/v2'
     
@@ -593,7 +598,8 @@ class GoogleMapsProvider(SocialMediaProvider):
     
     def __init__(self, tenant_id: int, integration: Integration):
         super().__init__(tenant_id, integration)
-        self.access_token = integration.access_token
+        from app.utils.encryption import decrypt_value
+        self.access_token = decrypt_value(integration.access_token)
         self.business_location_id = integration.extra_config.get('business_location_id', '')
         self.base_url = 'https://mybusiness.googleapis.com/v1'
     
@@ -755,13 +761,14 @@ class SocialMediaIntegrationService:
                 )
             
             # تحديث بيانات المصادقة
-            integration.api_key = credentials.get('api_key', '')
-            integration.api_secret = credentials.get('api_secret', '')
-            integration.access_token = credentials.get('access_token', '')
+            integration.api_key_decrypted = credentials.get('api_key', '')
+            integration.api_secret_decrypted = credentials.get('api_secret', '')
+            integration.access_token_decrypted = credentials.get('access_token', '')
+            
             integration.phone_number = credentials.get('phone_number', '')
             integration.phone_number_id = credentials.get('phone_number_id', '')
             integration.waba_id = credentials.get('waba_id', '')
-            integration.webhook_verify_token = credentials.get('webhook_verify_token', '')
+            integration.webhook_verify_token_decrypted = credentials.get('webhook_verify_token', '')
             
             # تحديث الإعدادات الإضافية
             extra_config = credentials.get('extra_config', {})

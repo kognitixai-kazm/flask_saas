@@ -82,8 +82,8 @@ def whatsapp_setup(tenant_id):
         config.phone_number = phone_number
         config.phone_number_id = phone_number_id
         config.waba_id = waba_id
-        config.access_token = access_token
-        config.webhook_verify_token = webhook_verify_token
+        config.access_token_decrypted = access_token
+        config.webhook_verify_token_decrypted = webhook_verify_token
         config.is_active = is_active
 
         db.session.commit()
@@ -121,8 +121,8 @@ def payment_setup(tenant_id):
             db.session.add(config)
 
         config.provider = request.form.get('provider', 'moyasar')
-        config.api_key = request.form.get('api_key', '')
-        config.api_secret = request.form.get('api_secret', '')
+        config.api_key_decrypted = request.form.get('api_key', '')
+        config.api_secret_decrypted = request.form.get('api_secret', '')
         config.payment_mode = request.form.get('payment_mode', 'test')
         config.payment_currency = request.form.get('payment_currency', 'SAR')
         config.is_active = 'is_active' in request.form
@@ -158,8 +158,8 @@ def accounting_setup(tenant_id):
             db.session.add(config)
 
         config.provider = request.form.get('provider', 'qoyod')
-        config.api_key = request.form.get('api_key', '')
-        config.api_secret = request.form.get('api_secret', '')
+        config.api_key_decrypted = request.form.get('api_key', '')
+        config.api_secret_decrypted = request.form.get('api_secret', '')
         config.is_active = 'is_active' in request.form
         prev = dict(config.extra_config or {})
         prev['webhook_url'] = request.form.get('webhook_url', '')
@@ -195,7 +195,7 @@ def contracts_setup(tenant_id):
             db.session.add(config)
 
         config.provider = request.form.get('provider', 'custom')
-        config.api_key = request.form.get('api_key', '')
+        config.api_key_decrypted = request.form.get('api_key', '')
         config.is_active = 'is_active' in request.form
         config.extra_config = {
             'template_url': request.form.get('template_url', ''),
@@ -245,8 +245,8 @@ def srm_setup(tenant_id):
             db.session.add(config)
 
         config.provider = request.form.get('provider', 'custom_srm')
-        config.api_key = request.form.get('api_key', '')
-        config.api_secret = request.form.get('api_secret', '')
+        config.api_key_decrypted = request.form.get('api_key', '')
+        config.api_secret_decrypted = request.form.get('api_secret', '')
         config.is_active = 'is_active' in request.form
         
         # حفظ أي إعدادات إضافية
@@ -275,8 +275,8 @@ def booking_com_setup(tenant_id):
             db.session.add(config)
 
         config.provider = request.form.get('provider', 'booking_api')
-        config.api_key = request.form.get('api_key', '')
-        config.api_secret = request.form.get('api_secret', '')
+        config.api_key_decrypted = request.form.get('api_key', '')
+        config.api_secret_decrypted = request.form.get('api_secret', '')
         config.is_active = 'is_active' in request.form
         
         config.extra_config = {

@@ -21,9 +21,9 @@
       <option value="xero" {{ 'selected' if config and config.provider == 'xero' }}>Xero</option>
     </select></div>
     <div><label class="block text-sm font-medium mb-1">API Key</label>
-    <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_key" value="{{ config.api_key_decrypted if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div><label class="block text-sm font-medium mb-1">API Secret</label>
-    <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_secret" value="{{ config.api_secret_decrypted if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div><label class="block text-sm font-medium mb-1">Webhook URL (اختياري — لربط المنصة بنظامك)</label>
     <input name="webhook_url" value="{{ (config.extra_config or {}).get('webhook_url','') if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm"></div>
     <div><label class="block text-sm font-medium mb-1">سر الاستقبال (اختياري)</label>

@@ -8,12 +8,18 @@
             <h1 class="text-2xl font-bold text-gray-900">القيود المحاسبية (Journal Entries)</h1>
             <p class="text-gray-500 mt-1">تتبع الحركات المالية، الإيرادات، والمصروفات بطريقة مؤتمتة.</p>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ url_for('tenant_accounting.list_expenses') }}" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('tenant_accounting.list_expenses') }}" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm font-medium">
                 إدارة المصروفات
             </a>
-            <a href="{{ url_for('tenant_accounting.new_expense') }}" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+            <a href="{{ url_for('tenant_accounting.new_expense') }}" class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-sm font-medium">
                 + تسجيل مصروف
+            </a>
+            <a href="{{ url_for('tenant_accounting.new_maintenance') }}" class="px-4 py-2 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 text-sm font-medium">
+                + تسجيل صيانة
+            </a>
+            <a href="{{ url_for('tenant_accounting.new_journal_entry') }}" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-sm font-medium">
+                + تسجيل قيد يدوي
             </a>
         </div>
     </div>

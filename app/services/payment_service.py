@@ -63,11 +63,13 @@ class PaymentService:
         if email:
             data['customer_email'] = email
 
+        from app.utils.encryption import decrypt_value
+        secret = decrypt_value(config.api_secret) if config.api_secret else decrypt_value(config.api_key)
         try:
             resp = requests.post(
                 url,
                 data=data,
-                headers={'Authorization': f'Bearer {config.api_secret or config.api_key}'},
+                headers={'Authorization': f'Bearer {secret}'},
                 timeout=15,
             )
             payload = resp.json()
@@ -97,8 +99,10 @@ class PaymentService:
             'callback_url': callback_url,
         }
 
+        from app.utils.encryption import decrypt_value
+        api_key = decrypt_value(config.api_key)
         try:
-            resp = requests.post(url, json=payload, auth=(config.api_key, ''), timeout=15)
+            resp = requests.post(url, json=payload, auth=(api_key, ''), timeout=15)
             data = resp.json()
 
             if resp.status_code in (200, 201):
@@ -120,8 +124,10 @@ class PaymentService:
         if not callback_url:
             callback_url = f"{current_app.config['SITE_URL']}/api/v1/webhooks/payment"
 
+        from app.utils.encryption import decrypt_value
+        api_key = decrypt_value(config.api_key)
         headers = {
-            'Authorization': f'Bearer {config.api_key}',
+            'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',
         }
         payload = {
@@ -228,15 +234,19 @@ class PaymentService:
             return {'valid': False, 'error': 'غير مفعّل'}
 
         try:
+            from app.utils.encryption import decrypt_value
+            api_key = decrypt_value(config.api_key) if config.api_key else ''
+            api_secret = decrypt_value(config.api_secret) if config.api_secret else ''
+            
             if config.provider == 'moyasar':
                 resp = requests.get('https://api.moyasar.com/v1/invoices?page=1',
-                                    auth=(config.api_key, ''), timeout=10)
+                                    auth=(api_key, ''), timeout=10)
             elif config.provider == 'tap':
                 resp = requests.get('https://api.tap.company/v2/charges?limit=1',
-                                    headers={'Authorization': f'Bearer {config.api_key}'}, timeout=10)
+                                    headers={'Authorization': f'Bearer {api_key}'}, timeout=10)
             elif config.provider == 'stripe':
                 resp = requests.get('https://api.stripe.com/v1/balance',
-                                    headers={'Authorization': f'Bearer {config.api_secret or config.api_key}'},
+                                    headers={'Authorization': f'Bearer {api_secret or api_key}'},
                                     timeout=10)
             else:
                 return {'valid': False, 'error': 'مزوّد غير مدعوم'}

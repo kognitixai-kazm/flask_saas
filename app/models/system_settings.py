@@ -42,16 +42,31 @@ class SystemSetting(db.Model):
     def __repr__(self):
         return f'<SystemSetting {self.key}>'
 
+    @property
+    def value_decrypted(self):
+        if self.is_secret and self.value:
+            from app.utils.encryption import decrypt_value
+            return decrypt_value(self.value)
+        return self.value
+
+    @value_decrypted.setter
+    def value_decrypted(self, val):
+        val = (val or '').strip()
+        if self.is_secret and val:
+            from app.utils.encryption import encrypt_value, decrypt_value
+            # Only encrypt if changed
+            if decrypt_value(self.value) != val:
+                self.value = encrypt_value(val)
+        else:
+            self.value = val
+
     @staticmethod
     def get(key: str, default: str = '') -> str:
         """جلب قيمة مفتاح."""
         s = SystemSetting.query.filter_by(key=key).first()
         if not s:
             return default
-        if s.is_secret and s.value:
-            from app.utils.encryption import decrypt_value
-            return decrypt_value(s.value)
-        return s.value
+        return s.value_decrypted
 
     @staticmethod
     def set(key: str, value: str, category: str = 'general',
@@ -59,24 +74,21 @@ class SystemSetting(db.Model):
             updated_by: str = ''):
         """تعيين/تحديث قيمة."""
         s = SystemSetting.query.filter_by(key=key).first()
-        
-        value_to_save = value
-        if is_secret and value:
-            from app.utils.encryption import encrypt_value
-            value_to_save = encrypt_value(value)
-            
         if s:
-            s.value = value_to_save
+            s.is_secret = is_secret
+            s.value_decrypted = value
             if updated_by:
                 s.updated_by = updated_by
         else:
             s = SystemSetting(
-                key=key, value=value_to_save,
+                key=key,
                 category=category, is_secret=is_secret,
                 description=description, updated_by=updated_by,
             )
+            s.value_decrypted = value
             db.session.add(s)
         return s
+
 
     @staticmethod
     def get_all_by_category(category: str = None):
@@ -97,6 +109,7 @@ class SystemSetting(db.Model):
              'Verify Token العام لـ webhook (يُستخدم كـ fallback)'),
 
             # AI
+            ('AI_BACKUP_KEY_ENABLED', 'ai', False, 'تفعيل مفتاح المنصة الاحتياطي (true/false)'),
             ('AI_OPENAI_KEY', 'ai', True, 'OpenAI API Key العام للمنصة'),
             ('AI_ANTHROPIC_KEY', 'ai', True, 'Anthropic API Key العام'),
             ('AI_GOOGLE_KEY', 'ai', True, 'Google Gemini API Key العام'),

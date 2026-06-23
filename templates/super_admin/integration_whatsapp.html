@@ -20,10 +20,10 @@
     <input name="waba_id" value="{{ config.waba_id if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="WABA ID"></div>
 
     <div><label class="block text-sm font-medium mb-1">Access Token <span class="text-gray-400">(Permanent Token)</span></label>
-    <textarea name="access_token" rows="3" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono text-xs">{{ config.access_token if config else '' }}</textarea></div>
+    <textarea name="access_token" rows="3" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono text-xs">{{ config.access_token_decrypted if config else '' }}</textarea></div>
 
     <div><label class="block text-sm font-medium mb-1">Webhook Verify Token <span class="text-gray-400">(تختاره أنت)</span></label>
-    <input name="webhook_verify_token" value="{{ config.webhook_verify_token if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="my_secret_token_123"></div>
+    <input name="webhook_verify_token" value="{{ config.webhook_verify_token_decrypted if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm" placeholder="my_secret_token_123"></div>
 
     <!-- Webhook URL -->
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">

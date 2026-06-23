@@ -15,9 +15,9 @@
     <div><label class="block text-sm font-medium mb-1">Hotel ID (معرف الفندق)</label>
     <input name="hotel_id" value="{{ (config.extra_config or {}).get('hotel_id','') if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div><label class="block text-sm font-medium mb-1">API Key / Username</label>
-    <input name="api_key" value="{{ config.api_key if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_key" value="{{ config.api_key_decrypted if config else '' }}" dir="ltr" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <div><label class="block text-sm font-medium mb-1">API Secret / Password</label>
-    <input name="api_secret" value="{{ config.api_secret if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
+    <input name="api_secret" value="{{ config.api_secret_decrypted if config else '' }}" dir="ltr" type="password" class="w-full border rounded-lg px-4 py-2.5 text-sm font-mono"></div>
     <label class="flex items-center gap-2"><input type="checkbox" name="is_active" {{ 'checked' if config and config.is_active }}><span class="text-sm font-bold">تفعيل</span></label>
     <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm">حفظ</button>
   </form>

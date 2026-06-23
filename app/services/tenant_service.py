@@ -61,7 +61,7 @@ class TenantService:
 
         # إنشاء Subscription (تجريبي)
         plan = Plan.query.get(plan_id)
-        trial_days = plan.trial_days if plan else 14
+        trial_days = 7
 
         subscription = Subscription(
             tenant_id=tenant.id,
@@ -197,7 +197,7 @@ class TenantService:
         if not plan:
             return False, 'لا توجد باقة لربط الاشتراك بها'
 
-        trial_days = plan.trial_days or 14
+        trial_days = 7
         now = datetime.utcnow()
         ends_at = now + timedelta(days=trial_days)
 
