@@ -46,11 +46,6 @@
         <a href="{{ url_for('tenant.dashboard') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             <span>📊</span> الرئيسية
         </a>
-        <a href="{{ url_for('tenant.ai_agents') }}" class="flex items-center justify-between px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-            <span class="flex items-center gap-2">🤖 فريق الذكاء الاصطناعي</span>
-            <span class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[9px] rounded-full px-2 py-0.5 font-bold shadow-sm animate-pulse">جديد</span>
-        </a>
-
         {# ---------- إدارة النشاط ---------- #}
         {% if _act in ('hotel','restaurant') %}
         <div class="pt-3 pb-1 px-4 text-[11px] tracking-wider text-gray-400 font-bold uppercase">

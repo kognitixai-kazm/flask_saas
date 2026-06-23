@@ -6,6 +6,5 @@ app/agents/__init__.py — وكلاء الذكاء الاصطناعي (AI Agents
 - model_resolver: تحديد النموذج والمفتاح لكل تاجر
 - tools/: أدوات الوكلاء (غرف، عقود، دفع، تحليلات)
 - front_desk_agent: وكيل الاستقبال والتعاقد (Omnichannel)
-- collection_agent: وكيل المتابعة والتحصيل المالي
 - manager_agent: وكيل الإدارة والتحليلات (شريط البحث الذكي)
 """

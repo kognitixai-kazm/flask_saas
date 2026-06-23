@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.tools import BaseTool
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from app.extensions import db
 from app.models.message_usage import MessageUsage
@@ -187,6 +189,7 @@ class BaseAgent:
         Returns:
             AgentResponse مع النتيجة
         """
+        logger.info(f'[Agent RUN] type={self.AGENT_TYPE}')
         # 1. التحقق من الرصيد
         can_run, balance_msg = self._check_balance()
         if not can_run:
@@ -231,8 +234,6 @@ class BaseAgent:
             if tools:
                 # وكيل مع أدوات
                 llm_with_tools = llm.bind_tools(tools)
-                from langchain.agents import AgentExecutor, create_tool_calling_agent
-                from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
                 prompt = ChatPromptTemplate.from_messages([
                     ("system", system_prompt),

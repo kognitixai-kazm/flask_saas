@@ -115,10 +115,8 @@ def _register_blueprints(app):
     from .blueprints.tenant_usage import bp as tenant_usage_bp
     from .blueprints.tenant_contracts import bp as tenant_contracts_bp
     from .blueprints.tenant_integrations import bp as tenant_integrations_bp
-    from .blueprints.admin_ai_assistant import bp as admin_ai_bp
     from .blueprints.tenant_accounting import bp as tenant_accounting_bp
     from .routes.tenant_social_media_integrations import bp as social_media_bp
-    from .blueprints.tenant_ai_agents import bp as ai_agents_bp
     from .blueprints.admin_plans_api import bp as admin_plans_api_bp
     from .blueprints.public_plans_api import bp as public_plans_api_bp
 
@@ -140,10 +138,8 @@ def _register_blueprints(app):
     app.register_blueprint(tenant_usage_bp, url_prefix='/app/usage')
     app.register_blueprint(tenant_contracts_bp, url_prefix='/app/contracts')
     app.register_blueprint(tenant_integrations_bp, url_prefix='/app/integrations')
-    app.register_blueprint(admin_ai_bp, url_prefix='/sa/ai-assistant')
     app.register_blueprint(tenant_accounting_bp, url_prefix='/app/accounting')
     app.register_blueprint(social_media_bp, url_prefix='/app/integrations/social-media')
-    app.register_blueprint(ai_agents_bp, url_prefix='/app/agents')
     app.register_blueprint(admin_plans_api_bp, url_prefix='/api/sa/plans')
     app.register_blueprint(public_plans_api_bp, url_prefix='/api/public/pricing')
 
@@ -597,101 +593,86 @@ def _register_cli_commands(app):
                         co_date_parsed = datetime.strptime(check_out, '%Y-%m-%d')
                         days_left = (co_date_parsed - now).days
                         
-                        # إرسال التذكير إذا تبقى 3 أيام أو أقل، ولم يتم الدفع
-                        if days_left <= 3 and c.payment_status != 'paid':
+                        # إرسال التذكير إذا انطبق أحد القوالب ولم يتم الدفع
+                        if c.payment_status != 'paid':
                             tenant_settings = c.tenant.settings or {}
+                            rems = tenant_settings.get('reminders')
                             
-                            # اختيار الرسالة
-                            msg = 'نود تذكيركم باقتراب موعد الدفع للإيجار. شاكرين ومقدرين حسن تعاونكم.'
-                            if tenant_settings.get('global_reminder_message'):
-                                msg = tenant_settings.get('global_reminder_message')
-                            elif c.template and c.template.reminder_message:
-                                msg = c.template.reminder_message
-                                
-                            send_wa = tenant_settings.get('reminder_send_whatsapp', False)
-                            send_em = tenant_settings.get('reminder_send_email', False)
-                            send_sms = tenant_settings.get('reminder_send_sms', False)
+                            msg_to_send = None
                             
-                            # للحفاظ على التوافق الرجعي: إذا لم يختر التاجر أي قناة، لا ترسل أو أرسل واتساب افتراضياً؟
-                            # بما أنها ميزة جديدة، نرسل واتساب افتراضياً لو لم يوجد إعداد
-                            if not (send_wa or send_em or send_sms):
-                                send_wa = True
+                            if rems:
+                                before = rems.get('before', {})
+                                on_rem = rems.get('on', {})
+                                after = rems.get('after', {})
                                 
-                            # 1. إرسال واتساب
-                            if send_wa and c.customer_phone and c.tenant:
-                                try:
-                                    WhatsAppService.send_text(c.tenant_id, c.customer_phone, msg)
-                                    click.echo(f"WhatsApp reminder sent to {c.customer_phone}")
-                                except Exception as e:
-                                    click.echo(f"Failed to send WA to {c.customer_phone}: {e}")
-                                    
-                            # 2. إرسال إيميل
-                            if send_em and c.customer_email and c.tenant:
-                                try:
-                                    payment_link = f"{app.config.get('SITE_URL', 'http://localhost:5000')}/pay/{c.contract_number or c.id}"
-                                    EmailService.send_payment_reminder(
-                                        to_email=c.customer_email,
-                                        tenant_name=c.tenant.business_name,
-                                        contract_number=c.contract_number or str(c.id),
-                                        amount=str(c.payment_amount or c.template.get_payment_amount()),
-                                        due_date=check_out,
-                                        payment_link=payment_link,
-                                        bank_name=c.tenant.bank_name,
-                                        bank_account_name=c.tenant.bank_account_name,
-                                        bank_iban=c.tenant.bank_iban
-                                    )
-                                    click.echo(f"Email reminder sent to {c.customer_email}")
-                                except Exception as e:
-                                    click.echo(f"Failed to send Email to {c.customer_email}: {e}")
+                                if days_left > 0 and days_left == before.get('days_offset', 3) and before.get('active', True):
+                                    msg_to_send = before.get('msg')
+                                elif days_left == 0 and on_rem.get('active', True):
+                                    msg_to_send = on_rem.get('msg')
+                                elif days_left < 0 and abs(days_left) == after.get('days_offset', 2) and after.get('active', True):
+                                    msg_to_send = after.get('msg')
+                            else:
+                                # توافق رجعي إذا لم تُحفظ قوالب جديدة
+                                if days_left <= 3:
+                                    msg_to_send = tenant_settings.get('global_reminder_message') or 'نود تذكيركم باقتراب موعد الدفع للإيجار. شاكرين ومقدرين حسن تعاونكم.'
 
-                            # 3. إرسال SMS
-                            if send_sms and c.customer_phone and c.tenant:
-                                try:
-                                    SMSService.send_sms(c.tenant_id, c.customer_phone, msg)
-                                    click.echo(f"SMS reminder sent to {c.customer_phone}")
-                                except Exception as e:
-                                    click.echo(f"Failed to send SMS to {c.customer_phone}: {e}")
+                            if msg_to_send:
+                                send_wa = tenant_settings.get('reminder_send_whatsapp', False)
+                                send_em = tenant_settings.get('reminder_send_email', False)
+                                send_sms = tenant_settings.get('reminder_send_sms', False)
+                                
+                                if not (send_wa or send_em or send_sms):
+                                    send_wa = True
                                     
-                            sent_count += 1
+                                amount = str(c.payment_amount or (c.template.get_payment_amount() if c.template else 0))
+                                payment_link = f"{app.config.get('SITE_URL', 'http://localhost:5000')}/pay/{c.contract_number or c.id}"
+                                
+                                # تعويض المتغيرات
+                                msg_to_send = msg_to_send.replace('{name}', c.customer_name or 'عميلنا العزيز')
+                                msg_to_send = msg_to_send.replace('{unit}', str(c.unit_id) if c.unit_id else 'الوحدة') # أو c.unit.name إذا توفر
+                                msg_to_send = msg_to_send.replace('{days}', str(abs(days_left)))
+                                msg_to_send = msg_to_send.replace('{amount}', amount)
+                                msg_to_send = msg_to_send.replace('{payment_link}', payment_link)
+                                
+                                # 1. إرسال واتساب
+                                if send_wa and c.customer_phone and c.tenant:
+                                    try:
+                                        WhatsAppService.send_text(c.tenant_id, c.customer_phone, msg_to_send)
+                                        click.echo(f"WhatsApp reminder sent to {c.customer_phone}")
+                                    except Exception as e:
+                                        click.echo(f"Failed to send WA to {c.customer_phone}: {e}")
+                                        
+                                # 2. إرسال إيميل
+                                if send_em and c.customer_email and c.tenant:
+                                    try:
+                                        EmailService.send_payment_reminder(
+                                            to_email=c.customer_email,
+                                            tenant_name=c.tenant.business_name,
+                                            contract_number=c.contract_number or str(c.id),
+                                            amount=amount,
+                                            due_date=check_out,
+                                            payment_link=payment_link,
+                                            bank_name=c.tenant.bank_name,
+                                            bank_account_name=c.tenant.bank_account_name,
+                                            bank_iban=c.tenant.bank_iban
+                                        )
+                                        click.echo(f"Email reminder sent to {c.customer_email}")
+                                    except Exception as e:
+                                        click.echo(f"Failed to send Email to {c.customer_email}: {e}")
+
+                                # 3. إرسال SMS
+                                if send_sms and c.customer_phone and c.tenant:
+                                    try:
+                                        SMSService.send_sms(c.tenant_id, c.customer_phone, msg_to_send)
+                                        click.echo(f"SMS reminder sent to {c.customer_phone}")
+                                    except Exception as e:
+                                        click.echo(f"Failed to send SMS to {c.customer_phone}: {e}")
+                                        
+                                sent_count += 1
                     except Exception as e:
                         click.echo(f"Error parsing date for contract {c.id}: {e}")
                         
             click.echo(f'Finished. Processed {sent_count} reminders.')
-
-    @app.cli.command('run-collection-agent')
-    @click.option('--tenant-id', default=None, type=int,
-                  help='معرف التاجر — إذا لم يُحدد يتم تشغيله على جميع التجار')
-    @click.option('--days', default=3, type=int,
-                  help='عدد الأيام للتحقق من العقود المنتهية (افتراضي: 3)')
-    def run_collection_agent(tenant_id, days):
-        """تشغيل وكيل التحصيل الذكي — يفحص العقود ويرسل تذكيرات الدفع."""
-        with app.app_context():
-            from .agents.collection_agent import CollectionAgent
-            from .models.tenant import Tenant
-
-            if tenant_id:
-                tenants = [Tenant.query.get(tenant_id)]
-                if not tenants[0]:
-                    click.echo(f'لم يتم العثور على التاجر رقم {tenant_id}')
-                    return
-            else:
-                tenants = Tenant.query.filter_by(status='active').all()
-
-            click.echo(f'🤖 بدء تشغيل وكيل التحصيل على {len(tenants)} تاجر...')
-
-            for t in tenants:
-                click.echo(f'\n--- تاجر: {t.business_name} (ID={t.id}) ---')
-                try:
-                    agent = CollectionAgent(tenant_id=t.id)
-                    result = agent.run_batch(days_ahead=days)
-                    if result.success:
-                        click.echo(result.text)
-                    else:
-                        click.echo(f'⚠️ {result.error}')
-                except Exception as e:
-                    click.echo(f'❌ خطأ: {e}')
-
-            click.echo(f'\n✅ تم الانتهاء.')
 
 
 def _setup_logging(app):

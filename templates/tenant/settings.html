@@ -43,13 +43,59 @@
         </label>
     </div>
 
-    <div class="mb-4">
-        <label class="block text-sm font-medium mb-1">رسالة التذكير العامة (اختياري)</label>
-        <textarea name="global_reminder_message" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="نود تذكيركم باقتراب موعد الدفع للإيجار. شاكرين ومقدرين حسن تعاونكم.">{{ tenant.settings.get('global_reminder_message', '') }}</textarea>
-        <p class="text-xs text-gray-500 mt-1">إذا لم تضع رسالة هنا، سيتم استخدام الرسالة المخصصة في قالب العقد.</p>
+    <!-- قوالب التذكير المخصصة -->
+    <div class="space-y-6 mt-6 border-t pt-6">
+        <h4 class="font-bold text-gray-800">قوالب التذكيرات المخصصة</h4>
+        <p class="text-xs text-gray-500 mb-4">يمكنك استخدام المتغيرات التالية: {name} لاسم النزيل، {unit} لاسم الوحدة، {days} لعدد الأيام، {amount} للمبلغ، {payment_link} لرابط الدفع.</p>
+        
+        {% set rems = tenant.settings.get('reminders', {}) %}
+        
+        <!-- قالب 1: قبل الانتهاء -->
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <div class="flex items-center justify-between mb-2">
+                <label class="flex items-center gap-2 font-bold text-sm">
+                    <input type="checkbox" name="rem_before_active" value="1" {% if rems.get('before', {}).get('active', True) %}checked{% endif %}>
+                    تذكير قبل انتهاء العقد
+                </label>
+                <div class="flex items-center gap-2 text-sm">
+                    <span>قبل</span>
+                    <input type="number" name="rem_before_days" class="w-16 border rounded px-2 py-1 text-center" value="{{ rems.get('before', {}).get('days_offset', 3) }}" min="1" max="30">
+                    <span>أيام</span>
+                </div>
+            </div>
+            <textarea name="rem_before_msg" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm">{{ rems.get('before', {}).get('msg', 'مرحباً {name}، نود تذكيرك بأن عقدك للوحدة {unit} سينتهي بعد {days} أيام. يرجى سداد المبلغ المتبقي {amount} عبر الرابط: {payment_link}') }}</textarea>
+        </div>
+
+        <!-- قالب 2: يوم الانتهاء -->
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <div class="flex items-center justify-between mb-2">
+                <label class="flex items-center gap-2 font-bold text-sm">
+                    <input type="checkbox" name="rem_on_active" value="1" {% if rems.get('on', {}).get('active', True) %}checked{% endif %}>
+                    تذكير يوم الانتهاء
+                </label>
+                <div class="text-sm text-gray-500">في نفس اليوم</div>
+            </div>
+            <textarea name="rem_on_msg" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm">{{ rems.get('on', {}).get('msg', 'مرحباً {name}، نود تذكيرك بأن عقدك للوحدة {unit} ينتهي اليوم. يرجى المبادرة بسداد {amount} لتجنب أي غرامات: {payment_link}') }}</textarea>
+        </div>
+
+        <!-- قالب 3: بعد الانتهاء (متأخر) -->
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <div class="flex items-center justify-between mb-2">
+                <label class="flex items-center gap-2 font-bold text-sm">
+                    <input type="checkbox" name="rem_after_active" value="1" {% if rems.get('after', {}).get('active', True) %}checked{% endif %}>
+                    تذكير الدفع المتأخر
+                </label>
+                <div class="flex items-center gap-2 text-sm">
+                    <span>بعد</span>
+                    <input type="number" name="rem_after_days" class="w-16 border rounded px-2 py-1 text-center" value="{{ rems.get('after', {}).get('days_offset', 2) }}" min="1" max="30">
+                    <span>أيام</span>
+                </div>
+            </div>
+            <textarea name="rem_after_msg" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm">{{ rems.get('after', {}).get('msg', 'مرحباً {name}، لقد تأخر سداد إيجار الوحدة {unit} بمقدار {days} أيام. نرجو السداد الفوري للمبلغ {amount} عبر الرابط التالي: {payment_link}') }}</textarea>
+        </div>
     </div>
 
-    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700">حفظ إعدادات التذكير</button>
+    <button type="submit" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700">حفظ إعدادات التذكير</button>
 </form>
 
 {% block page_content %}{% endblock %}

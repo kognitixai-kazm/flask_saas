@@ -88,11 +88,15 @@ class Subscription(db.Model):
         """هل يستطيع إرسال رسالة شات جديدة."""
         if not self.is_active:
             return False
-        if self.plan is None:
-            return False
-        # Use limits relation if available
-        limit = self.plan.limits.max_whatsapp_msgs if self.plan.limits else 0
-        return self.chats_used_this_month < limit
+        
+        # مفتوح مؤقتاً للاختبارات والإصلاحات بناءً على طلبك
+        return True
+        
+        # if self.plan is None:
+        #     return False
+        # # Use limits relation if available
+        # limit = self.plan.limits.max_whatsapp_msgs if self.plan.limits else 0
+        # return self.chats_used_this_month < limit
 
     def increment_chat_usage(self, count=1):
         """زيادة العدّاد + إعادة تعيين شهرية."""

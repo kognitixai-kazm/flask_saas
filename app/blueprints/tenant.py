@@ -320,16 +320,6 @@ def _build_analytics(tenant):
     return result
 
 
-# ========================
-# AI Agents Hub
-# ========================
-@bp.route('/ai-agents')
-@tenant_required
-def ai_agents():
-    """شاشة إدارة فريق الذكاء الاصطناعي في لوحة التاجر."""
-    tenant = g.current_tenant
-    return render_template('tenant/ai_agents.html', tenant=tenant)
-
 
 # ========================
 # Profile
@@ -505,8 +495,24 @@ def settings():
         tenant.settings['reminder_send_email'] = req_email
         tenant.settings['reminder_send_whatsapp'] = req_whatsapp
         tenant.settings['reminder_send_sms'] = req_sms
-        
-        tenant.settings['global_reminder_message'] = request.form.get('global_reminder_message', '').strip()
+        # إعدادات التذكير التفصيلية
+        tenant.settings['reminders'] = {
+            'before': {
+                'active': 'rem_before_active' in request.form,
+                'days_offset': int(request.form.get('rem_before_days', 3)),
+                'msg': request.form.get('rem_before_msg', '').strip()
+            },
+            'on': {
+                'active': 'rem_on_active' in request.form,
+                'days_offset': 0,
+                'msg': request.form.get('rem_on_msg', '').strip()
+            },
+            'after': {
+                'active': 'rem_after_active' in request.form,
+                'days_offset': int(request.form.get('rem_after_days', 2)),
+                'msg': request.form.get('rem_after_msg', '').strip()
+            }
+        }
 
         # حفظ activity_data كـ JSON
         tenant.activity_data = tenant.activity_data or {}
