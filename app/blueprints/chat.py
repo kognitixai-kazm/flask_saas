@@ -44,9 +44,23 @@ def interface(slug):
     # هل الزائر مسجّل ومتحقق؟
     visitor = _get_visitor(tenant.id)
     if not visitor:
-        return render_template('chat/visitor_login.html', tenant=tenant, slug=slug)
+        guest_token = session.get('chat_guest_token')
+        if not guest_token:
+            guest_token = generate_visitor_id(32)
+            session['chat_guest_token'] = guest_token
+        session.permanent = True
+        return render_template('chat/interface.html', tenant=tenant, visitor=None, is_guest=True)
 
-    return render_template('chat/interface.html', tenant=tenant, visitor=visitor)
+    session.permanent = True
+    return render_template('chat/interface.html', tenant=tenant, visitor=visitor, is_guest=False)
+
+@bp.route('/<slug>/login', methods=['GET'])
+def visitor_login_page(slug):
+    tenant = _get_tenant(slug)
+    visitor = _get_visitor(tenant.id)
+    if visitor:
+        return redirect(url_for('chat.interface', slug=slug))
+    return render_template('chat/visitor_login.html', tenant=tenant, slug=slug)
 
 
 @bp.route('/<slug>/register', methods=['POST'])
@@ -149,6 +163,19 @@ def visitor_verify(slug):
     db.session.commit()
 
     session['chat_visitor_token'] = visitor.visitor_token
+    session.permanent = True
+
+    # دمج المحادثات للضيف
+    guest_token = session.get('chat_guest_token')
+    if guest_token:
+        Conversation.query.filter_by(tenant_id=tenant.id, visitor_id=guest_token).update({
+            'visitor_id': visitor.visitor_token,
+            'visitor_name': visitor.name,
+            'visitor_email': visitor.email,
+            'visitor_phone': visitor.phone
+        }, synchronize_session=False)
+        db.session.commit()
+        session.pop('chat_guest_token', None)
 
     return jsonify({'success': True, 'redirect': url_for('chat.interface', slug=slug)})
 
@@ -166,8 +193,10 @@ def send_message(slug):
         current_app.logger.info('[Chat/message] start slug=%s', slug)
         tenant = _get_tenant(slug)
         visitor = _get_visitor(tenant.id)
-        if not visitor:
-            return jsonify({'success': False, 'error': 'يجب تسجيل الدخول'}), 401
+        guest_token = session.get('chat_guest_token')
+        
+        if not visitor and not guest_token:
+            return jsonify({'success': False, 'error': 'جلسة غير صالحة، يرجى تحديث الصفحة'}), 401
 
         sub = tenant.subscription
         if not sub or not sub.is_active:
@@ -197,13 +226,19 @@ def send_message(slug):
             conversation = Conversation.query.filter_by(
                 id=conversation_id, tenant_id=tenant.id,
             ).first()
+            
+        visitor_id = visitor.visitor_token if visitor else guest_token
+        visitor_name = visitor.name if visitor else "زائر"
+        visitor_email = visitor.email if visitor else ""
+        visitor_phone = visitor.phone if visitor else ""
+        
         if not conversation:
             conversation = Conversation(
                 tenant_id=tenant.id,
-                visitor_id=visitor.visitor_token,
-                visitor_name=visitor.name,
-                visitor_email=visitor.email,
-                visitor_phone=visitor.phone,
+                visitor_id=visitor_id,
+                visitor_name=visitor_name,
+                visitor_email=visitor_email,
+                visitor_phone=visitor_phone,
                 channel='web',
             )
             db.session.add(conversation)
@@ -368,16 +403,19 @@ def history(slug):
     """يرجع آخر محادثة افتراضياً، أو all=1 لقائمة كل المحادثات."""
     tenant = _get_tenant(slug)
     visitor = _get_visitor(tenant.id)
-    if not visitor:
+    guest_token = session.get('chat_guest_token')
+    
+    if not visitor and not guest_token:
         return jsonify({'messages': []})
 
+    vid = visitor.visitor_token if visitor else guest_token
     want_all = request.args.get('all') == '1'
     conv_id = request.args.get('conversation_id')
 
     if want_all and not conv_id:
         convs = (
             Conversation.query
-            .filter_by(tenant_id=tenant.id, visitor_id=visitor.visitor_token)
+            .filter_by(tenant_id=tenant.id, visitor_id=vid)
             .order_by(Conversation.started_at.desc())
             .limit(50)
             .all()
@@ -402,12 +440,12 @@ def history(slug):
         except (TypeError, ValueError):
             return jsonify({'messages': []})
         conv = Conversation.query.filter_by(
-            id=cid, tenant_id=tenant.id, visitor_id=visitor.visitor_token,
+            id=cid, tenant_id=tenant.id, visitor_id=vid,
         ).first()
     else:
         conv = (
             Conversation.query
-            .filter_by(tenant_id=tenant.id, visitor_id=visitor.visitor_token)
+            .filter_by(tenant_id=tenant.id, visitor_id=vid)
             .order_by(Conversation.started_at.desc())
             .first()
         )
@@ -435,13 +473,16 @@ def delete_conversation(slug, conv_id):
     """حذف محادثة معيّنة (للزائر صاحبها فقط)."""
     tenant = _get_tenant(slug)
     visitor = _get_visitor(tenant.id)
-    if not visitor:
-        return jsonify({'success': False, 'error': 'يجب تسجيل الدخول'}), 401
+    guest_token = session.get('chat_guest_token')
+    
+    if not visitor and not guest_token:
+        return jsonify({'success': False, 'error': 'يجب تحديث الصفحة'}), 401
 
+    vid = visitor.visitor_token if visitor else guest_token
     conv = Conversation.query.filter_by(
         id=conv_id,
         tenant_id=tenant.id,
-        visitor_id=visitor.visitor_token,
+        visitor_id=vid,
     ).first()
     if not conv:
         return jsonify({'success': False, 'error': 'المحادثة غير موجودة'}), 404
@@ -471,15 +512,19 @@ def delete_visitor_data(slug):
     """حذف نهائي لبيانات الزائر + كل محادثاته (Right to be forgotten)."""
     tenant = _get_tenant(slug)
     visitor = _get_visitor(tenant.id)
-    if not visitor:
-        return jsonify({'success': False, 'error': 'يجب تسجيل الدخول'}), 401
+    guest_token = session.get('chat_guest_token')
+    
+    if not visitor and not guest_token:
+        return jsonify({'success': False, 'error': 'يجب تحديث الصفحة'}), 401
+
+    vid = visitor.visitor_token if visitor else guest_token
 
     try:
         from app.models.inquiry import Inquiry
 
         conv_ids = [c.id for c in Conversation.query.filter_by(
             tenant_id=tenant.id,
-            visitor_id=visitor.visitor_token,
+            visitor_id=vid,
         ).all()]
 
         if conv_ids:
@@ -494,9 +539,12 @@ def delete_visitor_data(slug):
             ).all():
                 db.session.delete(c)
 
-        db.session.delete(visitor)
+        if visitor:
+            db.session.delete(visitor)
+            
         db.session.commit()
         session.pop('chat_visitor_token', None)
+        session.pop('chat_guest_token', None)
         return jsonify({
             'success': True,
             'redirect': url_for('chat.interface', slug=slug),
@@ -514,16 +562,23 @@ def start_new_conversation(slug):
     """يفتح محادثة جديدة دون مساس بالقديمة."""
     tenant = _get_tenant(slug)
     visitor = _get_visitor(tenant.id)
-    if not visitor:
-        return jsonify({'success': False, 'error': 'يجب تسجيل الدخول'}), 401
+    guest_token = session.get('chat_guest_token')
+    
+    if not visitor and not guest_token:
+        return jsonify({'success': False, 'error': 'يجب تحديث الصفحة'}), 401
+
+    vid = visitor.visitor_token if visitor else guest_token
+    vname = visitor.name if visitor else "زائر"
+    vemail = visitor.email if visitor else ""
+    vphone = visitor.phone if visitor else ""
 
     try:
         conv = Conversation(
             tenant_id=tenant.id,
-            visitor_id=visitor.visitor_token,
-            visitor_name=visitor.name,
-            visitor_email=visitor.email,
-            visitor_phone=visitor.phone,
+            visitor_id=vid,
+            visitor_name=vname,
+            visitor_email=vemail,
+            visitor_phone=vphone,
             channel='web',
         )
         db.session.add(conv)

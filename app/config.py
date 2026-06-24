@@ -58,7 +58,7 @@ class BaseConfig:
         'chat_visitor': {
             'cookie_name': 'chat_visitor',
             'cookie_path': '/c',
-            'lifetime': timedelta(days=30),
+            'lifetime': timedelta(days=365),
             'secure_key': 'visitor_id',
         },
     }

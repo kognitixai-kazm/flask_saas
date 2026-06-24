@@ -154,9 +154,12 @@ body { background:#eef2f7; display:flex; flex-direction:column; height:100vh; he
         <div class="name">{{ tenant.business_name }}</div>
         <div class="status">متصل · يرد بالذكاء الاصطناعي</div>
     </div>
+    {% if is_guest %}
+    <a href="{{ url_for('chat.visitor_login_page', slug=tenant.slug) }}" style="background:#fff; color:var(--brand); padding:6px 12px; border-radius:10px; font-size:12px; font-weight:bold; text-decoration:none; flex-shrink:0;">دخول</a>
+    {% endif %}
     <button id="menuBtn" type="button" aria-label="القائمة"
             style="background:rgba(255,255,255,.12); color:#fff; border:0; width:38px; height:38px;
-                   border-radius:12px; cursor:pointer; font-size:20px; line-height:1;">⋮</button>
+                   border-radius:12px; cursor:pointer; font-size:20px; line-height:1; flex-shrink:0;">⋮</button>
     <div class="powered" title="مدعوم من KOGNITIX">
         <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
         KOGNITIX
@@ -190,7 +193,7 @@ body { background:#eef2f7; display:flex; flex-direction:column; height:100vh; he
                 <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
             {% endif %}
         </div>
-        <div class="name">أهلاً بك {{ visitor.name }} 👋</div>
+        <div class="name">أهلاً بك {{ visitor.name if visitor else 'يا ضيفنا' }} 👋</div>
         <div class="sub">كيف نقدر نساعدك اليوم في {{ tenant.business_name }}؟</div>
     </div>
 </div>

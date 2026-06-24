@@ -649,11 +649,18 @@ class ChatService:
         business = (tenant.business_name or '').strip()
 
         visitor_line = ''
-        if conversation and (conversation.visitor_name or '').strip():
+        if conversation:
             vn = (conversation.visitor_name or '').strip()
-            visitor_line = (
-                f"\nاسم الزائر: {vn}. ناده باسمه مرة واحدة عند البدء فقط، بدون مبالغة."
-            )
+            if not conversation.visitor_email and not conversation.visitor_phone:
+                visitor_line = (
+                    f"\nالزائر الحالي هو ضيف غير مسجل (Guest). "
+                    "إذا أراد العميل إتمام حجز، الدفع، أو إجراء يتطلب بيانات شخصية، "
+                    "اطلب منه بلطف الضغط على زر «دخول» الموجود أعلى المحادثة لتسجيل بياناته أولاً ثم العودة لإكمال الإجراء."
+                )
+            elif vn:
+                visitor_line = (
+                    f"\nاسم الزائر: {vn}. ناده باسمه مرة واحدة عند البدء فقط، بدون مبالغة."
+                )
 
         scope_block = (
             f"النطاق المسموح: {persona['scope']}\n"
