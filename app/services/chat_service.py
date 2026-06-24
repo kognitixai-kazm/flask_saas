@@ -153,27 +153,31 @@ class ChatService:
                 bool(getattr(result, 'reply', None)),
             )
 
-            # رد جاهز من القواعد المحلية → نسلّمه مباشرة (Hybrid Logic Gate: AI لا يُستدعى)
+            # رد جاهز من القواعد المحلية → نسلّمه كـ Context للذكاء الاصطناعي (Hybrid Logic Gate)
             if result.reply and not result.needs_inquiry:
-                current_app.logger.info(f'[Chat] local reply for tenant={tenant.slug} intent={result.intent}')
+                current_app.logger.info(f'[Chat] local reply found for tenant={tenant.slug} intent={result.intent}')
 
                 if getattr(result, 'pipeline_meta', None):
                     try:
                         from app.services.hotel_booking_chat import persist_intent_pipeline_meta
-
                         persist_intent_pipeline_meta(conversation, result.pipeline_meta or {})
                         db.session.commit()
                     except Exception as e:
                         current_app.logger.warning(f'[Chat] persist pipeline_meta error: {e}')
                         db.session.rollback()
 
+                # محاولة صياغة الرد عن طريق الذكاء الاصطناعي
+                ai_text = ChatService._try_ai_reply(tenant, conversation, user_message, local_context=result.reply)
+                if ai_text:
+                    current_app.logger.info(f'[Chat] AI successfully formatted the intent: {result.intent}')
+                    return ai_text
+
+                current_app.logger.info(f'[Chat] AI failed or unavailable, falling back to local reply for intent={result.intent}')
                 ChatService._charge_message(
                     tenant_id=tenant.id,
                     service_key='text_message',
                     conversation_id=conversation.id,
                 )
-                # إذا كانت النية تطلب إرسال أكثر من فقاعة (مثل الترحيب)،
-                # ندمجها بفاصل خاص يقسّمها الواجهة الأمامية إلى رسائل منفصلة.
                 extras = []
                 if isinstance(result.pipeline_meta, dict):
                     extras = result.pipeline_meta.get('extra_replies') or []
@@ -201,7 +205,7 @@ class ChatService:
                     return ChatService._not_found_reply(tenant, user_message)
 
                 # جرّب الذكاء الخارجي قبل تمرير الاستفسار للفرع
-                ai_text = ChatService._try_ai_reply(tenant, conversation, user_message)
+                ai_text = ChatService._try_ai_reply(tenant, conversation, user_message, local_context=result.reply)
                 if ai_text:
                     return ai_text
 
@@ -275,17 +279,21 @@ class ChatService:
     # محاولة AI
     # ========================================
     @staticmethod
-    def _try_ai_reply(tenant: Tenant, conversation: Conversation, user_message: str) -> str:
+    def _try_ai_reply(tenant: Tenant, conversation: Conversation, user_message: str, local_context: str = None) -> str:
         """محاولة استدعاء AI — يخصم تلقائياً عند النجاح. لا يُستدعى إلا بعد فشل القواعد المحلية."""
         try:
             from app.services.ai_service import AIService
             from app.services.pricing_service import PricingService
 
+            current_app.logger.info(f'[Chat/AI] Attempting AI reply for tenant={tenant.slug}')
+
             # جلب النموذج المختار
             model = AIService.get_tenant_model(tenant.id)
             if not model:
-                current_app.logger.warning(f'[Chat] no AI model available for tenant={tenant.slug}')
+                current_app.logger.warning(f'[Chat/AI] No AI model available/configured for tenant={tenant.slug}')
                 return None
+
+            current_app.logger.info(f'[Chat/AI] Selected Provider: {model.provider}, Model: {model.model_name}')
 
             # التحقق من رصيد التاجر قبل الاستدعاء
             ok, msg, price = PricingService.can_afford(
@@ -294,47 +302,41 @@ class ChatService:
                 ai_model_id=model.id,
             )
             if not ok:
-                current_app.logger.warning(f'[Chat] insufficient balance for AI tenant={tenant.slug}: {msg}')
+                current_app.logger.warning(f'[Chat/AI] Insufficient balance for AI tenant={tenant.slug}: {msg}')
                 return None
 
             # فحص خفيف وسريع لصلاحية المفتاح (مع كاش TTL)
             api_key = AIService._get_api_key(model.provider, tenant.id)
             if not api_key:
-                current_app.logger.warning(
-                    f'[Chat] no API key for provider={model.provider} tenant={tenant.slug}'
-                )
+                current_app.logger.warning(f'[Chat/AI] Missing API key for provider={model.provider} tenant={tenant.slug}')
                 return None
+            
+            current_app.logger.info(f'[Chat/AI] API Key found for provider={model.provider}')
+
             key_ok, key_reason = AIService.validate_api_key(model.provider, api_key)
             if not key_ok:
-                current_app.logger.warning(
-                    f'[Chat] AI key invalid provider={model.provider} tenant={tenant.slug} reason={key_reason}'
-                )
+                current_app.logger.warning(f'[Chat/AI] API key invalid for provider={model.provider}: {key_reason}')
                 return None
 
-            system_prompt = ChatService._build_prompt(tenant, conversation)
-            history = ChatService._build_history(conversation)
+            current_app.logger.info(f'[Chat/AI] API Key is valid.')
 
-            current_app.logger.info(
-                '[Chat] before AIService.generate tenant=%s provider=%s timeout=%s',
-                tenant.slug,
-                model.provider,
-                AIService.http_timeout(),
-            )
+            system_prompt = ChatService._build_prompt(tenant, conversation)
+            if local_context:
+                system_prompt += f"\n\n[معلومات إضافية من النظام يجب استخدامها في صياغة الرد على الزائر]:\n{local_context}\n"
+
+            current_app.logger.info(f'[Chat/AI] Sending request to {model.provider} ({model.model_name})...')
             result = AIService.generate(
                 tenant_id=tenant.id,
                 user_message=user_message,
                 system_prompt=system_prompt,
-                history=history,
+                history=ChatService._build_history(conversation),
                 model_override=model,
             )
-            current_app.logger.info(
-                '[Chat] after AIService.generate tenant=%s success=%s',
-                tenant.slug,
-                bool(result.success and result.text),
-            )
-
-            if not result.success or not result.text:
-                current_app.logger.warning(f'[Chat] AI failed: {result.error}')
+            
+            if result.success and result.text:
+                current_app.logger.info(f'[Chat/AI] Successfully received reply from {model.provider}.')
+            else:
+                current_app.logger.warning(f'[Chat/AI] AI request failed: {result.error}')
                 return None
 
             ChatService._charge_message(
@@ -615,12 +617,12 @@ class ChatService:
 
     _ACTIVITY_PERSONA = {
         'hotel': {
-            'role': 'موظّف استقبال في فندق/شقق فندقية',
+            'role': 'موظّفة استقبال تدعى "سارة" في فندق/شقق فندقية',
             'scope': (
                 'الإجابة عن الغرف والوحدات والأسعار العامة والموقع والخدمات وساعات الاستقبال، '
                 'وتوجيه العميل لإكمال الحجز عبر النموذج الموجود في المحادثة.'
             ),
-            'avoid': 'لا تتحدث عن قوائم طعام أو حجوزات طاولات؛ هذه ليست مهمتنا هنا.',
+            'avoid': 'لا تتحدثي عن قوائم طعام أو حجوزات طاولات؛ هذه ليست مهمتنا هنا.',
         },
         'restaurant': {
             'role': 'مضيف/موظف خدمة عملاء في مطعم',

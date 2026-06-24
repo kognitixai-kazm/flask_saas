@@ -62,6 +62,10 @@ def confirm(id):
     booking.confirmed_at = datetime.utcnow()
     booking.admin_notes = request.form.get('admin_notes', booking.admin_notes)
 
+    if booking.unit:
+        booking.unit.status = 'booked'
+        booking.unit.is_available = False
+
     # ربط بفرع إذا اختار
     branch_id = request.form.get('branch_id')
     if branch_id:
@@ -114,6 +118,10 @@ def cancel(id):
     booking.status = 'cancelled'
     booking.cancelled_at = datetime.utcnow()
     booking.admin_notes = request.form.get('admin_notes', booking.admin_notes)
+    
+    if booking.unit:
+        booking.unit.status = 'available'
+        booking.unit.is_available = True
     
     # عكس أي قيود محاسبية مسجلة لهذا الحجز إن وجدت
     from app.services.accounting_service import reverse_journal_entry
@@ -193,6 +201,11 @@ def create_manual():
             unit_id = request.form.get('unit_id')
             if unit_id:
                 booking.unit_id = int(unit_id)
+                from app.models.hotel_models import Unit
+                unit = Unit.query.get(booking.unit_id)
+                if unit:
+                    unit.status = 'booked'
+                    unit.is_available = False
         else:
             res_date = request.form.get('reservation_date')
             if res_date:

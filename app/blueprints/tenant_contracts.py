@@ -171,6 +171,10 @@ def new_manual():
             # توليد العقد مباشرة
             contract.status = 'paid' # نفترض أنه دُفع أو أن التاجر أتم الإجراء يدوياً
             
+            if unit:
+                unit.status = 'booked'
+                unit.is_available = False
+            
             # -----------------
             # القيود المحاسبية
             # -----------------
@@ -411,6 +415,13 @@ def contract_approve_transfer(id):
     contract.paid_at = datetime.utcnow()
     contract.status = 'paid'
 
+    if contract.unit_id:
+        from app.models.hotel_models import Unit
+        unit = Unit.query.get(contract.unit_id)
+        if unit:
+            unit.status = 'booked'
+            unit.is_available = False
+
     # -----------------
     # القيود المحاسبية
     # -----------------
@@ -472,6 +483,13 @@ def contract_reject_transfer(id):
     contract.bank_transfer_note = (request.form.get('reason') or '').strip()[:500]
     contract.payment_status = 'pending'
     contract.status = 'rejected'
+    
+    if contract.unit_id:
+        from app.models.hotel_models import Unit
+        unit = Unit.query.get(contract.unit_id)
+        if unit:
+            unit.status = 'available'
+            unit.is_available = True
     
     # عكس أي قيود محاسبية مسجلة لهذا العقد إن وجدت
     from app.services.accounting_service import reverse_journal_entry
