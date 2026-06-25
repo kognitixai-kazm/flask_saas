@@ -293,7 +293,7 @@ class ChatService:
                 current_app.logger.warning(f'[Chat/AI] No AI model available/configured for tenant={tenant.slug}')
                 return None
 
-            current_app.logger.info(f'[Chat/AI] Selected Provider: {model.provider}, Model: {model.model_name}')
+            current_app.logger.info(f'[Chat/AI] Selected Provider: {model.provider}, Model: {model.model_id}')
 
             # التحقق من رصيد التاجر قبل الاستدعاء
             ok, msg, price = PricingService.can_afford(
@@ -324,7 +324,7 @@ class ChatService:
             if local_context:
                 system_prompt += f"\n\n[معلومات إضافية من النظام يجب استخدامها في صياغة الرد على الزائر]:\n{local_context}\n"
 
-            current_app.logger.info(f'[Chat/AI] Sending request to {model.provider} ({model.model_name})...')
+            current_app.logger.info(f'[Chat/AI] Sending request to {model.provider} ({model.model_id})...')
             result = AIService.generate(
                 tenant_id=tenant.id,
                 user_message=user_message,
