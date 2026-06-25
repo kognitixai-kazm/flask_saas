@@ -291,6 +291,7 @@ class ChatService:
             model = AIService.get_tenant_model(tenant.id)
             if not model:
                 current_app.logger.warning(f'[Chat/AI] No AI model available/configured for tenant={tenant.slug}')
+                ChatService._notify_ai_failure(tenant.id, "لم يتم اختيار أو تفعيل نموذج ذكاء اصطناعي")
                 return None
 
             current_app.logger.info(f'[Chat/AI] Selected Provider: {model.provider}, Model: {model.model_id}')
@@ -309,6 +310,7 @@ class ChatService:
             api_key = AIService._get_api_key(model.provider, tenant.id)
             if not api_key:
                 current_app.logger.warning(f'[Chat/AI] Missing API key for provider={model.provider} tenant={tenant.slug}')
+                ChatService._notify_ai_failure(tenant.id, "مفتاح الربط (API Key) غير موجود")
                 return None
             
             current_app.logger.info(f'[Chat/AI] API Key found for provider={model.provider}')
@@ -316,6 +318,7 @@ class ChatService:
             key_ok, key_reason = AIService.validate_api_key(model.provider, api_key)
             if not key_ok:
                 current_app.logger.warning(f'[Chat/AI] API key invalid for provider={model.provider}: {key_reason}')
+                ChatService._notify_ai_failure(tenant.id, f"مفتاح الربط غير صالح ({key_reason})")
                 return None
 
             current_app.logger.info(f'[Chat/AI] API Key is valid.')
@@ -337,6 +340,7 @@ class ChatService:
                 current_app.logger.info(f'[Chat/AI] Successfully received reply from {model.provider}.')
             else:
                 current_app.logger.warning(f'[Chat/AI] AI request failed: {result.error}')
+                ChatService._notify_ai_failure(tenant.id, f"خطأ في الاتصال ({result.error})")
                 return None
 
             ChatService._charge_message(
@@ -371,6 +375,25 @@ class ChatService:
         if any(cleaned.lower().startswith(b) for b in bad_starts):
             return ''
         return cleaned
+
+    # ========================================
+    # إشعار فشل الذكاء الاصطناعي
+    # ========================================
+    @staticmethod
+    def _notify_ai_failure(tenant_id: int, reason: str):
+        """يرسل إشعاراً للتاجر عند فشل الوكيل ليكون على علم بالمشكلة."""
+        try:
+            from app.utils.notification_service import NotificationService
+            NotificationService.notify_tenant(
+                tenant_id=tenant_id,
+                category='system',
+                title='⚠️ تنبيه: توقف وكيل الذكاء الاصطناعي',
+                body=f'الوكيل لا يعمل حالياً. السبب: {reason}. جاري استخدام الردود المحلية مؤقتاً.',
+                action_url='/app/ai-settings',
+                icon='🤖',
+            )
+        except Exception as e:
+            current_app.logger.warning(f'[Notification] ai notify error: {e}')
 
     # ========================================
     # رد عدم وجود المعلومة
