@@ -36,11 +36,12 @@ class BotConfig(db.Model):
     voice_provider = db.Column(db.String(30), default='')
     voice_api_key = db.Column(db.String(300), default='')
 
-    # AI إضافي (خاص بالتاجر — بديل عن المفتاح العام)
+    # AI إضافي (خاص بالتاجر — بديل عن المفتاح العام) (DEPRECATED: تم نقلها للإدارة المركزية)
     # openai | anthropic | google_gemini | mistral
-    ai_provider = db.Column(db.String(30), default='')
-    ai_api_key = db.Column(db.String(500), default='')
-    ai_model = db.Column(db.String(50), default='')
+    # سيتم إزالتها لاحقاً بالكامل، نتركها الآن كتعليقات لتجنب الأخطاء في أجزاء قديمة
+    # ai_provider = db.Column(db.String(30), default='')
+    # ai_api_key = db.Column(db.String(500), default='')
+    # ai_model = db.Column(db.String(50), default='')
 
     # بوت الاتصال الصوتي (Twilio / Vonage)
     call_provider = db.Column(db.String(30), default='')  # twilio | vonage | bland
@@ -117,17 +118,7 @@ class BotConfig(db.Model):
         if decrypt_value(self.voice_api_key) != val:
             self.voice_api_key = encrypt_value(val) if val else ''
 
-    @property
-    def ai_api_key_decrypted(self):
-        from app.utils.encryption import decrypt_value
-        return decrypt_value(self.ai_api_key)
 
-    @ai_api_key_decrypted.setter
-    def ai_api_key_decrypted(self, val):
-        from app.utils.encryption import encrypt_value, decrypt_value
-        val = (val or '').strip()
-        if decrypt_value(self.ai_api_key) != val:
-            self.ai_api_key = encrypt_value(val) if val else ''
 
     @property
     def call_api_key_decrypted(self):

@@ -35,145 +35,75 @@
 
 <!-- AI Tab -->
 <section id="tab-ai" class="tab-content">
-    <form method="POST" action="{{ url_for('admin_system.update_bulk') }}"
+    <form method="POST" action="{{ url_for('admin_system.update_ai') }}"
           class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="category" value="ai">
 
         <div class="flex items-start gap-3">
             <div class="w-12 h-12 rounded-xl bg-[#0b1f3a] text-cyan-300 flex items-center justify-center text-2xl">🧠</div>
             <div>
-                <h2 class="font-bold text-lg text-gray-900">مفاتيح مزوّدي الذكاء الاصطناعي</h2>
-                <p class="text-xs text-gray-500">اختر المنصة لإدخال المفتاح وإعداد النموذج المفضل لها.</p>
+                <h2 class="font-bold text-lg text-gray-900">مفاتيح مزوّدي الذكاء الاصطناعي والنماذج</h2>
+                <p class="text-xs text-gray-500">أدخل المفاتيح لتفعيل المزودين، ثم حدد النماذج المتاحة للعملاء والنموذج الافتراضي.</p>
             </div>
         </div>
 
-        <!-- AI Provider Selection Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
-            <!-- OpenAI Card -->
-            <div id="card-prov-openai" onclick="selectAIProvider('openai')" 
-                 class="ai-prov-card border-2 rounded-2xl p-4 cursor-pointer text-center hover:border-emerald-400 transition bg-gray-50/50">
-                <div class="text-3xl mb-2">🟢</div>
-                <div class="font-bold text-sm text-gray-900">OpenAI</div>
-                <div class="text-xs text-gray-500 mt-1">ChatGPT</div>
-                <span id="badge-prov-openai" class="inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700">غير نشط</span>
-            </div>
-
-            <!-- Anthropic Card -->
-            <div id="card-prov-anthropic" onclick="selectAIProvider('anthropic')" 
-                 class="ai-prov-card border-2 rounded-2xl p-4 cursor-pointer text-center hover:border-purple-400 transition bg-gray-50/50">
-                <div class="text-3xl mb-2">🟣</div>
-                <div class="font-bold text-sm text-gray-900">Anthropic</div>
-                <div class="text-xs text-gray-500 mt-1">Claude</div>
-                <span id="badge-prov-anthropic" class="inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700">غير نشط</span>
-            </div>
-
-            <!-- Google Gemini Card -->
-            <div id="card-prov-google" onclick="selectAIProvider('google')" 
-                 class="ai-prov-card border-2 rounded-2xl p-4 cursor-pointer text-center hover:border-blue-400 transition bg-gray-50/50">
-                <div class="text-3xl mb-2">🔵</div>
-                <div class="font-bold text-sm text-gray-900">Google Gemini</div>
-                <div class="text-xs text-gray-500 mt-1">Gemini Pro/Flash</div>
-                <span id="badge-prov-google" class="inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700">غير نشط</span>
-            </div>
-
-            <!-- MiniMax Card -->
-            <div id="card-prov-minimax" onclick="selectAIProvider('minimax')" 
-                 class="ai-prov-card border-2 rounded-2xl p-4 cursor-pointer text-center hover:border-amber-400 transition bg-gray-50/50">
-                <div class="text-3xl mb-2">🟡</div>
-                <div class="font-bold text-sm text-gray-900">MiniMax</div>
-                <div class="text-xs text-gray-500 mt-1">Chinese AI</div>
-                <span id="badge-prov-minimax" class="inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700">غير نشط</span>
-            </div>
-        </div>
-
-        <!-- Provider Settings Fields -->
+        {% for provider in ai_providers %}
         <div class="border border-gray-100 rounded-2xl p-5 bg-gray-50/40 space-y-4">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">{{ provider.icon }}</span>
+                <h3 class="font-bold text-gray-800 text-lg">{{ provider.name }}</h3>
+                {% if provider.api_key_decrypted %}
+                <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">مفعل ✅</span>
+                {% else %}
+                <span class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full text-[10px]">غير مفعل ⏸️</span>
+                {% endif %}
+            </div>
             
-            <!-- OpenAI Section -->
-            <div id="fields-openai" class="prov-fields hidden space-y-3">
-                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟢 إعدادات OpenAI (ChatGPT)</h3>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ OpenAI</label>
-                    <div class="flex gap-2">
-                        <input type="password" name="val_AI_OPENAI_KEY" id="input_AI_OPENAI_KEY"
-                               placeholder="sk-..." dir="ltr"
-                               class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
-                        <button type="button" onclick="testApiKey('openai', 'input_AI_OPENAI_KEY')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص المفتاح</button>
-                    </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ {{ provider.name }}</label>
+                <div class="flex gap-2">
+                    <input type="password" name="provider_key_{{ provider.id }}" id="input_{{ provider.slug }}"
+                           placeholder="{{ '••••••• (محفوظ)' if provider.api_key_decrypted else 'أدخل المفتاح لتفعيل المزود' }}" dir="ltr"
+                           class="w-full border rounded-lg px-3 py-2 text-sm font-mono bg-white">
+                    <button type="button" onclick="testApiKey('{{ provider.slug }}', 'input_{{ provider.slug }}')" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص</button>
                 </div>
+                {% if provider.api_key_decrypted %}
+                <label class="mt-2 flex items-center gap-2 text-xs text-red-600">
+                    <input type="checkbox" name="provider_clear_{{ provider.id }}" value="1">
+                    حذف المفتاح وإيقاف المزود
+                </label>
+                {% endif %}
             </div>
 
-            <!-- Anthropic Section -->
-            <div id="fields-anthropic" class="prov-fields hidden space-y-3">
-                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟣 إعدادات Anthropic (Claude)</h3>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ Anthropic</label>
-                    <div class="flex gap-2">
-                        <input type="password" name="val_AI_ANTHROPIC_KEY" id="input_AI_ANTHROPIC_KEY"
-                               placeholder="sk-ant-..." dir="ltr"
-                               class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
-                        <button type="button" onclick="testApiKey('anthropic', 'input_AI_ANTHROPIC_KEY')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص المفتاح</button>
+            <div class="mt-4 border-t pt-4">
+                <h4 class="font-bold text-sm text-gray-700 mb-3">النماذج التابعة لـ {{ provider.name }}:</h4>
+                <div class="grid md:grid-cols-2 gap-3">
+                    {% for model in provider.models %}
+                    <div class="bg-white border rounded-xl p-3 flex flex-col justify-between hover:border-blue-300 transition-colors">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2 font-bold text-sm">
+                                <span>{{ model.icon }}</span>
+                                <span>{{ model.display_name }}</span>
+                            </div>
+                            <label class="flex items-center gap-1 text-xs cursor-pointer">
+                                <input type="checkbox" name="model_active_{{ model.id }}" {{ 'checked' if model.is_active }}>
+                                <span>متاح للعملاء</span>
+                            </label>
+                        </div>
+                        <div class="text-xs text-gray-500 mb-3">{{ model.model_id }}</div>
+                        <label class="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-lg cursor-pointer border hover:bg-blue-50 border-gray-200 transition-colors">
+                            <input type="radio" name="default_model_id" value="{{ model.id }}" {{ 'checked' if model.is_default }}>
+                            <span class="font-bold text-gray-700">تعيين كالنموذج الافتراضي للمنصة 👑</span>
+                        </label>
                     </div>
-                </div>
-            </div>
-
-            <!-- Google Gemini Section -->
-            <div id="fields-google" class="prov-fields hidden space-y-3">
-                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🔵 إعدادات Google Gemini</h3>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ Google Gemini</label>
-                    <div class="flex gap-2">
-                        <input type="password" name="val_AI_GOOGLE_KEY" id="input_AI_GOOGLE_KEY"
-                               placeholder="AIza..." dir="ltr"
-                               class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
-                        <button type="button" onclick="testApiKey('google', 'input_AI_GOOGLE_KEY')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص المفتاح</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MiniMax Section -->
-            <div id="fields-minimax" class="prov-fields hidden space-y-3">
-                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🟡 إعدادات MiniMax AI</h3>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">مفتاح API الخاص بـ MiniMax</label>
-                    <div class="flex gap-2">
-                        <input type="password" name="val_AI_MINIMAX_KEY" id="input_AI_MINIMAX_KEY"
-                               placeholder="أدخل المفتاح" dir="ltr"
-                               class="w-full border rounded-lg px-3 py-2 text-sm font-mono">
-                        <button type="button" onclick="testApiKey('minimax', 'input_AI_MINIMAX_KEY')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">فحص المفتاح</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Default Model Selector -->
-            <div class="border-t pt-4 space-y-2">
-                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">⚙️ النموذج الافتراضي للمنصة</h3>
-                <p class="text-xs text-gray-500">اختر النموذج الافتراضي الذي سيتم تفعيله تلقائياً للمشتركين الجدد.</p>
-                
-                <select name="val_AI_DEFAULT_MODEL" id="select_AI_DEFAULT_MODEL" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
-                    {% for model in ai_models %}
-                        <option value="{{ model.model_id }}" data-provider="{{ model.provider }}" {% if model.is_default or settings_by_cat.ai|selectattr('key', 'equalto', 'AI_DEFAULT_MODEL')|map(attribute='value')|first == model.model_id %}selected{% endif %}>
-                            {{ model.icon }} {{ model.display_name }} ({{ model.model_id }}) — [{{ model.provider|upper }}]
-                        </option>
                     {% endfor %}
-                </select>
+                </div>
             </div>
-
-            <!-- Backup Key Toggle -->
-            <div class="border-t pt-4 space-y-2">
-                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">🛡️ تفعيل المفتاح الاحتياطي للمشتركين</h3>
-                <p class="text-xs text-gray-500">إذا كان التاجر مشتركاً ولديه رصيد ولكنه لم يضف مفتاح API خاص به، سيتم استخدام مفتاح المنصة (أعلاه) كاحتياطي.</p>
-                <select name="val_AI_BACKUP_KEY_ENABLED" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
-                    <option value="false" {% if settings_by_cat.ai|selectattr('key', 'equalto', 'AI_BACKUP_KEY_ENABLED')|map(attribute='value')|first == 'false' %}selected{% endif %}>تعطيل (يجب على كل تاجر إضافة مفتاحه)</option>
-                    <option value="true" {% if settings_by_cat.ai|selectattr('key', 'equalto', 'AI_BACKUP_KEY_ENABLED')|map(attribute='value')|first == 'true' %}selected{% endif %}>تفعيل (السماح باستخدام مفتاح المنصة للتجار)</option>
-                </select>
-            </div>
-
         </div>
+        {% endfor %}
 
         <div class="flex items-center justify-between border-t pt-4">
-            <p class="text-xs text-gray-500">يكفي إدخال مفتاح واحد لتفعيل الذكاء الاصطناعي على المنصة.</p>
+            <p class="text-xs text-gray-500">احفظ الإعدادات لتطبيق التغييرات على النماذج والمزودين.</p>
             <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold">💾 حفظ كل إعدادات الذكاء الاصطناعي</button>
         </div>
     </form>
@@ -356,83 +286,6 @@
     }
     tabs.forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
 
-    // ---- AI Provider Setup ----
-    const aiKeys = {
-        openai: "{{ settings_by_cat.ai|selectattr('key', 'equalto', 'AI_OPENAI_KEY')|map(attribute='value')|first or '' }}",
-        anthropic: "{{ settings_by_cat.ai|selectattr('key', 'equalto', 'AI_ANTHROPIC_KEY')|map(attribute='value')|first or '' }}",
-        google: "{{ settings_by_cat.ai|selectattr('key', 'equalto', 'AI_GOOGLE_KEY')|map(attribute='value')|first or '' }}",
-        minimax: "{{ settings_by_cat.ai|selectattr('key', 'equalto', 'AI_MINIMAX_KEY')|map(attribute='value')|first or '' }}"
-    };
-
-    window.selectAIProvider = function(provider) {
-        // Hide all provider field divs
-        document.querySelectorAll('.prov-fields').forEach(el => el.classList.add('hidden'));
-        // Remove active styling from all provider cards
-        document.querySelectorAll('.ai-prov-card').forEach(el => {
-            el.classList.remove('border-blue-600', 'bg-blue-50/50');
-            el.classList.add('border-gray-200', 'bg-gray-50/50');
-        });
-        
-        // Show fields of the selected provider
-        const fieldsDiv = document.getElementById('fields-' + provider);
-        if (fieldsDiv) fieldsDiv.classList.remove('hidden');
-        
-        // Add active style to the selected card
-        const cardDiv = document.getElementById('card-prov-' + provider);
-        if (cardDiv) {
-            cardDiv.classList.remove('border-gray-200', 'bg-gray-50/50');
-            cardDiv.classList.add('border-blue-600', 'bg-blue-50/50');
-        }
-        
-        // Filter the Default Model Select options to only show the chosen provider
-        const modelSelect = document.getElementById('select_AI_DEFAULT_MODEL');
-        if (modelSelect) {
-            let hasVisibleSelected = false;
-            Array.from(modelSelect.options).forEach(opt => {
-                const optProv = opt.getAttribute('data-provider');
-                if (optProv === provider) {
-                    opt.style.display = '';
-                    if (opt.selected) hasVisibleSelected = true;
-                } else {
-                    opt.style.display = 'none';
-                }
-            });
-            // If the current selected option is now hidden, select the first visible option
-            if (!hasVisibleSelected) {
-                const firstVisible = Array.from(modelSelect.options).find(opt => opt.style.display !== 'none');
-                if (firstVisible) {
-                    modelSelect.value = firstVisible.value;
-                }
-            }
-        }
-    };
-
-    // Initialize badges and placeholders
-    Object.keys(aiKeys).forEach(prov => {
-        const val = aiKeys[prov];
-        const badge = document.getElementById('badge-prov-' + prov);
-        const input = document.getElementById('input_AI_' + prov.toUpperCase() + '_KEY');
-        
-        if (val && val !== 'None' && val.trim() !== '') {
-            if (badge) {
-                badge.innerText = 'نشط ✅';
-                badge.className = 'inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-emerald-100 text-emerald-800 font-bold';
-            }
-            if (input) {
-                // If it's already active, put the decrypted placeholder so they know it's there
-                input.value = val;
-            }
-        } else {
-            if (badge) {
-                badge.innerText = 'غير مفعّل ⏸️';
-                badge.className = 'inline-block mt-2 px-2 py-0.5 text-[10px] rounded-full bg-gray-100 text-gray-500';
-            }
-        }
-    });
-
-    // Default select OpenAI
-    selectAIProvider('openai');
-    
     // AJAX Test API Key
     window.testApiKey = function(provider, inputId) {
         const key = document.getElementById(inputId).value.trim();

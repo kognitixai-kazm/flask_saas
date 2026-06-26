@@ -25,6 +25,7 @@ from .notification import Notification
 from .push_subscription import PushSubscription
 from .ai_provider import AIProvider
 from .ai_model import AIModel
+from .agent_profile import AgentProfile
 
 __all__ = [
     'SuperAdmin', 'Activity', 'Plan', 'PlanPricing', 'PlanLimit', 'PlanModule', 
@@ -37,6 +38,6 @@ __all__ = [
     'ContractTemplate', 'Contract', 'TenantIntegration',
     'Account', 'JournalEntry', 'JournalEntryLine', 'Expense',
     'Notification', 'PushSubscription',
-    'AIProvider', 'AIModel'
+    'AIProvider', 'AIModel', 'AgentProfile'
 ]
 

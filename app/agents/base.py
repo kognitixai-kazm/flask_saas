@@ -69,7 +69,14 @@ class BaseAgent:
 
     def get_system_prompt(self) -> str:
         """يُرجع System Prompt مع إمكانية التخصيص لكل تاجر."""
-        return self.SYSTEM_PROMPT
+        from app.services.facility_memory_service import FacilityMemoryService
+        
+        base_prompt = self.SYSTEM_PROMPT
+        memory_context = FacilityMemoryService.get_context_for_agent(self.tenant_id, self.AGENT_TYPE)
+        
+        if memory_context:
+            return f"{base_prompt}\n\n[معلومات إضافية ومهمة عن المنشأة]:\n{memory_context}"
+        return base_prompt
 
     def _resolve_model(self) -> Optional[ResolvedModel]:
         """تحديد النموذج والمفتاح المناسب."""

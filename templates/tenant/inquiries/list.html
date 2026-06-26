@@ -1,9 +1,7 @@
-{% extends "tenant/_base_panel.html" %}
-{% block title %}الاستفسارات{% endblock %}
-{% block panel_content %}
+{% extends "tenant/_customer_center_wrapper.html" %}
+{% block customer_content %}
 <div class="flex flex-col gap-4 mb-6">
   <div class="flex justify-between items-center flex-wrap gap-3">
-    <h1 class="text-2xl font-bold">📩 الاستفسارات والشكاوى</h1>
     <div class="flex gap-2 text-sm flex-wrap">
       <a href="{{ url_for('tenant_inquiries.list_inquiries', status=status_filter or none, kind=none) }}" class="px-3 py-1 rounded-full {{ 'bg-slate-700 text-white' if not kind_filter else 'bg-gray-100' }}">الكل</a>
       <a href="{{ url_for('tenant_inquiries.list_inquiries', status=status_filter or none, kind='general') }}" class="px-3 py-1 rounded-full {{ 'bg-blue-600 text-white' if kind_filter=='general' else 'bg-gray-100' }}">استفسارات</a>

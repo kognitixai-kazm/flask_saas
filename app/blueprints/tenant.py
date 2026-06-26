@@ -468,6 +468,10 @@ def _save_logo(tenant, file):
 @tenant_required
 def settings():
     tenant = g.current_tenant
+    from app.models.agent_profile import AgentProfile
+    agent_types = ['reception', 'contract', 'accounting', 'collection']
+    agents = {a.agent_type: a for a in AgentProfile.query.filter_by(tenant_id=tenant.id).all()}
+
     if request.method == 'POST':
         # إعدادات التذكير العامة
         tenant.settings = tenant.settings or {}
@@ -525,13 +529,25 @@ def settings():
         flag_modified(tenant, "settings")
         flag_modified(tenant, "activity_data")
 
+        # Save Agent Profiles
+        for atype in agent_types:
+            agent_name = request.form.get(f'agent_{atype}_name')
+            tone = request.form.get(f'agent_{atype}_tone')
+            if agent_name and tone:
+                if atype in agents:
+                    agents[atype].agent_name = agent_name
+                    agents[atype].tone = tone
+                else:
+                    new_agent = AgentProfile(tenant_id=tenant.id, agent_type=atype, agent_name=agent_name, tone=tone)
+                    db.session.add(new_agent)
+
         db.session.commit()
         flash('تم حفظ الإعدادات بنجاح', 'success')
         return redirect(url_for('tenant.settings'))
 
     activity = tenant.activity
     return render_template('tenant/settings.html',
-        tenant=tenant, activity=activity)
+        tenant=tenant, activity=activity, agents=agents)
 
 
 # ========================
@@ -640,6 +656,82 @@ def team():
         users=users,
         tenant=g.current_tenant,
     )
+
+# ========================
+# AI Agents (فريق الذكاء الاصطناعي)
+# ========================
+@bp.route('/ai-agents')
+@tenant_required
+def ai_agents():
+    tenant = g.current_tenant
+    from app.models.agent_profile import AgentProfile
+    agents = AgentProfile.query.filter_by(tenant_id=tenant.id).all()
+    return render_template('tenant/ai_agents.html', tenant=tenant, agents=agents)
+
+@bp.route('/ai-agents/chat', methods=['POST'])
+@tenant_required
+def ai_agents_chat():
+    tenant = g.current_tenant
+    from flask import request, jsonify
+    data = request.get_json() or {}
+    message = data.get('message', '').strip()
+    if not message:
+        return jsonify({'success': False, 'error': 'رسالة فارغة'}), 400
+
+    try:
+        from app.models.inquiry import Inquiry
+        from app.models.hotel_models import Unit
+        from app.models.booking import Booking
+        from app.services.ai_service import AIService
+        
+        # 1. إحصائيات الشكاوى والاستفسارات
+        total_inquiries = Inquiry.query.filter_by(tenant_id=tenant.id).count()
+        complaints_count = Inquiry.query.filter_by(tenant_id=tenant.id, inquiry_kind='complaint').count()
+        open_complaints = Inquiry.query.filter_by(tenant_id=tenant.id, inquiry_kind='complaint').filter(Inquiry.status.in_(['new', 'pending'])).count()
+        
+        # 2. إحصائيات الإشغال والوحدات
+        total_units = Unit.query.filter_by(tenant_id=tenant.id).count()
+        booked_units = Unit.query.filter_by(tenant_id=tenant.id, status='booked').count()
+        maintenance_units = Unit.query.filter_by(tenant_id=tenant.id, status='maintenance').count()
+        occupancy_rate = round((booked_units / total_units * 100) if total_units > 0 else 0, 1)
+
+        # 3. إحصائيات الحجوزات
+        active_bookings = Booking.query.filter_by(tenant_id=tenant.id, status='confirmed').count()
+        
+        # صياغة الـ System Prompt
+        system_prompt = f"""أنت "المشرف الذكي" ومحلل الأعمال الخاص بمنشأة "{tenant.business_name}".
+دورك هو مساعدة صاحب المنشأة (التاجر) في تحليل الأداء، الإجابة عن أسئلته بناءً على البيانات، وتقديم اقتراحات وحلول إدارية ذكية لتحسين العمل.
+يجب أن تتحدث بأسلوب مهني، عربي فصيح أو سعودي لبق، ومختصر قدر الإمكان.
+
+[إحصائيات النظام الحية لهذه اللحظة]:
+- إجمالي الوحدات/الغرف: {total_units}
+- الوحدات المشغولة (المؤجرة): {booked_units}
+- الوحدات في الصيانة: {maintenance_units}
+- نسبة الإشغال الحالية: {occupancy_rate}%
+- الحجوزات النشطة: {active_bookings}
+- إجمالي الاستفسارات الواردة: {total_inquiries}
+- إجمالي الشكاوى: {complaints_count}
+- الشكاوى المفتوحة (تحتاج رد): {open_complaints}
+
+اقرأ هذه البيانات، وإذا سألك التاجر عن أي منها، أجب بدقة. 
+وإذا سألك عن "كيف يمكننا التحسين؟" أو طلب اقتراحات، قم بتحليل هذه الأرقام واقترح حلول (مثلاً إذا كانت الشكاوى المفتوحة كثيرة، انصحه بسرعة الرد. وإذا كانت الصيانة كثيرة، انصحه بتفقد فريق الصيانة لزيادة الدخل).
+استخدم فقط البيانات المتوفرة أعلاه. استخدم التنسيق بخط عريض (Bold) للتركيز على الأرقام المهمة."""
+
+        result = AIService.generate(
+            tenant_id=tenant.id,
+            user_message=message,
+            system_prompt=system_prompt,
+        )
+
+        if result.success and result.text:
+            return jsonify({'success': True, 'reply': result.text})
+        else:
+            return jsonify({'success': False, 'error': result.error or 'فشل في توليد الرد من الذكاء الاصطناعي'})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # ==================== Branches (مشترك لكل الأنشطة) ====================

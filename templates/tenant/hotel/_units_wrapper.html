@@ -1,0 +1,31 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}إدارة الشقق والوحدات{% endblock %}
+{% block panel_content %}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-black text-gray-900">🏠 إدارة الشقق والوحدات</h1>
+    <p class="text-sm text-gray-500 mt-1">إدارة شاملة لجميع الوحدات، الأسعار، الحالات والتوافر.</p>
+</div>
+
+<!-- Tabs -->
+<div class="flex items-center gap-4 border-b border-gray-200 mb-6 overflow-x-auto pb-1">
+    <a href="{{ url_for('tenant_hotel.units_dashboard') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_hotel.units_dashboard' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       لوحة التوافر (Dashboard)
+    </a>
+    <a href="{{ url_for('tenant_hotel.units') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_hotel.units' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       قائمة الوحدات (التفاصيل)
+    </a>
+    <a href="{{ url_for('tenant_hotel.unit_form') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_hotel.unit_form' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       ➕ إضافة وحدة جديدة
+    </a>
+</div>
+
+{% block units_content %}{% endblock %}
+
+{% endblock %}

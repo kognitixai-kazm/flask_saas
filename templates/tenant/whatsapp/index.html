@@ -1,8 +1,5 @@
-{% extends "tenant/_base_panel.html" %}
-{% block title %}واتساب — {{ g.current_tenant.business_name }}{% endblock %}
-{% block panel_content %}
-<h1 class="text-2xl font-bold mb-2">واتساب</h1>
-<p class="text-gray-500 text-sm mb-6">محادثات العملاء عبر واتساب. ربط الرقم والتوكن يتم من إدارة المنصة فقط.</p>
+{% extends "tenant/_customer_center_wrapper.html" %}
+{% block customer_content %}
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

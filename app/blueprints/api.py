@@ -154,7 +154,94 @@ def twilio_voice_webhook(tenant_id):
     return Response(xml, mimetype='text/xml')
 
 
-# ========================================
+@bp.route('/webhooks/twilio/voice/<int:tenant_id>/process', methods=['POST', 'GET'])
+@csrf.exempt
+def twilio_voice_process(tenant_id):
+    """معالجة صوت العميل وتحويله للذكاء الاصطناعي."""
+    from app.models.bot_config import BotConfig
+    from app.services.call_integration_service import twilio_signature_valid, build_twiml_for_tenant
+    from app.models.conversation import Conversation, Message
+    from app.services.ai_router import AIRouter
+    
+    bot = BotConfig.query.filter_by(tenant_id=tenant_id).first()
+    if not bot or not bot.call_is_active:
+        return 'Not Found', 404
+        
+    token = (bot.call_api_secret or '').strip()
+    if token and not twilio_signature_valid(request, token):
+        return 'Forbidden', 403
+
+    call_sid = request.values.get('CallSid')
+    speech_result = request.values.get('SpeechResult', '').strip()
+    
+    if not speech_result:
+        return Response(build_twiml_for_tenant(bot, say_text='عفواً، لم أسمع شيئاً. هل أنت معي؟'), mimetype='text/xml')
+        
+    # Fetch or create conversation
+    conv = Conversation.query.filter_by(tenant_id=tenant_id, visitor_id=call_sid, channel='voice').first()
+    if not conv:
+        conv = Conversation(tenant_id=tenant_id, visitor_id=call_sid, channel='voice', visitor_name='متصل هاتفي')
+        db.session.add(conv)
+        db.session.commit()
+        
+    # Save user message
+    user_msg = Message(conversation_id=conv.id, tenant_id=tenant_id, sender_type='visitor', content=speech_result)
+    db.session.add(user_msg)
+    db.session.commit()
+    
+    # Format history
+    history = []
+    messages = conv.messages.order_by(Message.created_at.asc()).all()
+    for m in messages[-10:]: # last 10
+        role = 'user' if m.sender_type == 'visitor' else 'assistant'
+        history.append({'role': role, 'content': m.content})
+        
+    # Call AI Router
+    router = AIRouter()
+    try:
+        ai_result = router.route_task('reception', speech_result, history=history[:-1], tenant_id=tenant_id)
+        ai_text = ai_result.get('content', 'عذراً، حدث خطأ في النظام.')
+    except Exception as e:
+        current_app.logger.error(f"Voice AI Error: {e}")
+        ai_text = 'عذراً، حدث خطأ في معالجة طلبك.'
+    
+    # Save AI message
+    ai_msg = Message(conversation_id=conv.id, tenant_id=tenant_id, sender_type='agent', content=ai_text)
+    db.session.add(ai_msg)
+    db.session.commit()
+    
+    xml = build_twiml_for_tenant(bot, say_text=ai_text)
+    return Response(xml, mimetype='text/xml')
+
+
+@bp.route('/webhooks/twilio/voice/<int:tenant_id>/status', methods=['POST'])
+@csrf.exempt
+def twilio_voice_status(tenant_id):
+    """استلام إشعار انتهاء المكالمة لخصم التكلفة من محفظة التاجر."""
+    from app.models.tenant_wallet import TenantWallet
+    from app.models.system_settings import SystemSetting
+    import math
+    
+    call_status = request.values.get('CallStatus')
+    if call_status == 'completed':
+        duration = int(request.values.get('CallDuration', 0))
+        if duration > 0:
+            minutes = math.ceil(duration / 60.0)
+            try:
+                cost_per_min = float(SystemSetting.get('VOICE_CALL_COST_PER_MINUTE', '1.0'))
+            except ValueError:
+                cost_per_min = 1.0
+                
+            total_cost = minutes * cost_per_min
+            
+            if total_cost > 0:
+                wallet = TenantWallet.query.filter_by(tenant_id=tenant_id).first()
+                if wallet:
+                    wallet.balance -= total_cost
+                    db.session.commit()
+                    current_app.logger.info(f"Deducted {total_cost} from Tenant {tenant_id} for {minutes} voice mins.")
+                    
+    return 'OK', 200
 # Payment Webhook — ✅ مع تحقق التوقيع (ثغرة #3)
 # ========================================
 @bp.route('/webhooks/payment', methods=['GET', 'POST'])

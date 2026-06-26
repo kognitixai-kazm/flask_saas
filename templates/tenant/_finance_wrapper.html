@@ -1,0 +1,36 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}المالية والمحاسبة{% endblock %}
+{% block panel_content %}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-black text-gray-900">💰 المالية والمحاسبة</h1>
+    <p class="text-sm text-gray-500 mt-1">لوحة القيادة المالية، القيود اليومية، والمصاريف والتقارير.</p>
+</div>
+
+<!-- Tabs -->
+<div class="flex items-center gap-4 border-b border-gray-200 mb-6 overflow-x-auto pb-1">
+    <a href="{{ url_for('tenant_accounting.dashboard') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_accounting.dashboard' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       نظرة عامة
+    </a>
+    <a href="{{ url_for('tenant_accounting.dashboard') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_accounting.dashboard' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       القيود اليومية
+    </a>
+    <a href="{{ url_for('tenant_accounting.list_expenses') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_accounting.list_expenses' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       المصاريف
+    </a>
+    <a href="#" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+       التقارير
+    </a>
+</div>
+
+{% block finance_content %}{% endblock %}
+
+{% endblock %}

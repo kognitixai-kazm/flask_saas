@@ -19,96 +19,47 @@ class AIHealthService:
     @staticmethod
     def scan_tenants_ai(limit: int = 200) -> List[Dict]:
         """
-        يرجع قائمة التجار الذين يحاولون استخدام AI لكنه لا يعمل.
-
-        السبب الممكن:
-        - chose_provider = ضبط provider بدون مفتاح
-        - invalid_key   = المفتاح موجود لكنه غير صالح
-        - fallback_only = ما اختار مفتاحاً لكن النموذج الافتراضي للمنصة بلا مفتاح
+        يرجع قائمة بالمشاكل الخاصة بالذكاء الاصطناعي.
+        بما أن المفاتيح أصبحت مركزية، سيتم فحص مزود المنصة الافتراضي.
         """
-        tenants = (
-            Tenant.query.filter_by(status='active')
-            .order_by(Tenant.id.asc())
-            .limit(limit)
-            .all()
-        )
+        from app.models.ai_provider import AIProvider
+        from app.services.ai_service import AIService
+        
         problems: List[Dict] = []
-
-        for tenant in tenants:
-            bot = BotConfig.query.filter_by(tenant_id=tenant.id).first()
-
-            # 1) تاجر اختار provider خاص فيه
-            tenant_provider = (bot.ai_provider or '').strip().lower() if bot else ''
-            from app.utils.encryption import decrypt_value
-            tenant_key = decrypt_value((bot.ai_api_key or '')).strip() if bot else ''
-
-            if tenant_provider and tenant_provider not in ('', 'none'):
-                if not tenant_key:
-                    problems.append({
-                        'tenant_id': tenant.id,
-                        'tenant_name': tenant.business_name,
-                        'tenant_slug': tenant.slug,
-                        'provider': tenant_provider,
-                        'reason': 'chose_provider',
-                        'message': f'اختار {tenant_provider} لكن لم يدخل مفتاح API.',
-                    })
-                    continue
-
-                ok, reason = AIService.validate_api_key(tenant_provider, tenant_key)
-                if not ok:
-                    problems.append({
-                        'tenant_id': tenant.id,
-                        'tenant_name': tenant.business_name,
-                        'tenant_slug': tenant.slug,
-                        'provider': tenant_provider,
-                        'reason': 'invalid_key',
-                        'message': f'مفتاح {tenant_provider} غير صالح ({reason}).',
-                    })
-                    continue
-                # المفتاح يعمل ✓
-                continue
-
-            # 2) تاجر لم يضبط provider خاص → نعتمد على النموذج الافتراضي للمنصة
-            try:
-                default_model = AIService.get_tenant_model(tenant.id)
-            except Exception:
-                default_model = None
-            if not default_model:
-                continue  # لا توجد نماذج معدّة — مشكلة منصة، لا تاجر
-
-            sys_key = AIService._get_api_key(default_model.provider, tenant_id=tenant.id)
-            if not sys_key:
-                from app.models.system_settings import SystemSetting
-                backup_enabled = SystemSetting.get('AI_BACKUP_KEY_ENABLED', 'false').lower() == 'true'
-                
-                if not backup_enabled:
-                    msg = 'لا يملك مفتاحاً خاصاً ومفتاح المنصة الاحتياطي غير مفعّل.'
-                    reason_code = 'backup_key_disabled'
-                elif not tenant.subscription or not tenant.subscription.is_active:
-                    msg = 'لا يملك مفتاحاً خاصاً والاشتراك غير فعال للوصول للمفتاح الاحتياطي.'
-                    reason_code = 'inactive_subscription'
-                else:
-                    msg = f'يعتمد على {default_model.provider} الافتراضي لكن المفتاح العام للمنصة فارغ أو الرصيد غير كافٍ.'
-                    reason_code = 'platform_key_missing_or_no_balance'
-                    
-                problems.append({
-                    'tenant_id': tenant.id,
-                    'tenant_name': tenant.business_name,
-                    'tenant_slug': tenant.slug,
-                    'provider': default_model.provider,
-                    'reason': reason_code,
-                    'message': msg,
-                })
-                continue
-            ok, reason = AIService.validate_api_key(default_model.provider, sys_key)
-            if not ok:
-                problems.append({
-                    'tenant_id': tenant.id,
-                    'tenant_name': tenant.business_name,
-                    'tenant_slug': tenant.slug,
-                    'provider': default_model.provider,
-                    'reason': 'platform_key_invalid',
-                    'message': f'المفتاح العام للمنصة غير صالح ({reason}).',
-                })
-
+        provider = AIProvider.query.filter_by(is_active=True).order_by(AIProvider.priority.asc()).first()
+        
+        if not provider:
+            problems.append({
+                'tenant_id': 0,
+                'tenant_name': 'المنصة',
+                'tenant_slug': 'platform',
+                'provider': 'none',
+                'reason': 'no_active_provider',
+                'message': 'لا يوجد مزود ذكاء اصطناعي مفعل للمنصة.',
+            })
+            return problems
+            
+        key = getattr(provider, 'api_key_decrypted', None)
+        if not key:
+            problems.append({
+                'tenant_id': 0,
+                'tenant_name': 'المنصة',
+                'tenant_slug': 'platform',
+                'provider': provider.name,
+                'reason': 'missing_platform_key',
+                'message': f'مزود {provider.name} ليس لديه مفتاح API.',
+            })
+            return problems
+            
+        ok, reason = AIService.validate_api_key(provider.name, key, force=False)
+        if not ok:
+            problems.append({
+                'tenant_id': 0,
+                'tenant_name': 'المنصة',
+                'tenant_slug': 'platform',
+                'provider': provider.name,
+                'reason': 'invalid_platform_key',
+                'message': f'المفتاح العام للمنصة لمزود {provider.name} غير صالح ({reason}).',
+            })
+            
         return problems

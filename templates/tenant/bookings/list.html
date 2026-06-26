@@ -1,8 +1,6 @@
-{% extends "tenant/_base_panel.html" %}
-{% block title %}الحجوزات — {{ g.current_tenant.business_name }}{% endblock %}
-{% block panel_content %}
+{% extends "tenant/_customer_center_wrapper.html" %}
+{% block customer_content %}
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-  <h1 class="text-2xl font-bold">📅 الحجوزات</h1>
   <div class="flex gap-2">
     <a href="{{ url_for('tenant_bookings.create_manual') }}" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700">+ حجز يدوي</a>
   </div>

@@ -34,41 +34,6 @@
   </div>
 </div>
 
-<!-- اختيار نموذج AI -->
-<div class="bg-white rounded-xl p-5 shadow-sm mb-6">
-  <h3 class="font-bold mb-3">🤖 اختر نموذج AI</h3>
-  <p class="text-xs text-gray-500 mb-4">يستخدم النموذج للأسئلة المعقدة فقط — الردود البسيطة مجانية تقريباً</p>
-
-  <form method="POST" action="{{ url_for('tenant_usage.select_model') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {% for m in available_models %}
-      <label class="border-2 rounded-xl p-4 cursor-pointer hover:bg-blue-50 transition
-                    {{ 'border-blue-500 bg-blue-50' if current_model_id == m.id else 'border-gray-200' }}">
-        <input type="radio" name="model_id" value="{{ m.id }}" {{ 'checked' if current_model_id == m.id }} class="sr-only">
-
-        <div class="flex justify-between items-start mb-2">
-          <div>
-            <div class="font-bold text-base flex items-center gap-2">
-              <span class="text-2xl">{{ m.icon }}</span>
-              {{ m.display_name }}
-              {% if m.is_default %}<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">افتراضي</span>{% endif %}
-            </div>
-            <div class="text-xs text-gray-500 mt-1">{{ m.quality_label }}</div>
-          </div>
-          <div class="text-left">
-            <div class="text-lg font-bold text-blue-600">{{ "%.2f"|format(m.price_per_message) }} ر.س</div>
-            <div class="text-xs text-gray-400">لكل رسالة</div>
-          </div>
-        </div>
-        <p class="text-xs text-gray-600 mt-2">{{ m.description }}</p>
-      </label>
-      {% endfor %}
-    </div>
-
-    <button type="submit" class="mt-4 bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-blue-700 font-bold">💾 حفظ الاختيار</button>
-  </form>
-</div>
 
 <!-- تفاصيل الاستهلاك -->
 <div class="bg-white rounded-xl p-5 shadow-sm mb-6">

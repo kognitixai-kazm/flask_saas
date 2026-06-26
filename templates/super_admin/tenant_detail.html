@@ -28,6 +28,14 @@
 <div><span class="text-gray-400">البريد:</span> <span dir="ltr">{{ tenant.owner_email }}</span></div>
 <div><span class="text-gray-400">الجوال:</span> <span dir="ltr">{{ tenant.owner_phone or '—' }}</span></div>
 <div><span class="text-gray-400">الحالة:</span> {{ tenant.status }}</div>
+<div><span class="text-gray-400">ذكاء اصطناعي لا محدود:</span>
+    <form method="POST" action="{{ url_for('super_admin.tenant_toggle_unlimited_ai', id=tenant.id) }}" class="inline-block ml-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="px-2 py-1 text-xs rounded font-bold {% if tenant.has_unlimited_ai %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+            {% if tenant.has_unlimited_ai %}مفعل{% else %}معطل{% endif %}
+        </button>
+    </form>
+</div>
 {% if tenant.subscription %}
 <div><span class="text-gray-400">حالة الاشتراك:</span>
     {% if tenant.subscription.status == 'pending_approval' %}

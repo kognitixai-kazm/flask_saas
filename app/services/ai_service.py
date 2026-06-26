@@ -165,64 +165,20 @@ class AIService:
     @staticmethod
     def get_tenant_model(tenant_id: int) -> Optional[AIModel]:
         """جلب النموذج المختار للتاجر، أو الافتراضي."""
-        bot_config = BotConfig.query.filter_by(tenant_id=tenant_id).first()
-
-        if bot_config and bot_config.ai_provider and bot_config.ai_model:
-            prov = bot_config.ai_provider.strip().lower()
-            if prov == 'google_gemini':
-                prov = 'google'
-            model = AIModel.query.filter_by(
-                provider=prov,
-                model_id=bot_config.ai_model,
-                is_active=True,
-            ).first()
-            if model:
-                return model
-
-        # رجوع للنموذج الافتراضي
+        from app.models.ai_provider import AIProvider
+        provider = AIProvider.query.filter_by(is_active=True).order_by(AIProvider.priority.asc()).first()
+        if provider:
+            model = AIModel.query.filter_by(provider_id=provider.id, is_active=True).first()
+            if model: return model
         return AIModel.query.filter_by(is_default=True, is_active=True).first()
 
     @staticmethod
     def _get_api_key(provider: str, tenant_id: int = None) -> str:
-        """
-        جلب مفتاح API للمزوّد.
-
-        الأولوية:
-        1. مفتاح خاص بالتاجر (من BotConfig.ai_api_key)
-        2. المفتاح العام (من SystemSetting: AI_OPENAI_KEY وغيره)
-        3. احتياطي: متغيرات البيئة من ملف .env (OPENAI_API_KEY، …) كما في app.config
-        """
-        # محاولة جلب مفتاح التاجر أولاً
-        if tenant_id:
-            bot_config = BotConfig.query.filter_by(tenant_id=tenant_id).first()
-            if bot_config and bot_config.ai_api_key:
-                bp = (bot_config.ai_provider or '').strip().lower()
-                if bp == 'google_gemini':
-                    bp = 'google'
-                # If the tenant hasn't specified a provider, assume the key is for the current provider
-                if not bp or bp == provider.lower():
-                    from app.utils.encryption import decrypt_value
-                    return decrypt_value(bot_config.ai_api_key).strip()
-
-            # No specific key, check if we can fallback to the platform's backup key
-            from app.models.tenant import Tenant
-            tenant = Tenant.query.get(tenant_id)
-            if not tenant:
-                return ''
-            
-            # Check if backup key fallback is enabled
-            backup_enabled = SystemSetting.get('AI_BACKUP_KEY_ENABLED', 'false').lower() == 'true'
-            if not backup_enabled:
-                return ''
-            
-            # Check if tenant has a valid, active subscription with balance
-            if not tenant.subscription or not tenant.subscription.is_active:
-                return ''
-                
-            from app.models.tenant_wallet import TenantWallet
-            wallet = TenantWallet.query.filter_by(tenant_id=tenant_id).first()
-            if not wallet or not wallet.can_use_service:
-                return ''
+        """جلب مفتاح API للمزوّد."""
+        from app.models.ai_provider import AIProvider
+        p = AIProvider.query.filter_by(name=provider, is_active=True).first()
+        if p and getattr(p, 'api_key_decrypted', None):
+            return getattr(p, 'api_key_decrypted')
 
         # المفتاح العام من SystemSetting أو متغيرات البيئة
         # يتم استخدامه للـ Admin AI (tenant_id is None) أو للتجار الذين يملكون اشتراكاً ورصيداً

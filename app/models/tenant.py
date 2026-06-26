@@ -46,6 +46,9 @@ class Tenant(db.Model):
     logo_path = db.Column(db.String(500))
     primary_color = db.Column(db.String(7), default='#2563eb')
 
+    # السماح للمدير العام بفتح سقف استهلاك الذكاء الاصطناعي للتاجر
+    has_unlimited_ai = db.Column(db.Boolean, default=False, nullable=False)
+
     # ===== الحساب البنكي للتحويل (يظهر للعميل عند طلب التحويل) =====
     bank_name = db.Column(db.String(100), default='')          # الراجحي / الأهلي / إنماء ...
     bank_account_name = db.Column(db.String(200), default='')  # اسم صاحب الحساب (للتأكد)

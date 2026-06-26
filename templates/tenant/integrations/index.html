@@ -1,11 +1,5 @@
-{% extends "tenant/_base_panel.html" %}
-{% block title %}التكاملات — KOGNITIX{% endblock %}
-{% block panel_content %}
-
-<div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">🔗 تكاملات نشاطك</h1>
-    <p class="text-gray-500 mt-1 text-sm">اضبط مفاتيحك ومزودي الخدمة بنفسك — كل شيء معزول وآمن لنشاطك فقط.</p>
-</div>
+{% extends "tenant/_integrations_wrapper.html" %}
+{% block integrations_content %}
 
 {% set boxes = [
     ('whatsapp',   '💬 واتساب (Meta Cloud)', 'استقبل وأجِب على عملائك في واتساب تلقائياً.', 'tenant_integrations.whatsapp', 'from-emerald-500 to-teal-600'),

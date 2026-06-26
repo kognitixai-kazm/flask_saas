@@ -1,14 +1,5 @@
-{% extends "base.html" %}
-{% block title %}رابط الشات — {{ tenant.business_name }}{% endblock %}
-{% block body %}
-<div class="flex min-h-screen">
-{% include 'tenant/_sidebar.html' ignore missing %}
-
-<main class="flex-1 p-6 md:p-8">
-<div class="max-w-3xl mx-auto">
-
-<h1 class="text-2xl font-bold mb-1">🔗 رابط الشات</h1>
-<p class="text-sm text-gray-500 mb-6">شارك هذا الرابط مع عملائك ليتواصلوا معك مباشرة</p>
+{% extends "tenant/_customer_center_wrapper.html" %}
+{% block customer_content %}
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, msg in messages %}
@@ -90,7 +81,4 @@
   </ul>
 </div>
 
-</div>
-</main>
-</div>
 {% endblock %}

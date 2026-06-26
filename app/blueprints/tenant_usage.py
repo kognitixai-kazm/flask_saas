@@ -37,23 +37,11 @@ def index():
     # النماذج المتاحة (المفعّلة فقط)
     available_models = AIModel.query.filter_by(is_active=True).order_by(AIModel.sort_order).all()
 
-    # النموذج الذي اختاره التاجر
-    bot_config = BotConfig.query.filter_by(tenant_id=tenant.id).first()
+    # النموذج الافتراضي
     current_model_id = None
-    if bot_config and bot_config.ai_provider:
-        # نحاول إيجاد النموذج المختار من ai_provider+ai_model
-        current = AIModel.query.filter_by(
-            provider=bot_config.ai_provider,
-            model_id=bot_config.ai_model,
-        ).first()
-        if current:
-            current_model_id = current.id
-
-    if not current_model_id:
-        # النموذج الافتراضي
-        default_model = AIModel.query.filter_by(is_default=True).first()
-        if default_model:
-            current_model_id = default_model.id
+    default_model = AIModel.query.filter_by(is_default=True).first()
+    if default_model:
+        current_model_id = default_model.id
 
     # الإحصائيات الأساسية
     total_30 = sum(item['total_spent'] for item in summary)
@@ -72,38 +60,6 @@ def index():
         total_7=total_7,
         total_count_30=total_count_30,
     )
-
-
-@bp.route('/select-model', methods=['POST'])
-@tenant_owner_required
-def select_model():
-    """اختيار نموذج AI."""
-    tenant = g.current_tenant
-
-    try:
-        model_id = int(request.form.get('model_id', 0))
-        model = AIModel.query.filter_by(id=model_id, is_active=True).first()
-        if not model:
-            flash('النموذج غير متاح', 'danger')
-            return redirect(url_for('tenant_usage.index'))
-
-        # حفظ في BotConfig
-        bot_config = BotConfig.query.filter_by(tenant_id=tenant.id).first()
-        if not bot_config:
-            bot_config = BotConfig(tenant_id=tenant.id)
-            db.session.add(bot_config)
-
-        bot_config.ai_provider = model.provider
-        bot_config.ai_model = model.model_id
-        db.session.commit()
-
-        flash(f'✅ تم اختيار {model.display_name} — السعر: {model.price_per_message} ر.س لكل رسالة', 'success')
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f'[tenant_usage] select_model error: {e}')
-        flash('حدث خطأ', 'danger')
-
-    return redirect(url_for('tenant_usage.index'))
 
 
 @bp.route('/topup-request', methods=['GET', 'POST'])

@@ -1,0 +1,250 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}المشرف الذكي (وكلاء الذكاء الاصطناعي){% endblock %}
+{% block panel_content %}
+
+<div class="flex flex-col md:flex-row h-[calc(100vh-100px)] gap-6 bg-gray-50 p-4 rounded-xl">
+    
+    <!-- القسم الجانبي: قائمة الوكلاء -->
+    <div class="w-full md:w-1/3 lg:w-1/4 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+        <div class="p-5 border-b border-gray-100 bg-gradient-to-l from-purple-50 to-white">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <span class="text-xl">🤖</span> وكلاء النظام
+            </h3>
+            <p class="text-xs text-gray-500 mt-1">الوكلاء المتاحين لخدمتك</p>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+            <!-- وكيل خدمة العملاء -->
+            <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl shadow-inner">
+                    💬
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-gray-800">وكيل خدمة العملاء</h4>
+                    <p class="text-xs text-gray-500">يتواصل مع الزوار</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded-full font-bold">نشط</span>
+                </div>
+            </div>
+            
+            <!-- المشرف الذكي (الحالي) -->
+            <div class="bg-purple-50 border border-purple-200 p-4 rounded-xl flex items-center gap-4 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-2 h-full bg-purple-500"></div>
+                <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-2xl shadow-inner animate-pulse">
+                    👁️
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-purple-900">المشرف الإداري</h4>
+                    <p class="text-xs text-purple-700">محلل البيانات</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 bg-purple-200 text-purple-800 text-[10px] rounded-full font-bold">متصل بـك الآن</span>
+                </div>
+            </div>
+            
+            {% for agent in agents %}
+            <!-- أي وكلاء إضافيين من الداتا بيس -->
+            <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-2xl">
+                    {{ agent.icon or '⚙️' }}
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-gray-800">{{ agent.name }}</h4>
+                    <p class="text-xs text-gray-500">{{ agent.role }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- القسم الرئيسي: واجهة المحادثة -->
+    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden relative">
+        <!-- هيدر الشات -->
+        <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-white z-10 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow">
+                    👁️
+                </div>
+                <div>
+                    <h2 class="font-bold text-gray-800 leading-tight">المشرف الذكي (Business Analyst)</h2>
+                    <p class="text-xs text-gray-500 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> متصل ببيانات منشأتك
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- منطقة الرسائل -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
+            <!-- رسالة الترحيب -->
+            <div class="flex gap-4">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex-shrink-0 flex items-center justify-center text-white text-sm shadow">
+                    👁️
+                </div>
+                <div class="bg-white p-4 rounded-2xl rounded-tr-none shadow-sm border border-gray-100 max-w-[85%]">
+                    <p class="text-sm text-gray-800 leading-relaxed">
+                        أهلاً بك أستاذي! أنا المشرف الذكي المكلّف بمتابعة أداء منشأتك ({{ tenant.business_name }}).<br><br>
+                        أمتلك صلاحية الوصول الفوري لقراءة:<br>
+                        📊 <b>معدلات الإشغال وحالة الوحدات</b><br>
+                        📉 <b>نسب الشكاوى والاستفسارات المفتوحة</b><br>
+                        🤖 <b>أداء وكيل خدمة العملاء</b><br><br>
+                        كيف يمكنني مساعدتك في تحليل بيانات اليوم؟ هل ترغب في تقرير ملخص؟
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- منطقة الإدخال -->
+        <div class="p-4 bg-white border-t border-gray-100">
+            <form id="chat-form" class="relative flex items-end gap-2 max-w-4xl mx-auto">
+                <div class="relative flex-1">
+                    <textarea id="chat-input" rows="1" class="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition resize-none text-sm" placeholder="اسأل المشرف الذكي عن أداء منشأتك... (مثال: ما هي نسبة الشكاوى؟)" style="min-height: 48px; max-height: 120px;"></textarea>
+                </div>
+                <button type="submit" id="send-btn" class="w-12 h-12 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center transition shadow-md flex-shrink-0 disabled:opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform -rotate-90 rtl:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const sendBtn = document.getElementById('send-btn');
+    
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        if (this.value.trim() === '') {
+            sendBtn.disabled = true;
+        } else {
+            sendBtn.disabled = false;
+        }
+    });
+    sendBtn.disabled = true;
+
+    // Handle Enter to send
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (this.value.trim() !== '') {
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        }
+    });
+
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const message = chatInput.value.trim();
+        if (!message) return;
+        
+        // Add User Message
+        appendUserMessage(message);
+        chatInput.value = '';
+        chatInput.style.height = 'auto';
+        sendBtn.disabled = true;
+        scrollToBottom();
+        
+        // Add Loading Indicator
+        const loadingId = appendLoadingIndicator();
+        scrollToBottom();
+
+        try {
+            const response = await fetch("{{ url_for('tenant.ai_agents_chat') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ message: message })
+            });
+            
+            const data = await response.json();
+            
+            // Remove Loading
+            document.getElementById(loadingId).remove();
+            
+            if (response.ok && data.success) {
+                appendAIMessage(data.reply);
+            } else {
+                appendAIMessage('⚠️ عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: ' + (data.error || 'خطأ غير معروف'));
+            }
+        } catch (error) {
+            document.getElementById(loadingId).remove();
+            appendAIMessage('⚠️ حدث خطأ في الاتصال بالخادم. الرجاء المحاولة مرة أخرى.');
+            console.error('Chat Error:', error);
+        }
+        
+        scrollToBottom();
+    });
+    
+    function appendUserMessage(text) {
+        const html = `
+            <div class="flex gap-4 flex-row-reverse">
+                <div class="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-600 text-sm shadow-sm">
+                    👤
+                </div>
+                <div class="bg-purple-600 text-white p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
+                    <p class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(text)}</p>
+                </div>
+            </div>
+        `;
+        chatMessages.insertAdjacentHTML('beforeend', html);
+    }
+    
+    function appendAIMessage(text) {
+        // Format markdown basic (bold, line breaks)
+        let formattedText = escapeHtml(text)
+            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+            .replace(/\n/g, '<br>');
+            
+        const html = `
+            <div class="flex gap-4">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex-shrink-0 flex items-center justify-center text-white text-sm shadow">
+                    👁️
+                </div>
+                <div class="bg-white p-4 rounded-2xl rounded-tr-none shadow-sm border border-gray-100 max-w-[85%]">
+                    <p class="text-sm text-gray-800 leading-relaxed">${formattedText}</p>
+                </div>
+            </div>
+        `;
+        chatMessages.insertAdjacentHTML('beforeend', html);
+    }
+    
+    function appendLoadingIndicator() {
+        const id = 'loading-' + Date.now();
+        const html = `
+            <div id="${id}" class="flex gap-4">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex-shrink-0 flex items-center justify-center text-white text-sm shadow animate-pulse">
+                    👁️
+                </div>
+                <div class="bg-white p-4 rounded-2xl rounded-tr-none shadow-sm border border-gray-100 flex items-center gap-1 w-20 justify-center">
+                    <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                    <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                </div>
+            </div>
+        `;
+        chatMessages.insertAdjacentHTML('beforeend', html);
+        return id;
+    }
+    
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+});
+</script>
+{% endblock %}

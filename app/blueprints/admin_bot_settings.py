@@ -59,47 +59,7 @@ def save_settings(tenant_id):
     config.custom_instructions = request.form.get('custom_instructions', '')
     config.blocked_topics = request.form.get('blocked_topics', '')
 
-    from app.utils.encryption import encrypt_value
-
-    # مفاتيح الصور
-    config.image_provider = request.form.get('image_provider', '')
-    config.image_api_key_decrypted = request.form.get('image_api_key', '')
-
-    # مفاتيح الصوت
-    config.voice_provider = request.form.get('voice_provider', '')
-    config.voice_api_key_decrypted = request.form.get('voice_api_key', '')
-
-    new_ai_provider = request.form.get('ai_provider', '')
-    new_ai_api_key = request.form.get('ai_api_key', '')
-    new_ai_model = request.form.get('ai_model', '')
-    
-    ai_key_changed = (
-        new_ai_provider.strip() != (config.ai_provider or '').strip()
-        or new_ai_api_key.strip() != config.ai_api_key_decrypted
-    )
-
-    if ai_key_changed and (new_ai_provider or '').strip() and (new_ai_api_key or '').strip():
-        try:
-            from app.services.ai_service import AIService
-
-            AIService.invalidate_key_cache(new_ai_provider, new_ai_api_key)
-            ok, reason = AIService.validate_api_key(new_ai_provider, new_ai_api_key, force=True)
-            if ok:
-                flash('تم التحقق من مفتاح الذكاء الاصطناعي بنجاح.', 'success')
-                config.ai_provider = new_ai_provider
-                config.ai_api_key_decrypted = new_ai_api_key
-                config.ai_model = new_ai_model
-            else:
-                flash(f'فشل التحقق من مفتاح الذكاء الاصطناعي ({reason}). لم يتم حفظ المفتاح الجديد.', 'danger')
-        except Exception as e:
-            current_app.logger.warning(f'[admin_bot] ai key validate error: {e}')
-            flash('حدث خطأ أثناء التحقق من المفتاح.', 'danger')
-    else:
-        config.ai_provider = new_ai_provider
-        # Only update/encrypt if the key actually changed to prevent double encrypting
-        if ai_key_changed:
-            config.ai_api_key_decrypted = new_ai_api_key
-        config.ai_model = new_ai_model
+    # We no longer save image/voice/AI keys here as it is managed platform-wide
 
     # اتصال
     config.call_provider = request.form.get('call_provider', '')

@@ -400,7 +400,18 @@ def tenant_reject_request(id):
     return redirect(url_for('super_admin.tenants_list', status='cancelled'))
 
 
+
+@bp.route('/tenants/<int:id>/toggle_unlimited_ai', methods=['POST'])
+@super_admin_required
+def tenant_toggle_unlimited_ai(id):
+    tenant = Tenant.query.get_or_404(id)
+    tenant.has_unlimited_ai = not getattr(tenant, 'has_unlimited_ai', False)
+    db.session.commit()
+    flash(f"تم {'تفعيل' if tenant.has_unlimited_ai else 'إلغاء'} الذكاء الاصطناعي اللامحدود.", 'success')
+    return redirect(url_for('super_admin.tenant_detail', id=id))
+
 @bp.route('/tenants/<int:id>/delete', methods=['POST'])
+
 @super_admin_required
 def tenant_delete(id):
     from app.services.tenant_deletion_service import TenantDeletionService

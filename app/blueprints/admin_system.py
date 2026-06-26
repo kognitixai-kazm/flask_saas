@@ -36,9 +36,12 @@ def index():
 
     # جلب جميع نماذج الذكاء الاصطناعي المتاحة (مع البذور التلقائية إذا كانت فارغة)
     from app.models.ai_model import AIModel
+    from app.models.ai_provider import AIProvider
+    
     if AIModel.query.count() == 0:
         AIModel.seed_defaults()
     ai_models = AIModel.query.order_by(AIModel.sort_order).all()
+    ai_providers = AIProvider.query.order_by(AIProvider.priority).all()
 
     # فحص الأمان
     from app.utils.security import check_production_safety
@@ -48,6 +51,7 @@ def index():
         'super_admin/system.html',
         settings_by_cat=settings_by_cat,
         ai_models=ai_models,
+        ai_providers=ai_providers,
         security_issues=security_issues,
         sa_user=g.current_admin,
     )
@@ -85,58 +89,68 @@ def update_setting():
     return redirect(url_for('admin_system.index'))
 
 
+@bp.route('/update-ai', methods=['POST'])
+@super_admin_required
+def update_ai():
+    """تحديث مزودي ونماذج الذكاء الاصطناعي."""
+    from app.models.ai_provider import AIProvider
+    from app.models.ai_model import AIModel
+    
+    providers = AIProvider.query.all()
+    
+    # 1. تحديث مفاتيح المزودين
+    for p in providers:
+        new_key = request.form.get(f'provider_key_{p.id}')
+        if new_key is not None:
+            new_key = new_key.strip()
+            # If it's a masked password from the UI (e.g. •••••••), don't overwrite if it hasn't changed.
+            # But the UI will just send empty if unchanged, so we check if it's not empty.
+            if new_key:
+                p.api_key_decrypted = new_key
+                p.is_active = True
+            elif request.form.get(f'provider_clear_{p.id}'):
+                p.api_key_decrypted = ''
+                p.is_active = False
+                
+    # 2. تحديث النماذج (التفعيل)
+    models = AIModel.query.all()
+    for m in models:
+        m.is_active = request.form.get(f'model_active_{m.id}') == 'on'
+        
+    # 3. النموذج الافتراضي
+    default_model_id = request.form.get('default_model_id')
+    if default_model_id:
+        for m in models:
+            m.is_default = (str(m.id) == str(default_model_id))
+            
+    try:
+        db.session.commit()
+        flash('✅ تم حفظ إعدادات الذكاء الاصطناعي بنجاح.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'[admin_system] update ai error: {e}')
+        flash('حدث خطأ في الحفظ', 'danger')
+
+    return redirect(url_for('admin_system.index') + '#tab-ai')
+
 @bp.route('/update-bulk', methods=['POST'])
 @super_admin_required
 def update_bulk():
-    """تحديث جميع المفاتيح في تصنيف واحد + تحقق ذكي للـ AI."""
+    """تحديث المفاتيح الاخرى."""
     category = (request.form.get('category') or '').strip()
-    if not category:
+    if not category or category == 'ai':
         flash('تصنيف غير صالح', 'danger')
         return redirect(url_for('admin_system.index'))
 
     settings = SystemSetting.query.filter_by(category=category).all()
     updated = 0
-    changed_ai_providers: list[tuple[str, str]] = []  # (provider, key)
-
-    ai_provider_map = {
-        'AI_OPENAI_KEY': 'openai',
-        'AI_ANTHROPIC_KEY': 'anthropic',
-        'AI_GOOGLE_KEY': 'google',
-    }
-
     for s in settings:
         new_value = request.form.get(f'val_{s.key}', None)
         if new_value is not None:
             new_value = new_value.strip()
-            # لو سرّي وفاضي، لا نعدّل (نحافظ على القديم)
             if s.is_secret and not new_value:
                 continue
-                
-            # Extract content from google site verification if user pasted a meta tag
-            if s.key == 'GOOGLE_SITE_VERIFICATION' and 'meta' in new_value.lower() and 'content' in new_value.lower():
-                import re
-                match = re.search(r'content=["\']([^"\']+)["\']', new_value, re.IGNORECASE)
-                if match:
-                    new_value = match.group(1)
-
             if s.value_decrypted != new_value:
-                # تحقق فوري لمفاتيح الذكاء الاصطناعي
-                if category == 'ai' and s.key in ai_provider_map and new_value:
-                    prov = ai_provider_map[s.key]
-                    try:
-                        from app.services.ai_service import AIService
-                        AIService.invalidate_key_cache(prov, new_value)
-                        ok, reason = AIService.validate_api_key(prov, new_value, force=True)
-                        if not ok:
-                            flash(f'❌ مفتاح {prov.upper()} غير صالح ({reason}). لم يتم حفظه.', 'danger')
-                            continue
-                        else:
-                            flash(f'✅ مفتاح {prov.upper()} تم التحقق منه.', 'success')
-                    except Exception as e:
-                        current_app.logger.warning(f'[admin_system] AI validate error: {e}')
-                        flash(f'⚠️ تعذر فحص مفتاح {prov.upper()} بسبب خطأ اتصال.', 'warning')
-                        continue
-                
                 s.value_decrypted = new_value
                 s.updated_by = g.current_admin.username
                 updated += 1

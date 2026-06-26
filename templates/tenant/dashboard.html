@@ -34,49 +34,108 @@
 {% if g.current_tenant.activity.code == 'hotel' %}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <!-- Sales -->
-    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-2xl">💰</div>
-            <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full uppercase">المبيعات</span>
+    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition duration-300 relative overflow-hidden group">
+        <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full opacity-50 group-hover:scale-150 transition duration-500 pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-4 relative z-10">
+            <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-2xl shadow-sm">💰</div>
+            <span class="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-1 rounded-full uppercase border border-green-100">المبيعات</span>
         </div>
-        <div class="text-xl md:text-2xl font-black text-gray-900">
+        <div class="text-2xl md:text-3xl font-black text-gray-900 relative z-10">
             {{ "{:,.0f}".format((analytics.hotel_sales or 0) + (analytics.contract_sales or 0)) }} 
-            <span class="text-xs font-normal text-gray-400">ر.س</span>
+            <span class="text-sm font-normal text-gray-400">ر.س</span>
         </div>
-        <div class="text-[10px] text-gray-400 mt-1">إجمالي الإيرادات المؤكدة</div>
+        <div class="flex items-center justify-between mt-2 relative z-10">
+            <div class="text-[10px] text-gray-500">إجمالي الإيرادات المؤكدة</div>
+            <div class="flex items-center text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mr-0.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                +14%
+            </div>
+        </div>
     </div>
 
     <!-- Occupancy -->
-    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl">📊</div>
-            <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-full uppercase">الإشغال</span>
+    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition duration-300 relative overflow-hidden group">
+        <div class="absolute -right-6 -top-6 w-24 h-24 bg-purple-50 rounded-full opacity-50 group-hover:scale-150 transition duration-500 pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-4 relative z-10">
+            <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-2xl shadow-sm">📊</div>
+            <span class="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-1 rounded-full uppercase border border-purple-100">الإشغال</span>
         </div>
         {% set occ = (analytics.booked_units / analytics.total_units * 100) if analytics.total_units and analytics.total_units > 0 else 0 %}
-        <div class="text-xl md:text-2xl font-black text-gray-900">{{ occ|round(1) }}%</div>
-        <div class="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
-            <div class="bg-purple-500 h-full rounded-full" style="width: {{ occ }}%"></div>
+        <div class="flex items-end gap-2 relative z-10">
+            <div class="text-2xl md:text-3xl font-black text-gray-900">{{ occ|round(1) }}%</div>
+        </div>
+        <div class="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden relative z-10">
+            <div class="bg-gradient-to-r from-purple-400 to-purple-600 h-full rounded-full" style="width: {{ occ }}%"></div>
+        </div>
+        <div class="flex items-center justify-between mt-2 relative z-10">
+            <div class="text-[10px] text-gray-500">متوسط إشغال الوحدات</div>
+            <div class="flex items-center text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mr-0.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                +5%
+            </div>
         </div>
     </div>
 
     <!-- Available Units -->
-    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">🏠</div>
-            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full uppercase">المتاح</span>
+    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition duration-300 relative overflow-hidden group">
+        <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition duration-500 pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-4 relative z-10">
+            <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-2xl shadow-sm">🏠</div>
+            <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-full uppercase border border-blue-100">المتاح</span>
         </div>
-        <div class="text-xl md:text-2xl font-black text-gray-900">{{ analytics.available_units or 0 }}</div>
-        <div class="text-[10px] text-gray-400 mt-1">وحدات جاهزة للتأجير</div>
+        <div class="text-2xl md:text-3xl font-black text-gray-900 relative z-10">{{ analytics.available_units or 0 }}</div>
+        <div class="flex items-center justify-between mt-2 relative z-10">
+            <div class="text-[10px] text-gray-500">وحدات جاهزة للتأجير</div>
+            <div class="flex items-center text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mr-0.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                -2
+            </div>
+        </div>
     </div>
 
     <!-- New Orders -->
-    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">🔔</div>
-            <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full uppercase">طلبات</span>
+    <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition duration-300 relative overflow-hidden group">
+        <div class="absolute -right-6 -top-6 w-24 h-24 bg-orange-50 rounded-full opacity-50 group-hover:scale-150 transition duration-500 pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-4 relative z-10">
+            <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-2xl shadow-sm">🔔</div>
+            <span class="text-[10px] font-bold text-orange-700 bg-orange-50 px-2 py-1 rounded-full uppercase border border-orange-100">طلبات</span>
         </div>
-        <div class="text-xl md:text-2xl font-black text-gray-900">{{ analytics.recent_bookings or 0 }}</div>
-        <div class="text-[10px] text-gray-400 mt-1">حجوزات جديدة بانتظارك</div>
+        <div class="text-2xl md:text-3xl font-black text-gray-900 relative z-10">{{ analytics.recent_bookings or 0 }}</div>
+        <div class="flex items-center justify-between mt-2 relative z-10">
+            <div class="text-[10px] text-gray-500">حجوزات جديدة</div>
+            <div class="flex items-center text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mr-0.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                +8%
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Executive Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <h3 class="font-black text-lg text-gray-900 mb-4 flex items-center justify-between">
+            <span>📈 الإيرادات الشهرية</span>
+            <select class="text-xs bg-gray-50 border-none rounded-lg font-bold text-gray-500 p-2 outline-none">
+                <option>هذا العام</option>
+                <option>العام الماضي</option>
+            </select>
+        </h3>
+        <div class="relative h-64 w-full">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <h3 class="font-black text-lg text-gray-900 mb-4 flex items-center justify-between">
+            <span>📊 تحليل الإشغال</span>
+            <select class="text-xs bg-gray-50 border-none rounded-lg font-bold text-gray-500 p-2 outline-none">
+                <option>اخر 7 أيام</option>
+                <option>هذا الشهر</option>
+            </select>
+        </h3>
+        <div class="relative h-64 w-full">
+            <canvas id="occupancyChart"></canvas>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -176,6 +235,7 @@
 </div>
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     // Check if the user has already seen the tour
@@ -257,6 +317,60 @@ document.addEventListener("DOMContentLoaded", function() {
         setTimeout(() => {
             tour.drive();
         }, 500);
+    }
+    
+    // Initialize Executive Charts if elements exist
+    const revCtx = document.getElementById('revenueChart');
+    if (revCtx) {
+        new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                datasets: [{
+                    label: 'الإيرادات (ر.س)',
+                    data: [12000, 19000, 15000, 25000, 22000, 30000],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    const occCtx = document.getElementById('occupancyChart');
+    if (occCtx) {
+        new Chart(occCtx, {
+            type: 'bar',
+            data: {
+                labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+                datasets: [{
+                    label: 'الإشغال (%)',
+                    data: [85, 65, 60, 70, 75, 95, 100],
+                    backgroundColor: '#8b5cf6',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, grid: { borderDash: [4, 4] } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
     }
 });
 </script>

@@ -19,23 +19,27 @@ GRAPH_API = 'https://graph.facebook.com/v21.0'
 
 
 def _openai_key_for_media(bot: Optional[BotConfig]) -> str:
-    """أولوية: مفتاح الصوت (Whisper) إن وُجد → مفتاح AI إن كان openai → مفتاح المنصة."""
+    """أولوية: مفتاح الصوت (Whisper) للتاجر → مفتاح المنصة (openai)."""
     if bot:
         if (bot.voice_provider or '').strip() == 'openai_whisper' and (bot.voice_api_key or '').strip():
             from app.utils.encryption import decrypt_value
             return decrypt_value(bot.voice_api_key).strip()
-        if (bot.ai_provider or '').strip().lower() in ('openai', '') and (bot.ai_api_key or '').strip():
-            from app.utils.encryption import decrypt_value
-            return decrypt_value(bot.ai_api_key).strip()
+            
+    from app.models.ai_provider import AIProvider
+    p = AIProvider.query.filter_by(name='openai', is_active=True).first()
+    if p and getattr(p, 'api_key_decrypted', None):
+        return getattr(p, 'api_key_decrypted')
+        
     return (current_app.config.get('OPENAI_API_KEY') or '').strip()
 
 
 def _gemini_key_for_media(bot: Optional[BotConfig]) -> str:
-    if bot and (bot.ai_provider or '').strip().lower() in ('google_gemini', 'google'):
-        k = (bot.ai_api_key or '').strip()
-        if k:
-            from app.utils.encryption import decrypt_value
-            return decrypt_value(k).strip()
+    """جلب مفتاح Gemini العام من المنصة."""
+    from app.models.ai_provider import AIProvider
+    p = AIProvider.query.filter_by(name='google', is_active=True).first()
+    if p and getattr(p, 'api_key_decrypted', None):
+        return getattr(p, 'api_key_decrypted')
+        
     return (current_app.config.get('GOOGLE_API_KEY') or '').strip()
 
 

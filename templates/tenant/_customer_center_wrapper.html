@@ -1,0 +1,43 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}مركز العملاء{% endblock %}
+{% block panel_content %}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-black text-gray-900">💬 مركز العملاء</h1>
+    <p class="text-sm text-gray-500 mt-1">تواصل مع عملائك، استقبل استفساراتهم، وأدر الرسائل من مكان واحد.</p>
+</div>
+
+<!-- Tabs -->
+<div class="flex items-center gap-4 border-b border-gray-200 mb-6 overflow-x-auto pb-1">
+    <a href="{{ url_for('tenant.conversations') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant.conversations' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       💬 المحادثات المباشرة
+    </a>
+    <a href="{{ url_for('tenant_inquiries.list_inquiries') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_inquiries.list_inquiries' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       📩 الاستفسارات والشكاوى
+    </a>
+    <a href="{{ url_for('tenant_bookings.list_bookings') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_bookings.list_bookings' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       📅 الحجوزات والطلبات
+    </a>
+    {% if g.current_tenant.subscription and g.current_tenant.subscription.is_active and g.current_tenant.subscription.plan and g.current_tenant.subscription.plan.has_feature('whatsapp') %}
+    <a href="{{ url_for('tenant_whatsapp.index') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant_whatsapp.index' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       📱 واتساب
+    </a>
+    {% endif %}
+    <a href="{{ url_for('tenant.chat_link') }}" 
+       class="whitespace-nowrap px-4 py-2 border-b-2 transition-colors font-bold text-sm
+       {% if request.endpoint == 'tenant.chat_link' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+       🔗 رابط الشات الذكي
+    </a>
+</div>
+
+{% block customer_content %}{% endblock %}
+
+{% endblock %}

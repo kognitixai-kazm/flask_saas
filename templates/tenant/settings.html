@@ -1,22 +1,5 @@
-{% extends "base.html" %}
-{% block title %}إعدادات النشاط — {{ tenant.business_name }}{% endblock %}
-{% block body %}
-<div class="flex min-h-screen">
-<aside class="w-64 bg-white border-l shadow-sm hidden md:block">
-<div class="p-6 border-b"><div class="font-bold text-lg text-blue-600 truncate">{{ tenant.business_name }}</div></div>
-<nav class="p-4 space-y-1">
-<a href="{{ url_for('tenant.dashboard') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">📊 الرئيسية</a>
-<a href="{{ url_for('tenant.profile') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">👤 الملف الشخصي</a>
-<a href="{{ url_for('tenant.settings') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">⚙️ إعدادات النشاط</a>
-<a href="{{ url_for('tenant.conversations') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">💬 المحادثات</a>
-<a href="{{ url_for('tenant.chat_link') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">🔗 رابط الشات</a>
-<a href="{{ url_for('tenant.billing') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">💳 الاشتراك</a>
-<a href="{{ url_for('tenant.team') }}" class="block px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">👥 الفريق</a>
-<hr class="my-3"><form method="POST" action="{{ url_for('tenant.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<button class="block w-full text-right px-4 py-2.5 rounded-lg text-red-500 hover:bg-red-50 text-sm">🚪 خروج</button></form>
-</nav></aside>
-<main class="flex-1 p-8"><div class="max-w-4xl mx-auto">
-<h1 class="text-2xl font-bold mb-6">إعدادات النشاط</h1>
+{% extends "tenant/_settings_wrapper.html" %}
+{% block settings_content %}
 
 <form method="POST" action="{{ url_for('tenant.settings') }}" class="bg-white p-6 rounded-xl shadow-sm border mb-8">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -95,9 +78,47 @@
         </div>
     </div>
 
+    
+    <!-- إعدادات وكلاء الذكاء الاصطناعي -->
+    <div class="space-y-6 mt-6 border-t pt-6">
+        <h4 class="font-bold text-gray-800">🤖 إعدادات وكلاء الذكاء الاصطناعي</h4>
+        <p class="text-xs text-gray-500 mb-4">قم بتخصيص اسم ونبرة كل وكيل ذكاء اصطناعي في نظامك.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% set agent_types = [
+                ('reception', 'موظف الاستقبال', 'يرد على استفسارات العملاء العامة'),
+                ('contract', 'موظف العقود', 'يدير إنشاء وتوقيع العقود'),
+                ('accounting', 'المحاسب', 'يتعامل مع الفواتير والمدفوعات'),
+                ('collection', 'موظف التحصيل', 'يتابع الدفعات المتأخرة')
+            ] %}
+            
+            {% for atype, label, desc in agent_types %}
+            {% set agent = agents.get(atype) if agents else None %}
+            <div class="bg-gray-50 p-4 rounded-lg border">
+                <h5 class="font-bold text-sm mb-1">{{ label }}</h5>
+                <p class="text-xs text-gray-500 mb-3">{{ desc }}</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-medium text-gray-700">الاسم:</label>
+                        <input type="text" name="agent_{{ atype }}_name" value="{{ agent.agent_name if agent else ('مساعد ذكي' if not loop.first else 'موظف الاستقبال') }}" class="w-full border rounded px-3 py-1.5 text-sm mt-1" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-gray-700">نبرة التحدث:</label>
+                        <select name="agent_{{ atype }}_tone" class="w-full border rounded px-3 py-1.5 text-sm mt-1">
+                            <option value="professional" {% if agent and agent.tone == 'professional' %}selected{% endif %}>رسمي ومهني</option>
+                            <option value="friendly" {% if agent and agent.tone == 'friendly' %}selected{% endif %}>ودود وترحيبي</option>
+                            <option value="strict" {% if agent and agent.tone == 'strict' %}selected{% endif %}>حازم (للتحصيل)</option>
+                            <option value="funny" {% if agent and agent.tone == 'funny' %}selected{% endif %}>مرح</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <button type="submit" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700">حفظ إعدادات التذكير</button>
 </form>
 
 {% block page_content %}{% endblock %}
-</div></main></div>
 {% endblock %}

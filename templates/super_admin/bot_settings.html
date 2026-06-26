@@ -17,7 +17,7 @@
   <!-- ==================== Tabs ==================== -->
   <div class="flex gap-1 mb-6 overflow-x-auto text-sm" id="tabs">
     <button onclick="showTab('general')" class="tab-btn px-4 py-2 rounded-t-lg bg-blue-600 text-white">🎨 عام</button>
-    <button onclick="showTab('keys')" class="tab-btn px-4 py-2 rounded-t-lg bg-gray-200 text-gray-600">🔑 مفاتيح API</button>
+
     <button onclick="showTab('replies')" class="tab-btn px-4 py-2 rounded-t-lg bg-gray-200 text-gray-600">📝 ردود مخصصة</button>
     <button onclick="showTab('call')" class="tab-btn px-4 py-2 rounded-t-lg bg-gray-200 text-gray-600">📞 الاتصال</button>
   </div>
@@ -67,78 +67,6 @@
       </div>
     </div>
 
-    <!-- ==================== Tab 2: مفاتيح API ==================== -->
-    <div id="tab-keys" class="tab-content bg-white rounded-xl p-6 shadow-sm space-y-5" style="display:none">
-      <h2 class="font-bold text-lg mb-4">🔑 مفاتيح API</h2>
-
-      <!-- معالج صور -->
-      <div class="border rounded-lg p-4">
-        <h3 class="font-bold text-sm mb-3">🖼️ معالج الصور</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs text-gray-500 mb-1">المزوّد</label>
-          <select name="image_provider" class="w-full border rounded-lg px-3 py-2 text-sm">
-            <option value="">غير مفعّل</option>
-            <option value="cloudinary" {{ 'selected' if config.image_provider == 'cloudinary' }}>Cloudinary</option>
-            <option value="imgbb" {{ 'selected' if config.image_provider == 'imgbb' }}>ImgBB</option>
-          </select></div>
-          <div><label class="block text-xs text-gray-500 mb-1">API Key</label>
-          <input name="image_api_key" value="{{ config.image_api_key_decrypted }}" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm font-mono"></div>
-        </div>
-        <p class="text-xs text-gray-500 mt-2">تحليل صور واتساب يعمل تلقائياً عبر مفتاح <strong>OpenAI</strong> أو <strong>Gemini</strong> (قسم AI أعلاه أو مفتاح المنصة). ImgBB اختياري لرفع صورة عامة لاحقاً.</p>
-      </div>
-
-      <!-- معالج صوت -->
-      <div class="border rounded-lg p-4">
-        <h3 class="font-bold text-sm mb-3">🎤 معالج الصوت</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs text-gray-500 mb-1">المزوّد</label>
-          <select name="voice_provider" class="w-full border rounded-lg px-3 py-2 text-sm">
-            <option value="">غير مفعّل</option>
-            <option value="openai_whisper" {{ 'selected' if config.voice_provider == 'openai_whisper' }}>OpenAI Whisper</option>
-            <option value="google_speech" {{ 'selected' if config.voice_provider == 'google_speech' }}>Google Speech</option>
-          </select></div>
-          <div><label class="block text-xs text-gray-500 mb-1">API Key</label>
-          <input name="voice_api_key" value="{{ config.voice_api_key_decrypted }}" dir="ltr" class="w-full border rounded-lg px-3 py-2 text-sm font-mono"></div>
-        </div>
-        <p class="text-xs text-gray-500 mt-2">نسخ رسائل صوتية واتساب: اختر <strong>OpenAI Whisper</strong> وضع مفتاحاً هنا، أو اتركه فارغاً ويُستخدم مفتاح OpenAI من قسم AI / المنصة.</p>
-      </div>
-
-      <!-- AI -->
-      <div class="border rounded-lg p-4">
-        <h3 class="font-bold text-sm mb-3">🧠 ذكاء اصطناعي (AI)</h3>
-        <p class="text-xs text-gray-400 mb-2">مفتاح هذا التاجر يتجاوز مفاتيح المنصة العامة. اختر المزوّد ثم ضع اسم موديل مدعوم من وثائق ذلك المزوّد.</p>
-        <ul class="text-xs text-gray-500 list-disc pr-5 mb-3 space-y-0.5">
-          <li><strong>OpenAI</strong> — توازن تكلفة/جودة: <code class="bg-gray-100 px-1 rounded">gpt-4o-mini</code> أو أقوى: <code class="bg-gray-100 px-1 rounded">gpt-4o</code></li>
-          <li><strong>Anthropic</strong> — عربي وجودة عالية: <code class="bg-gray-100 px-1 rounded">claude-3-5-sonnet-20241022</code> أو أسرع: <code class="bg-gray-100 px-1 rounded">claude-3-5-haiku-20241022</code></li>
-          <li><strong>Google Gemini</strong> — سريع ومناسب لاحقاً لصور+نص: <code class="bg-gray-100 px-1 rounded">gemini-2.0-flash</code> أو <code class="bg-gray-100 px-1 rounded">gemini-1.5-flash</code></li>
-        </ul>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><label class="block text-xs text-gray-500 mb-1">المزوّد</label>
-          <select name="ai_provider" id="ai_provider_select" class="w-full border rounded-lg px-3 py-2 text-sm">
-            <option value="">المفتاح العام للمنصة (حسب إعداد السيرفر)</option>
-            {% for p in ai_providers %}
-            <option value="{{ p.slug }}" {{ 'selected' if config.ai_provider == p.slug or (config.ai_provider == 'google_gemini' and p.slug == 'google') }}>{{ p.name }}</option>
-            {% endfor %}
-          </select></div>
-          <div><label class="block text-xs text-gray-500 mb-1">API Key</label>
-          <div class="flex gap-2">
-            <input name="ai_api_key" id="ai_api_key_input" value="{{ config.ai_api_key_decrypted }}" dir="ltr" class="flex-1 w-full border rounded-lg px-3 py-2 text-sm font-mono" placeholder="حسب المزوّد">
-            <button type="button" id="btn_test_ai" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-bold border">اختبار الاتصال</button>
-          </div>
-          <div id="ai_test_result" class="text-xs mt-1 font-bold"></div>
-          </div>
-          <div><label class="block text-xs text-gray-500 mb-1">اسم الموديل</label>
-          <select name="ai_model" id="ai_model_select" class="w-full border rounded-lg px-3 py-2 text-sm" dir="ltr">
-            <option value="" data-provider="">الافتراضي / تلقائي</option>
-            {% for m in ai_models %}
-            <option value="{{ m.model_id }}" data-provider="{{ m.provider if m.provider else (m.ai_provider_rel.slug if m.ai_provider_rel else '') }}" {{ 'selected' if config.ai_model == m.model_id }}>
-              {{ m.icon }} {{ m.display_name }}
-            </option>
-            {% endfor %}
-          </select></div>
-        </div>
-      </div>
-    </div>
 
     <!-- ==================== Tab 5: اتصال ==================== -->
     <div id="tab-call" class="tab-content bg-white rounded-xl p-6 shadow-sm space-y-4" style="display:none">
@@ -260,93 +188,5 @@ function showTab(name) {
   event.target.classList.remove('bg-gray-200','text-gray-600');
   event.target.classList.add('bg-blue-600','text-white');
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-  const providerSelect = document.getElementById('ai_provider_select');
-  const modelSelect = document.getElementById('ai_model_select');
-  
-  if (providerSelect && modelSelect) {
-    const originalOptions = Array.from(modelSelect.options).map(opt => opt.cloneNode(true));
-    
-    function filterModels() {
-      const provider = providerSelect.value;
-      const matchProvider = (provider === 'google_gemini') ? 'google' : provider;
-      const currentVal = modelSelect.value;
-      
-      modelSelect.innerHTML = '';
-      
-      let hasValidSelection = false;
-      
-      originalOptions.forEach(opt => {
-        const optProv = opt.getAttribute('data-provider');
-        if (!optProv || optProv === matchProvider) {
-          modelSelect.appendChild(opt.cloneNode(true));
-          if (opt.value === currentVal) hasValidSelection = true;
-        }
-      });
-      
-      if (hasValidSelection) {
-        modelSelect.value = currentVal;
-      } else {
-        modelSelect.value = '';
-      }
-    }
-    
-    providerSelect.addEventListener('change', filterModels);
-    filterModels();
-  }
-  
-  // Test AI Key Logic
-  const btnTestAI = document.getElementById('btn_test_ai');
-  const aiKeyInput = document.getElementById('ai_api_key_input');
-  const aiProviderSelect = document.getElementById('ai_provider_select');
-  const testResultDiv = document.getElementById('ai_test_result');
-  
-  if (btnTestAI) {
-      btnTestAI.addEventListener('click', async function() {
-          const provider = aiProviderSelect.value;
-          const apiKey = aiKeyInput.value.trim();
-          
-          if (!provider || !apiKey) {
-              testResultDiv.textContent = 'أدخل المزوّد والمفتاح أولاً';
-              testResultDiv.className = 'text-xs mt-1 font-bold text-red-600';
-              return;
-          }
-          
-          btnTestAI.disabled = true;
-          btnTestAI.textContent = 'جاري الفحص...';
-          testResultDiv.textContent = '';
-          
-          const formData = new FormData();
-          formData.append('provider', provider);
-          formData.append('api_key', apiKey);
-          
-          try {
-              const response = await fetch("{{ url_for('admin_bot.test_ai_key') }}", {
-                  method: 'POST',
-                  headers: {
-                      'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                  },
-                  body: formData
-              });
-              
-              const data = await response.json();
-              if (data.success) {
-                  testResultDiv.textContent = data.message;
-                  testResultDiv.className = 'text-xs mt-1 font-bold text-green-600';
-              } else {
-                  testResultDiv.textContent = data.message;
-                  testResultDiv.className = 'text-xs mt-1 font-bold text-red-600';
-              }
-          } catch (error) {
-              testResultDiv.textContent = 'حدث خطأ في الاتصال بالسيرفر';
-              testResultDiv.className = 'text-xs mt-1 font-bold text-red-600';
-          } finally {
-              btnTestAI.disabled = false;
-              btnTestAI.textContent = 'اختبار الاتصال';
-          }
-      });
-  }
-});
 </script>
 {% endblock %}

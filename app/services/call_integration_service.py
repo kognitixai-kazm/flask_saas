@@ -43,19 +43,26 @@ def twilio_signature_valid(request: Request, auth_token: str) -> bool:
         return False
 
 
-def build_twiml_for_tenant(bot: BotConfig) -> str:
-    """TwiML بسيط: ترحيب صوتي."""
+def build_twiml_for_tenant(bot: BotConfig, say_text: str = None) -> str:
+    """TwiML لبدء أو استكمال محادثة مع <Gather>."""
     from xml.sax.saxutils import escape
 
-    greet = (bot.call_greeting or '').strip() or f'أهلاً بك في خدمة العملاء، كيف نقدر نخدمك؟'
+    base_url = (current_app.config.get('SITE_URL') or '').rstrip('/')
+    action_url = f'{base_url}/api/v1/webhooks/twilio/voice/{bot.tenant_id}/process'
+    
+    greet = say_text if say_text is not None else ((bot.call_greeting or '').strip() or 'أهلاً بك، كيف نقدر نخدمك؟')
     lang = 'ar-SA'
     if (bot.call_voice or '').endswith('_en'):
         lang = 'en-US'
+        
     return (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<Response>'
+        f'<Gather input="speech" action="{escape(action_url)}" language="{lang}" speechTimeout="auto">'
         f'<Say language="{lang}">{escape(greet)}</Say>'
-        '<Pause length="1"/>'
+        '</Gather>'
+        # إذا لم يتحدث المتصل، نعيد توجيهه لنفس المعالج بصمت (أو يمكن تشغيل رسالة وداع)
+        f'<Redirect>{escape(action_url)}?timeout=1</Redirect>'
         '</Response>'
     )
 

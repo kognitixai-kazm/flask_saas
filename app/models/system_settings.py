@@ -134,12 +134,16 @@ class SystemSetting(db.Model):
             ('SMTP_PASSWORD', 'email', True, 'كلمة مرور التطبيق'),
             ('SMTP_FROM_NAME', 'email', False, 'الاسم الظاهر للمرسِل'),
             ('MAIL_ENABLED', 'email', False, 'true/false'),
+
+            # Billing & Voice
+            ('VOICE_CALL_COST_PER_MINUTE', 'billing', False, 'تكلفة المكالمة الصوتية بالدقيقة للتاجر (يتم خصمها من المحفظة)'),
         ]
         for key, cat, is_sec, desc in defaults:
             existing = SystemSetting.query.filter_by(key=key).first()
             if not existing:
+                default_val = '1.0' if key == 'VOICE_CALL_COST_PER_MINUTE' else ''
                 db.session.add(SystemSetting(
-                    key=key, value='', category=cat,
+                    key=key, value=default_val, category=cat,
                     is_secret=is_sec, description=desc,
                 ))
         db.session.commit()
