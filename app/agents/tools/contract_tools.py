@@ -120,10 +120,11 @@ def process_booking_request(
     customer_name: str,
     customer_phone: str,
     unit_id: int,
-    check_in_date: str,
-    duration_months: int,
-    payment_method: str,
-    conversation_id: int = 0,
+    check_in_date: Optional[str] = None,
+    duration_months: int = 1,
+    payment_method: str = 'cash',
+    customer_email: Optional[str] = None,
+    conversation_id: int = 0
 ) -> str:
     """معالجة طلب الحجز كاملاً بعد استيفاء البيانات.
     استخدم هذه الأداة عندما يكتمل جمع بيانات الحجز (الوحدة، التواريخ، طريقة الدفع).
@@ -205,6 +206,7 @@ def process_booking_request(
         "tenant_id": tenant_id,
         "customer_name": customer_name,
         "customer_phone": customer_phone,
+        "customer_email": customer_email or "",
         "unit_id": unit_id,
         "duration_months": duration_months,
         "check_in_date": check_in_date,
