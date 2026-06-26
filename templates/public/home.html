@@ -1,358 +1,622 @@
-{% extends "base.html" %}
-{% block title %}KognitixAI — شريكك الرقمي الذكي{% endblock %}
-{% block body %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KognitixAI - منصة الذكاء الاصطناعي للمؤسسات</title>
+    <meta name="description" content="منصة KognitixAI - وكلاء ذكاء اصطناعي متخصصون في إدارة الحجوزات والتحصيل وخدمة العملاء.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#030305',
+                        surface: '#0a0a0f',
+                        surfaceLight: '#14141f',
+                        brand: { 500: '#4f46e5', 600: '#4338ca' },
+                        accent: { 500: '#06b6d4', 600: '#0891b2' }
+                    },
+                    fontFamily: {
+                        sans: ['Tajawal', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <style>
+        :root { --mouse-x: 50%; --mouse-y: 50%; }
+        body { font-family: 'Tajawal', sans-serif; background-color: #030305; color: #f8fafc; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        
+        .glow-card-wrapper { position: relative; background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1px; overflow: hidden; }
+        .glow-card-wrapper::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.1), transparent 40%); z-index: 0; opacity: 0; transition: opacity 0.3s; }
+        .glow-card-wrapper:hover::before { opacity: 1; }
+        .glow-card-content { background: #0a0a0f; border-radius: calc(1.5rem - 1px); position: relative; z-index: 1; height: 100%; }
+        
+        .magnetic-btn { display: inline-block; position: relative; z-index: 1; }
+        .text-gradient-premium { background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .shadow-glow-brand { box-shadow: 0 0 20px rgba(79,70,229,0.5); }
+        .shadow-glow-accent { box-shadow: 0 0 20px rgba(6,182,212,0.5); }
+        
+        .ambient-glow { position: absolute; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: -1; animation: pulse-glow 8s infinite alternate; }
+        @keyframes pulse-glow { 0% { transform: scale(1); opacity: 0.3; } 100% { transform: scale(1.2); opacity: 0.5; } }
+        
+        .glass-nav { background: rgba(3, 3, 5, 0.6); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .mobile-menu-overlay { clip-path: circle(0% at 20px 20px); transition: clip-path 0.6s cubic-bezier(0.85, 0, 0.15, 1); }
+        .mobile-menu-overlay.open { clip-path: circle(150% at 20px 20px); }
+        
+        .ai-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 50px 50px; perspective: 1000px; transform-origin: bottom; transform: rotateX(60deg) scale(2); opacity: 0.3; z-index: -2; animation: move-grid 20s linear infinite; }
+        @keyframes move-grid { 0% { background-position: 0 0; } 100% { background-position: 0 50px; } }
+        
+        .noise-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 50; opacity: 0.03; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .float-anim { animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        
+        .scroll-progress { position: fixed; top: 0; left: 0; height: 2px; background: linear-gradient(to right, #4f46e5, #06b6d4); z-index: 9999; transform-origin: left; transform: scaleX(0); }
+        html { scroll-behavior: smooth; }
 
-<!-- Navbar -->
-<nav class="bg-white/85 backdrop-blur sticky top-0 z-40 border-b border-gray-100 relative" x-data="{ open: false }">
-    <div class="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-        <a href="/" class="flex items-center">
-            {% with tagline=True %}{% include "_brand.html" %}{% endwith %}
-        </a>
-        <div class="hidden md:flex gap-7 text-sm text-gray-600">
-            <a href="#features" class="hover:text-blue-700 transition">لماذا KognitixAI</a>
-            <a href="#use-cases" class="hover:text-blue-700 transition">القطاعات</a>
-            <a href="#ai-agents" class="hover:text-blue-700 transition">فريقك الذكي</a>
-            <a href="#faq" class="hover:text-blue-700 transition">الأسئلة الشائعة</a>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ url_for('tenant.login') }}" class="text-sm text-gray-700 hover:text-blue-700 py-2 px-3 hidden sm:inline-block">دخول</a>
-            <a href="{{ url_for('registration.step1') }}" class="text-sm font-bold gradient-brand text-white px-4 md:px-5 py-2 rounded-xl shadow-sm hover:opacity-95 transition whitespace-nowrap">
-                ابدأ الآن
+        /* 3D Robot & Database Animation CSS */
+        .db-system-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            perspective: 1500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-robot-3d {
+            position: relative;
+            z-index: 20;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle at 30% 30%, #4f46e5, #1e1b4b);
+            border-radius: 20%;
+            box-shadow: 
+                inset 0 0 40px rgba(255,255,255,0.2),
+                0 0 60px rgba(79, 70, 229, 0.6),
+                0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+            animation: levitate-robot 6s ease-in-out infinite;
+        }
+
+        .main-robot-3d::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            width: 100px;
+            height: 20px;
+            background: rgba(79, 70, 229, 0.4);
+            filter: blur(15px);
+            border-radius: 50%;
+            animation: shadow-robot 6s ease-in-out infinite;
+        }
+
+        .robot-eye {
+            width: 60px;
+            height: 20px;
+            background: #000;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(6, 182, 212, 0.5);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.8);
+        }
+
+        .robot-eye-scanner {
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        .db-node {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            background: rgba(10, 10, 15, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+        }
+
+        .db-node.left { left: 10%; top: 20%; animation: levitate-db-1 5s ease-in-out infinite; transform: rotateY(20deg); }
+        .db-node.right { right: 10%; top: 50%; animation: levitate-db-2 7s ease-in-out infinite; transform: rotateY(-20deg); }
+        .db-node.bottom { left: 30%; bottom: 10%; animation: levitate-db-3 6s ease-in-out infinite; transform: rotateX(20deg); }
+
+        .db-slot {
+            width: 60%;
+            height: 6px;
+            background: #111;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .db-slot.active::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 30%; height: 100%;
+            background: #06b6d4;
+            box-shadow: 0 0 10px #06b6d4;
+            animation: db-blink 1s infinite alternate;
+        }
+
+        /* SVG Data Streams */
+        .data-stream {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .data-line {
+            fill: none;
+            stroke: url(#gradient);
+            stroke-width: 2;
+            stroke-dasharray: 10 15;
+            animation: data-flow 2s linear infinite;
+        }
+
+        @keyframes data-flow {
+            to { stroke-dashoffset: -50; }
+        }
+
+        @keyframes levitate-robot {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-20px) rotateY(10deg); }
+        }
+        
+        @keyframes shadow-robot {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(0.8); opacity: 0.3; }
+        }
+
+        @keyframes levitate-db-1 { 0%, 100% { transform: translateY(0) rotateY(20deg); } 50% { transform: translateY(-15px) rotateY(25deg); } }
+        @keyframes levitate-db-2 { 0%, 100% { transform: translateY(0) rotateY(-20deg); } 50% { transform: translateY(-20px) rotateY(-15deg); } }
+        @keyframes levitate-db-3 { 0%, 100% { transform: translateY(0) rotateX(20deg); } 50% { transform: translateY(15px) rotateX(15deg); } }
+
+        @keyframes scan { 0% { left: -100%; } 100% { left: 200%; } }
+        @keyframes db-blink { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    </style>
+</head>
+<body class="antialiased bg-background text-white overflow-x-hidden">
+
+    <!-- Noise Overlay -->
+    <div class="noise-bg"></div>
+
+    <!-- Scroll Progress -->
+    <div class="scroll-progress" id="scroll-progress"></div>
+
+    <!-- Background Glows -->
+    <div class="ambient-glow bg-brand-500 w-[600px] h-[600px] top-[-200px] right-[-200px]"></div>
+    <div class="ambient-glow bg-accent-500 w-[500px] h-[500px] top-[40%] left-[-200px] opacity-20"></div>
+
+    <!-- 1. Sticky Navigation -->
+    <nav class="glass-nav fixed w-full z-50 transition-all duration-500 py-4" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex justify-between items-center">
+            
+            <!-- Restored Logo using _brand.html -->
+            <a href="/" class="flex items-center group">
+                {% with tagline=True %}{% include "_brand.html" %}{% endwith %}
             </a>
-            <!-- Mobile Menu Toggle -->
-            <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden ml-2 p-2 text-gray-600 hover:text-blue-700 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#hero" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">الرئيسية</a>
+                <a href="#features" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">المميزات</a>
+                <a href="#agents" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">الأنظمة الذكية</a>
+            </div>
+
+            <div class="hidden md:flex items-center gap-5">
+                <a href="{{ url_for('tenant.login') }}" class="text-sm font-medium text-gray-300 hover:text-white transition">دخول العملاء</a>
+                <div class="magnetic-btn">
+                    <a href="https://wa.me/966538344673" target="_blank" class="relative inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white transition-all bg-white/5 border border-white/10 rounded-full overflow-hidden group">
+                        <span class="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black"></span>
+                        <span class="absolute inset-0 w-full h-full transition-all duration-300 ease-out translate-y-full bg-gradient-to-tr from-brand-500 to-accent-500 group-hover:translate-y-0"></span>
+                        <span class="relative flex items-center gap-2">احجز عرضاً تجريبياً <i class="fas fa-arrow-left text-xs"></i></span>
+                    </a>
+                </div>
+            </div>
+
+            <button id="mobile-menu-btn" class="md:hidden relative z-50 w-10 h-10 flex flex-col items-center justify-center gap-1.5 focus:outline-none">
+                <span class="w-6 h-0.5 bg-white transition-transform origin-center"></span>
+                <span class="w-6 h-0.5 bg-white transition-transform origin-center"></span>
             </button>
         </div>
-    </div>
-    <!-- Mobile Menu Dropdown -->
-    <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-lg z-50">
-        <div class="flex flex-col px-4 pt-2 pb-4 space-y-3 text-sm text-gray-700">
-            <a href="#features" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="hover:text-blue-700 py-2 border-b border-gray-50">لماذا KognitixAI</a>
-            <a href="#use-cases" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="hover:text-blue-700 py-2 border-b border-gray-50">القطاعات</a>
-            <a href="#ai-agents" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="hover:text-blue-700 py-2 border-b border-gray-50">فريقك الذكي</a>
-            <a href="#faq" class="hover:text-blue-700 py-2 border-b border-gray-50">الأسئلة الشائعة</a>
-            <a href="{{ url_for('tenant.login') }}" class="text-blue-700 font-bold py-2 sm:hidden">تسجيل الدخول</a>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="mobile-menu-overlay fixed inset-0 bg-surface z-40 flex flex-col justify-center items-center">
+        <div class="flex flex-col items-center gap-8 text-2xl font-bold z-10 w-full px-6">
+            <a href="#hero" class="mobile-link text-gray-400 hover:text-white transition w-full text-center py-4 border-b border-white/5">الرئيسية</a>
+            <a href="#features" class="mobile-link text-gray-400 hover:text-white transition w-full text-center py-4 border-b border-white/5">المميزات</a>
+            <a href="#agents" class="mobile-link text-gray-400 hover:text-white transition w-full text-center py-4 border-b border-white/5">الأنظمة الذكية</a>
+            <a href="https://wa.me/966538344673" target="_blank" class="mobile-link mt-8 w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 text-white text-center shadow-glow-brand">تواصل معنا</a>
         </div>
     </div>
-</nav>
 
-<!-- Hero Section -->
-<section class="gradient-brand text-white relative overflow-hidden">
-    <div class="absolute inset-0 opacity-20" aria-hidden="true">
-        <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-white blur-3xl"></div>
-        <div class="absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-cyan-300 blur-3xl"></div>
-    </div>
-    <div class="max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-28 relative">
-        <div class="grid md:grid-cols-12 gap-10 items-center">
-            <div class="md:col-span-7 text-center md:text-right">
-                <span class="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-blue-50 text-xs md:text-sm px-3 py-1 rounded-full mb-5">
-                    <span class="w-2 h-2 rounded-full bg-cyan-300 animate-pulse"></span>
-                    شريكك الرقمي الذكي
-                </span>
-                <h1 class="text-3xl md:text-5xl font-extrabold leading-tight mb-5">
-                    ضاعف نمو أعمالك ووفر وقتك مع <br class="hidden md:block">
-                    <span class="text-cyan-200">تجربة عميل</span> استثنائية لا تُنسى!
-                </h1>
-                <p class="text-base md:text-lg text-blue-50/90 mb-8 max-w-2xl mx-auto md:mx-0 leading-relaxed">
-                    KognitixAI هو شريكك الرقمي الذكي. ارتقِ بخدمة عملائك، أتمت عملياتك، ودع الذكاء الاصطناعي يعمل من أجلك لتقديم خدمة تليق بعلامتك التجارية.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-3 justify-center md:justify-start mb-6">
-                    <a href="{{ url_for('registration.step1') }}"
-                       class="bg-white text-blue-700 px-6 md:px-8 py-3 rounded-xl font-extrabold text-base md:text-lg hover:bg-blue-50 transition shadow-xl hover:scale-105 duration-300">
-                        ابدأ رحلة التحول الآن ←
-                    </a>
-                    <a href="#features"
-                       class="border border-white/40 text-white px-6 md:px-8 py-3 rounded-xl font-bold hover:bg-white/10 transition">
-                        اكتشف كيف نعمل
-                    </a>
-                </div>
-                <!-- Social Proof -->
-                <div class="flex items-center justify-center md:justify-start gap-4 text-sm text-blue-100">
-                    <div class="flex -space-x-2">
-                        <div class="w-8 h-8 rounded-full bg-blue-200 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-700">+</div>
-                    </div>
-                    <span>انضم لـ <strong>+50 شركة</strong> تستخدم KognitixAI بنجاح</span>
-                </div>
-            </div>
-            <div class="md:col-span-5 hidden md:block">
-                <div class="bg-white/10 backdrop-blur rounded-3xl border border-white/20 p-6 shadow-2xl relative hover:shadow-3xl transition-all duration-300">
-                    <div class="absolute -top-4 -right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
-                        متصل الآن 🟢
-                    </div>
-                    <div class="bg-white rounded-2xl p-4 text-gray-800">
-                        <div class="flex items-center gap-3 pb-3 border-b">
-                            <img src="{{ url_for('static', filename='img/logo.png') }}" class="w-10 h-10 rounded-lg" alt="KognitixAI">
-                            <div>
-                                <div class="font-bold text-sm">مساعد KognitixAI</div>
-                                <div class="text-[11px] text-green-600">يرد فوراً باحترافية</div>
-                            </div>
-                        </div>
-                        <div class="mt-3 space-y-3 text-sm">
-                            <div class="bg-blue-50 text-blue-900 rounded-2xl rounded-tr-md px-4 py-2 inline-block shadow-sm">مساء الخير، هل يوجد لديكم طاولات متاحة لشخصين الليلة؟</div>
-                            <div class="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-md px-4 py-2 inline-block shadow-sm relative">
-                                أهلاً بك! نعم، يسعدنا استضافتكم. قمت بحجز طاولة مميزة لشخصين الساعة 8:00 مساءً. هل ترغب في الاطلاع على قائمة العشاء الخاصة؟ 🍽️
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+    <!-- 2. Hero Section -->
+    <section id="hero" class="relative min-h-screen flex items-center justify-center pt-20 pb-20 overflow-hidden">
+        <div class="ai-grid-bg"></div>
+        <div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-background to-transparent z-0"></div>
 
-<!-- Why KognitixAI -->
-<section id="features" class="py-16 md:py-24 px-4 md:px-6 bg-white">
-    <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-16">
-            <span class="text-xs uppercase tracking-[0.2em] text-blue-600 font-bold">لماذا تختارنا؟</span>
-            <h2 class="text-3xl md:text-4xl font-extrabold mt-3 mb-4 text-gray-900">لماذا KognitixAI؟</h2>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-8">
-            <div class="rounded-3xl p-8 bg-gradient-to-br from-blue-50 to-white border border-blue-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group">
-                <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300">⏰</div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">تواجد دائم 24/7</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    <strong>خدمة لا تعرف النوم.</strong> كن متاحاً لعملائك في أي وقت، ولا تفوت أي فرصة بيع أو حجز، مهما كان الوقت متأخراً.
-                </p>
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 w-full flex flex-col items-center text-center mt-12 md:mt-0">
+            <div class="gsap-hero inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-gray-300 backdrop-blur-sm mb-8">
+                <div class="w-2 h-2 rounded-full bg-accent-500 animate-pulse shadow-glow-accent"></div>
+                أول منصة وكلاء ذكاء اصطناعي متكاملة في الشرق الأوسط
             </div>
             
-            <div class="rounded-3xl p-8 bg-gradient-to-br from-purple-50 to-white border border-purple-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group">
-                <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300">🎯</div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">دقة واحترافية في الردود</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    <strong>صوت علامتك التجارية الأصيل.</strong> إجابات ذكية، دقيقة، ومصممة خصيصاً لتلبي احتياجات عملائك وتزيد من ولائهم.
-                </p>
-            </div>
-
-            <div class="rounded-3xl p-8 bg-gradient-to-br from-green-50 to-white border border-green-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group">
-                <div class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300">🔗</div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">تكامل سلس وبسيط</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    <strong>جاهزون للعمل فوراً.</strong> اربط المنصة بأنظمتك الحالية بسهولة تامة، وابدأ في استقبال عملائك دون أي تعقيدات.
-                </p>
-            </div>
-
-            <div class="rounded-3xl p-8 bg-gradient-to-br from-orange-50 to-white border border-orange-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group">
-                <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300">📊</div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">تقارير أداء ذكية</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    <strong>بيانات تصنع قراراتك.</strong> احصل على رؤى وتحليلات عميقة حول تفضيلات عملائك وأداء نشاطك لتحقيق نمو مستدام.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Use Cases -->
-<section id="use-cases" class="py-20 md:py-28 px-4 md:px-6 bg-gray-50 border-y border-gray-100">
-    <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-16">
-            <span class="text-xs uppercase tracking-[0.2em] text-blue-600 font-bold">الحلول المخصصة</span>
-            <h2 class="text-3xl md:text-4xl font-extrabold mt-3 text-gray-900">حلول مصممة خصيصاً لقطاعك</h2>
-        </div>
-        
-        <div class="grid md:grid-cols-2 gap-10">
-            <!-- Hotels -->
-            <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-1 group">
-                <div class="h-48 bg-gradient-to-r from-blue-600 to-cyan-500 relative flex items-center justify-center overflow-hidden">
-                    <span class="text-8xl absolute opacity-20 drop-shadow-lg group-hover:scale-110 transition-transform duration-300">🏨</span>
-                    <h3 class="text-3xl font-extrabold text-white relative z-10">قطاع الفنادق</h3>
-                </div>
-                <div class="p-8">
-                    <h4 class="text-xl font-bold text-blue-900 mb-4">"حجوزات أذكى.. ضيوف أسعد"</h4>
-                    <p class="text-gray-600 leading-relaxed">
-                        نحول رحلة ضيفك إلى تجربة رقمية ساحرة. من الرد الفوري على استفسارات الغرف، إلى إتمام الحجوزات بشكل أوتوماتيكي بالكامل. نقدم توصيات مخصصة للضيوف، وندير طلباتهم لضمان إقامة مريحة واستثنائية ترفع من تقييم فندقك.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Restaurants -->
-            <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 hover:shadow-2xl transition-all hover:-translate-y-1 group">
-                <div class="h-48 bg-gradient-to-r from-orange-500 to-red-500 relative flex items-center justify-center overflow-hidden">
-                    <span class="text-8xl absolute opacity-20 drop-shadow-lg group-hover:scale-110 transition-transform duration-300">🍽️</span>
-                    <h3 class="text-3xl font-extrabold text-white relative z-10">المطاعم والمقاهي</h3>
-                </div>
-                <div class="p-8">
-                    <h4 class="text-xl font-bold text-orange-900 mb-4">"طلبات أسرع.. عمليات أكثر سلاسة"</h4>
-                    <p class="text-gray-600 leading-relaxed">
-                        تفرغ لابتكار أشهى الأطباق ودع لنا الباقي! نستقبل طلبات عملائك، نعالجها، ونحدث حالاتها بشكل آلي ومبهر. تجربة طلب سلسة تقضي على أوقات الانتظار، وتعزز من كفاءة مطعمك وتزيد من رضا زبائنك.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- AI Agents -->
-<section id="ai-agents" class="py-16 md:py-24 px-4 md:px-6 bg-white">
-    <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-16">
-            <span class="text-xs uppercase tracking-[0.2em] text-blue-600 font-bold">فريقك الذكي</span>
-            <h2 class="text-3xl md:text-4xl font-extrabold mt-3 mb-4 text-gray-900">طاقم عملك من الوكلاء الأذكياء (AI Agents)</h2>
-            <p class="text-gray-600 max-w-2xl mx-auto">موظفون رقميون يعملون على مدار الساعة لخدمة عملائك وإدارة شؤونك المالية والتشغيلية بدقة متناهية.</p>
-        </div>
-
-        <div class="grid md:grid-cols-3 gap-6">
-            <div class="bg-blue-50/50 rounded-3xl p-8 border border-blue-100 hover:-translate-y-2 transition-transform duration-300 group">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm mb-6 text-blue-600 group-hover:scale-110 transition-transform duration-300">💼</div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">وكيل الاستقبال (Front-Desk)</h3>
-                <p class="text-gray-600 text-sm leading-relaxed mb-4">
-                    موظف استقبال احترافي متاح على (واتساب، انستقرام، وغيرها). يجيب على استفسارات النزلاء، يرسل صور الغرف والأسعار، يجمع بيانات العميل، و<strong>ينشئ مسودات العقود وروابط الدفع تلقائياً.</strong>
-                </p>
-                <div class="text-[11px] font-bold text-blue-700 bg-blue-100/50 px-3 py-2 rounded-lg inline-block">💬 أتمتة الحجوزات 100%</div>
-            </div>
+            <h1 class="gsap-hero text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1] mb-6 max-w-5xl text-white drop-shadow-lg">
+                مستقبل الأعمال <br/>
+                <span class="text-gradient-premium">يُدار ذاتياً بالذكاء</span>
+            </h1>
             
-            <div class="bg-purple-50/50 rounded-3xl p-8 border border-purple-100 hover:-translate-y-2 transition-transform duration-300 group">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm mb-6 text-purple-600 group-hover:scale-110 transition-transform duration-300">💸</div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">وكيل التحصيل (Collection)</h3>
-                <p class="text-gray-600 text-sm leading-relaxed mb-4">
-                    محاسبك الدقيق الذي لا ينسى. يقوم يومياً بفحص العقود التي قاربت على الانتهاء، ويرسل <strong>تذكيرات دفع لبقة</strong> للنزلاء تتضمن بياناتك البنكية للتحويل عبر الواتساب والإيميل والرسائل النصية.
-                </p>
-                <div class="text-[11px] font-bold text-purple-700 bg-purple-100/50 px-3 py-2 rounded-lg inline-block">💸 تحصيل آلي بدون إحراج</div>
+            <p class="gsap-hero text-lg md:text-xl text-gray-400 mb-12 max-w-2xl font-light leading-relaxed">
+                حول عملياتك الروتينية إلى وكلاء رقميين يعملون 24/7. استقبال الحجوزات، إدارة قواعد البيانات، والتحصيل المالي بشكل آلي وبدون تدخل بشري.
+            </p>
+            
+            <div class="gsap-hero flex flex-col sm:flex-row items-center gap-6 w-full justify-center mb-16">
+                <div class="magnetic-btn">
+                    <a href="https://wa.me/966538344673" target="_blank" class="group relative flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-all w-full sm:w-auto shadow-[0_0_30px_rgba(255,255,255,0.15)]">
+                        ابدأ التحول الرقمي
+                        <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i class="fas fa-arrow-left text-sm"></i>
+                        </div>
+                    </a>
+                </div>
             </div>
 
-            <div class="bg-green-50/50 rounded-3xl p-8 border border-green-100 hover:-translate-y-2 transition-transform duration-300 group">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm mb-6 text-green-600 group-hover:scale-110 transition-transform duration-300">📊</div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">المستشار المالي (Manager)</h3>
-                <p class="text-gray-600 text-sm leading-relaxed mb-4">
-                    مساعدك الإداري المتاح عبر "شريط بحث ذكي" في لوحة تحكمك. اسأله ببساطة: <em>"كم أرباح هذا الشهر؟"</em> أو <em>"ما نسبة الإشغال؟"</em> وسيقوم فوراً بجلب تقارير دقيقة ومقارنات شهرية.
-                </p>
-                <div class="text-[11px] font-bold text-green-700 bg-green-100/50 px-3 py-2 rounded-lg inline-block">📈 تقارير وأرقام حية فورية</div>
+            <!-- Custom 3D Robot & Database Visualization -->
+            <div class="gsap-hero db-system-container">
+                <!-- SVG Connections -->
+                <svg class="data-stream" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice">
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#4f46e5" stop-opacity="0" />
+                            <stop offset="50%" stop-color="#06b6d4" stop-opacity="1" />
+                            <stop offset="100%" stop-color="#4f46e5" stop-opacity="0" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M 500 200 Q 300 150 150 130" class="data-line"/>
+                    <path d="M 500 200 Q 700 250 850 200" class="data-line"/>
+                    <path d="M 500 200 Q 400 350 350 350" class="data-line"/>
+                </svg>
+
+                <!-- Database Nodes -->
+                <div class="db-node left">
+                    <i class="fas fa-database text-2xl text-gray-500 mb-2"></i>
+                    <div class="db-slot active"></div>
+                    <div class="db-slot"></div>
+                    <div class="db-slot active" style="animation-delay: 0.5s"></div>
+                </div>
+
+                <div class="db-node right">
+                    <i class="fas fa-server text-2xl text-gray-500 mb-2"></i>
+                    <div class="db-slot"></div>
+                    <div class="db-slot active" style="animation-delay: 0.2s"></div>
+                    <div class="db-slot"></div>
+                </div>
+
+                <div class="db-node bottom">
+                    <i class="fas fa-network-wired text-xl text-gray-500 mb-2"></i>
+                    <div class="db-slot active"></div>
+                    <div class="db-slot active" style="animation-delay: 0.7s"></div>
+                </div>
+
+                <!-- Main AI Robot -->
+                <div class="main-robot-3d">
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] opacity-30"></div>
+                    <div class="robot-eye">
+                        <div class="robot-eye-scanner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating WhatsApp Notification -->
+            <div class="absolute right-[10%] top-[30%] hidden lg:flex items-center gap-3 bg-surfaceLight/80 border border-white/10 p-3 rounded-2xl backdrop-blur-xl float-anim z-20 shadow-xl">
+                <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+                    <i class="fab fa-whatsapp text-xl"></i>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-400">تحديث قواعد البيانات</p>
+                    <p class="text-sm font-bold text-white">تم تأكيد الحجز ومزامنته</p>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Dashboards UI -->
-<section id="dashboards" class="py-20 md:py-32 px-4 md:px-6 bg-[#0b1f3a] text-white overflow-hidden relative">
-    <div class="absolute inset-0 opacity-10" aria-hidden="true">
-        <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-blue-500 blur-[100px]"></div>
-        <div class="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-cyan-400 blur-[100px]"></div>
-    </div>
-    
-    <div class="max-w-6xl mx-auto relative z-10">
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-                <span class="text-xs uppercase tracking-[0.2em] text-cyan-400 font-bold">لوحات تحكم ذكية</span>
-                <h2 class="text-3xl md:text-5xl font-extrabold mt-4 mb-6 leading-tight text-white drop-shadow-sm">تحكم كامل بأعمالك، وكفاءة تشغيلية لا تضاهى</h2>
-                <div class="space-y-6 text-blue-50 leading-relaxed text-lg">
-                    <p>
-                        لوحة تحكم مركزية تضع كل تفاصيل نشاطك بين يديك. تابع أداء وكلاء الذكاء الاصطناعي، راقب معدلات الحجوزات والمبيعات، وأدر طلبات عملائك لحظة بلحظة لضمان تقديم أعلى مستوى من الخدمة المتميزة.
-                    </p>
-                    <p>
-                        المنصة مصممة لتمنحك رؤية شاملة تدعم اتخاذ قراراتك. مع تقارير دقيقة ومؤشرات أداء حية، ستتمكن من تحسين عملياتك التشغيلية ومضاعفة أرباحك، لتتفرغ أنت لنمو تجارتك.
-                    </p>
+    <!-- 3. Features Section -->
+    <section id="features" class="py-32 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="mb-20 text-center md:text-right">
+                <div class="flex items-center justify-center md:justify-start gap-4 mb-4 gsap-reveal">
+                    <div class="h-px w-12 bg-gradient-to-r from-transparent to-brand-500"></div>
+                    <span class="text-brand-500 font-mono text-sm tracking-widest uppercase">قدرات النظام</span>
                 </div>
-                <div class="mt-8 flex flex-wrap gap-4 text-white font-medium">
-                    <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-5 py-2.5 rounded-full shadow-sm hover:bg-white/10 transition"><span class="text-cyan-400 font-bold">✓</span> تقارير وتحليلات دقيقة</div>
-                    <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-5 py-2.5 rounded-full shadow-sm hover:bg-white/10 transition"><span class="text-cyan-400 font-bold">✓</span> إدارة مركزية لجميع العمليات</div>
+                <h2 class="text-4xl md:text-5xl font-black max-w-3xl leading-tight gsap-reveal mx-auto md:mx-0">
+                    بنية تحتية للذكاء الاصطناعي <br/><span class="text-gray-500">مخصصة لقطاعات الأعمال.</span>
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Feature 1 -->
+                <div class="glow-card-wrapper group gsap-stagger">
+                    <div class="glow-card-content p-8 flex flex-col h-full">
+                        <div class="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:bg-brand-500/20 group-hover:border-brand-500/50 transition-all duration-500 relative overflow-hidden">
+                            <i class="fas fa-database text-xl text-gray-300 group-hover:text-brand-400 z-10 transition-colors"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4 text-white">إدارة ذكية للبيانات</h3>
+                        <p class="text-gray-400 leading-relaxed mb-8 flex-grow text-sm font-light">روبوت ذكاء اصطناعي يقرأ ويكتب في قواعد بياناتك لتسجيل الحجوزات والمعلومات بشكل فوري وآمن.</p>
+                    </div>
+                </div>
+                <!-- Feature 2 -->
+                <div class="glow-card-wrapper group gsap-stagger">
+                    <div class="glow-card-content p-8 flex flex-col h-full">
+                        <div class="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-500 relative overflow-hidden">
+                            <i class="fas fa-key text-xl text-gray-300 group-hover:text-purple-400 z-10 transition-colors"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4 text-white">الشقق المفروشة</h3>
+                        <p class="text-gray-400 leading-relaxed mb-8 flex-grow text-sm font-light">أتمتة كاملة للتأجير، عقود إلكترونية، تحصيل آلي للإيجار وتحديث مباشر لقواعد البيانات.</p>
+                    </div>
+                </div>
+                <!-- Feature 3 -->
+                <div class="glow-card-wrapper group gsap-stagger">
+                    <div class="glow-card-content p-8 flex flex-col h-full">
+                        <div class="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:bg-accent-500/20 group-hover:border-accent-500/50 transition-all duration-500 relative overflow-hidden">
+                            <i class="fas fa-utensils text-xl text-gray-300 group-hover:text-accent-400 z-10 transition-colors"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4 text-white">المطاعم والمقاهي</h3>
+                        <p class="text-gray-400 leading-relaxed mb-8 flex-grow text-sm font-light">استقبال طلبات واتساب، حجز طاولات، وردود ذكية تعتمد على قاعدة معرفة المنيو المربوطة بالسحابة.</p>
+                    </div>
                 </div>
             </div>
-            <div class="relative group mt-8 md:mt-0">
-                <!-- Enhanced Glow Effect with Glassmorphism -->
-                <div class="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-[2rem] blur-2xl opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-300"></div>
-                <div class="absolute -inset-0.5 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-[2rem] blur-lg"></div>
+        </div>
+    </section>
+
+    <!-- 4. AI Agents Cards Section -->
+    <section id="agents" class="py-32 relative z-10 bg-surfaceLight/30 border-y border-white/5">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl md:text-5xl font-black mb-6 text-white gsap-reveal">فريق من <span class="text-gradient-premium">الوكلاء الذاتيين</span></h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto gsap-reveal">نظام متعدد الوكلاء ينسق العمليات المعقدة ويدير قواعد البيانات في الخلفية بأمان وبدون أخطاء.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <!-- Agent 1 -->
+                <div class="relative bg-surface border border-white/10 rounded-3xl p-8 hover:-translate-y-2 transition-transform duration-500 shadow-xl gsap-agent">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-brand-500 flex items-center justify-center shadow-glow-brand border-[3px] border-surface">
+                        <i class="fas fa-server text-white"></i>
+                    </div>
+                    <div class="text-center mt-6">
+                        <h3 class="text-xl font-bold text-white mb-2">وكيل قواعد البيانات</h3>
+                        <p class="text-gray-400 text-sm mb-6">يقوم بتحديث، استرجاع، وتخزين المعلومات بدقة متناهية من خلال ربط آمن وسريع.</p>
+                        <div class="bg-white/5 rounded-lg p-3 flex justify-between items-center border border-white/5">
+                            <span class="text-xs text-gray-500">زمن المزامنة</span>
+                            <span class="text-sm font-bold text-brand-400">0.1s</span>
+                        </div>
+                    </div>
+                </div>
                 
-                <!-- High Quality Dashboard Image Window with Enhanced Glassmorphism -->
-                <div class="relative bg-white/8 backdrop-blur-2xl border border-white/30 rounded-[1.5rem] p-3 shadow-2xl transform group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-500">
-                    <div class="flex items-center gap-2 mb-3 px-2">
-                        <div class="w-3.5 h-3.5 rounded-full bg-rose-500/80"></div>
-                        <div class="w-3.5 h-3.5 rounded-full bg-amber-400/80"></div>
-                        <div class="w-3.5 h-3.5 rounded-full bg-emerald-400/80"></div>
+                <!-- Agent 2 -->
+                <div class="relative bg-surface border border-white/10 rounded-3xl p-8 hover:-translate-y-2 transition-transform duration-500 shadow-xl gsap-agent lg:mt-10">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.5)] border-[3px] border-surface">
+                        <i class="fas fa-wallet text-white"></i>
                     </div>
-                    <img src="{{ url_for('static', filename='img/merchant_dashboard.png') }}" alt="لوحة تحكم ذكية" class="rounded-xl w-full h-auto shadow-inner border border-white/10" />
+                    <div class="text-center mt-6">
+                        <h3 class="text-xl font-bold text-white mb-2">الوكيل المالي</h3>
+                        <p class="text-gray-400 text-sm mb-6">ينشئ الفواتير، يصدر روابط دفع آمنة، يتابع التحصيلات، ويحدث دفاتر المحاسبة دون أي تدخل بشري.</p>
+                        <div class="bg-white/5 rounded-lg p-3 flex justify-between items-center border border-white/5">
+                            <span class="text-xs text-gray-500">دقة التحصيل</span>
+                            <span class="text-sm font-bold text-purple-400">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent 3 -->
+                <div class="relative bg-surface border border-white/10 rounded-3xl p-8 hover:-translate-y-2 transition-transform duration-500 shadow-xl gsap-agent">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-accent-500 flex items-center justify-center shadow-glow-accent border-[3px] border-surface">
+                        <i class="fas fa-headset text-white"></i>
+                    </div>
+                    <div class="text-center mt-6">
+                        <h3 class="text-xl font-bold text-white mb-2">وكيل الاستقبال</h3>
+                        <p class="text-gray-400 text-sm mb-6">يرد على العملاء بذكاء ويستقبل طلباتهم، ثم يمررها لوكيل قواعد البيانات لتسجيلها بشكل صحيح.</p>
+                        <div class="bg-white/5 rounded-lg p-3 flex justify-between items-center border border-white/5">
+                            <span class="text-xs text-gray-500">التوفر</span>
+                            <span class="text-sm font-bold text-accent-400">24/7</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- FAQ Section -->
-<section id="faq" class="py-16 md:py-24 px-4 md:px-6 bg-white">
-    <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-16">
-            <span class="text-xs uppercase tracking-[0.2em] text-blue-600 font-bold">أسئلة شائعة</span>
-            <h2 class="text-3xl md:text-4xl font-extrabold mt-3 mb-4 text-gray-900">الأسئلة الشائعة</h2>
-            <p class="text-gray-600">إجابات سريعة على أكثر الأسئلة التي يطرحها عملاؤنا</p>
-        </div>
-
-        <div class="space-y-4">
-            <!-- FAQ Item 1 -->
-            <details class="group bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <summary class="flex items-center justify-between font-bold text-gray-900 text-lg">
-                    <span>كم الوقت المطلوب للبدء مع KognitixAI؟</span>
-                    <span class="text-2xl text-blue-600 group-open:rotate-180 transition-transform duration-300">+</span>
-                </summary>
-                <p class="text-gray-600 mt-4 leading-relaxed">يمكنك البدء فوراً! التسجيل يستغرق أقل من دقيقة واحدة. بعد ذلك، سيتواصل معك فريقنا لتخصيص الحل حسب احتياجات نشاطك، وستكون جاهزاً للعمل في غضون 24-48 ساعة.</p>
-            </details>
-
-            <!-- FAQ Item 2 -->
-            <details class="group bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <summary class="flex items-center justify-between font-bold text-gray-900 text-lg">
-                    <span>هل يمكن دمج KognitixAI مع أنظمتي الحالية؟</span>
-                    <span class="text-2xl text-blue-600 group-open:rotate-180 transition-transform duration-300">+</span>
-                </summary>
-                <p class="text-gray-600 mt-4 leading-relaxed">نعم، بالتأكيد! نحن نوفر واجهات برمجية (APIs) قوية وسهلة الاستخدام تتكامل بسلاسة مع أنظمتك الحالية. فريقنا التقني سيساعدك في كل خطوة من خطوات التكامل.</p>
-            </details>
-
-            <!-- FAQ Item 3 -->
-            <details class="group bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <summary class="flex items-center justify-between font-bold text-gray-900 text-lg">
-                    <span>ما هي مستويات الأمان والخصوصية في KognitixAI؟</span>
-                    <span class="text-2xl text-blue-600 group-open:rotate-180 transition-transform duration-300">+</span>
-                </summary>
-                <p class="text-gray-600 mt-4 leading-relaxed">نحن نستخدم أعلى معايير الأمان العالمية. جميع البيانات مشفرة بتقنية SSL، وننتمي لمعايير GDPR و ISO 27001. بيانات عملائك آمنة تماماً معنا.</p>
-            </details>
-
-            <!-- FAQ Item 4 -->
-            <details class="group bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <summary class="flex items-center justify-between font-bold text-gray-900 text-lg">
-                    <span>هل يوجد فترة تجريبية مجانية؟</span>
-                    <span class="text-2xl text-blue-600 group-open:rotate-180 transition-transform duration-300">+</span>
-                </summary>
-                <p class="text-gray-600 mt-4 leading-relaxed">نعم! نقدم فترة تجريبية مجانية لمدة 14 يوماً بكل المميزات. لا تحتاج لبطاقة ائتمان، وبإمكانك إلغاء الاشتراك في أي وقت دون أي التزام.</p>
-            </details>
-        </div>
-
-        <div class="mt-12 text-center">
-            <p class="text-gray-600 mb-4">هل لديك سؤال آخر؟</p>
-            <a href="{{ url_for('public.contact') }}" class="inline-block text-blue-600 font-bold hover:text-blue-700 transition">
-                تواصل معنا مباشرة ←
+    <!-- Bottom CTA -->
+    <section class="py-24 relative z-10 overflow-hidden bg-background border-t border-white/5 text-center flex flex-col items-center">
+        <div class="absolute inset-0 opacity-20 z-0 mix-blend-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-900 via-background to-background"></div>
+        <h2 class="text-4xl md:text-6xl font-black mb-6 text-white relative z-10">جاهز للتحول الذكي؟</h2>
+        <div class="magnetic-btn mt-8 relative z-10">
+            <a href="https://wa.me/966538344673" target="_blank" class="group flex items-center justify-center gap-4 bg-white text-black px-10 py-4 rounded-full font-bold text-xl hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+                <i class="fab fa-whatsapp text-2xl text-green-600"></i>
+                تواصل عبر واتساب
             </a>
         </div>
-    </div>
-</section>
+        <p class="mt-6 text-sm text-gray-500 font-mono tracking-widest relative z-10">+966 53 834 4673</p>
+    </section>
 
-<!-- CTA -->
-<section class="py-16 md:py-24 px-4 md:px-6 bg-white">
-    <div class="max-w-4xl mx-auto rounded-3xl p-8 md:p-14 gradient-brand text-white text-center shadow-2xl relative overflow-hidden hover:shadow-3xl transition-all duration-300">
-        <div class="absolute -top-20 -right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
-        <h2 class="text-2xl md:text-3xl font-extrabold mb-3 relative">جاهز لتجربة KognitixAI في نشاطك؟</h2>
-        <p class="text-blue-50/90 mb-8 relative text-lg">سجّل بياناتك خلال دقيقة، نراجع الطلب ونتواصل معك مباشرة لبدء التحول الرقمي.</p>
-        <a href="{{ url_for('registration.step1') }}"
-           class="inline-block bg-white text-blue-700 px-10 py-4 rounded-xl font-extrabold text-lg hover:bg-blue-50 transition shadow-xl relative hover:scale-105 duration-300">
-            اطلب وصول الآن ←
-        </a>
-    </div>
-</section>
-
-<!-- Footer -->
-<footer class="bg-[#0b1f3a] text-gray-300 py-12 px-4 md:px-6 border-t border-white/10">
-    <div class="max-w-6xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
-                {% with variant='dark', tagline=True %}{% include "_brand.html" %}{% endwith %}
-            </div>
-            <div class="flex gap-6 text-sm">
-                <a href="{{ url_for('public.terms') }}" class="hover:text-white transition">الشروط</a>
-                <a href="{{ url_for('public.privacy') }}" class="hover:text-white transition">الخصوصية</a>
-                <a href="{{ url_for('public.contact') }}" class="hover:text-white transition">تواصل</a>
-            </div>
-            <p class="text-xs">© KognitixAI — جميع الحقوق محفوظة</p>
+    <!-- Footer -->
+    <footer class="bg-black py-10 border-t border-white/5 relative z-10 text-center text-sm text-gray-600 flex flex-col md:flex-row justify-between items-center px-8">
+        <div class="flex items-center gap-2 mb-4 md:mb-0 group">
+            {% with tagline=True %}{% include "_brand.html" %}{% endwith %}
         </div>
-    </div>
-</footer>
+        <div class="flex gap-6 font-medium">
+            <a href="#" class="hover:text-white transition">الخصوصية</a>
+            <a href="#" class="hover:text-white transition">الشروط</a>
+            <a href="{{ url_for('tenant.login') }}" class="hover:text-white transition">تسجيل الدخول</a>
+        </div>
+    </footer>
 
-{% endblock %}
+    <!-- Main JS Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. Glow Cards (Mouse Tracking without Custom Cursor) ---
+            document.addEventListener('mousemove', (e) => {
+                document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+                document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+            });
+
+            // --- 2. Magnetic Buttons ---
+            const magneticBtns = document.querySelectorAll('.magnetic-btn');
+            magneticBtns.forEach(btn => {
+                btn.addEventListener('mousemove', (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    
+                    gsap.to(btn.children[0], {
+                        x: x * 0.3,
+                        y: y * 0.3,
+                        duration: 0.3,
+                        ease: "power2.out"
+                    });
+                });
+                
+                btn.addEventListener('mouseleave', () => {
+                    gsap.to(btn.children[0], {
+                        x: 0,
+                        y: 0,
+                        duration: 0.5,
+                        ease: "elastic.out(1, 0.3)"
+                    });
+                });
+            });
+
+            // --- 3. Scroll Progress & Navbar State ---
+            const navbar = document.getElementById('navbar');
+            const scrollProgress = document.getElementById('scroll-progress');
+            
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('shadow-lg', 'bg-surface/80');
+                    navbar.classList.remove('py-4');
+                    navbar.classList.add('py-2');
+                } else {
+                    navbar.classList.remove('shadow-lg', 'bg-surface/80', 'py-2');
+                    navbar.classList.add('py-4');
+                }
+                
+                const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = winScroll / height;
+                gsap.set(scrollProgress, { scaleX: scrolled });
+            });
+
+            // --- 4. Mobile Menu ---
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileLinks = document.querySelectorAll('.mobile-link');
+            let menuOpen = false;
+
+            mobileBtn.addEventListener('click', () => {
+                menuOpen = !menuOpen;
+                const lines = mobileBtn.querySelectorAll('span');
+                
+                if (menuOpen) {
+                    mobileMenu.classList.add('open');
+                    gsap.to(lines[0], { y: 4, rotation: 45, duration: 0.3 });
+                    gsap.to(lines[1], { y: -4, rotation: -45, duration: 0.3 });
+                    
+                    gsap.fromTo(mobileLinks, 
+                        { y: 50, opacity: 0 }, 
+                        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, delay: 0.2, ease: "power3.out" }
+                    );
+                } else {
+                    mobileMenu.classList.remove('open');
+                    gsap.to(lines[0], { y: 0, rotation: 0, duration: 0.3 });
+                    gsap.to(lines[1], { y: 0, rotation: 0, duration: 0.3 });
+                }
+            });
+
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if(menuOpen) mobileBtn.click();
+                });
+            });
+
+            // --- 5. GSAP Scroll Animations ---
+            gsap.registerPlugin(ScrollTrigger);
+
+            const tl = gsap.timeline();
+            tl.fromTo(".gsap-hero", 
+                { y: 50, opacity: 0 },
+                { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: "power4.out", delay: 0.2 }
+            );
+
+            gsap.utils.toArray('.gsap-reveal').forEach(element => {
+                gsap.from(element, {
+                    scrollTrigger: {
+                        trigger: element,
+                        start: "top 85%",
+                    },
+                    y: 40,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out"
+                });
+            });
+
+            gsap.from(".gsap-stagger", {
+                scrollTrigger: {
+                    trigger: "#features",
+                    start: "top 80%",
+                },
+                y: 50,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.2,
+                ease: "power3.out"
+            });
+
+            gsap.from(".gsap-agent", {
+                scrollTrigger: {
+                    trigger: "#agents",
+                    start: "top 80%",
+                },
+                y: 60,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.2,
+                ease: "back.out(1.7)"
+            });
+        });
+    </script>
+</body>
+</html>

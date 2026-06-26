@@ -18,7 +18,7 @@ def home():
         Plan.code != 'trial'
     ).order_by(Plan.sort_order).all()
     activities = Activity.query.filter_by(is_active=True).order_by(Activity.sort_order).all()
-    return render_template('public/home.html', plans=plans, activities=activities)
+    return render_template('public/landing_v2.html', plans=plans, activities=activities)
 
 
 @bp.route('/features')

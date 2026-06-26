@@ -21,9 +21,79 @@ from app.models.subscription import Subscription
 from app.models.conversation import Conversation, Message
 from app.models.audit_log import AuditLog
 from app.models.super_admin import SuperAdmin
+from app.models.tenant_deletion_code import TenantDeletionCode
+from app.models.ai_provider import AIProvider
+from app.models.ai_model import AIModel
+from app.models.agent_profile import AgentProfile
+from sqlalchemy import text
 from app.extensions import db
 
 bp = Blueprint('super_admin', __name__, template_folder='../../templates/super_admin')
+
+
+@bp.route('/run-db-fix')
+@super_admin_required
+def run_db_fix():
+    """مسار مؤقت لإصلاح هيكل قاعدة البيانات على السيرفر السحابي وتحديث النماذج"""
+    try:
+        # 1. إصلاح جدول tenants
+        db.session.execute(text('ALTER TABLE tenants ADD COLUMN IF NOT EXISTS has_unlimited_ai BOOLEAN DEFAULT FALSE NOT NULL;'))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+
+    try:
+        # 2. إنشاء جدول agent_profiles إن لم يكن موجوداً
+        AgentProfile.__table__.create(db.engine, checkfirst=True)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+
+    # 3. إعداد مزودي الذكاء الاصطناعي
+    providers_data = [
+        ('google', 'Google Gemini', 4),
+        ('anthropic', 'Anthropic Claude', 2),
+        ('openai', 'OpenAI', 3),
+        ('glm', 'Zhipu GLM', 1),
+        ('minimax', 'MiniMax', 5)
+    ]
+    
+    prov_objs = {}
+    for slug, name, prio in providers_data:
+        prov = AIProvider.query.filter_by(slug=slug).first()
+        if not prov:
+            prov = AIProvider(slug=slug, name=name, priority=prio)
+            db.session.add(prov)
+            db.session.flush()
+        else:
+            prov.priority = prio
+        prov_objs[slug] = prov
+
+    models_to_add = [
+        ('google', 'gemini-1.5-pro', 'Gemini 1.5 Pro', True),
+        ('google', 'gemini-1.5-flash', 'Gemini 1.5 Flash', False),
+        ('anthropic', 'claude-3-opus-20240229', 'Claude 3 Opus', False),
+        ('anthropic', 'claude-3-5-sonnet-20240620', 'Claude 3.5 Sonnet', True),
+        ('anthropic', 'claude-3-haiku-20240307', 'Claude 3 Haiku', False),
+        ('openai', 'gpt-4o', 'GPT-4o', True),
+        ('openai', 'gpt-4o-mini', 'GPT-4o Mini', False),
+        ('glm', 'glm-4', 'GLM-4', True),
+        ('minimax', 'abab6.5', 'MiniMax abab6.5', True)
+    ]
+
+    for p_slug, m_id, d_name, is_def in models_to_add:
+        p = prov_objs[p_slug]
+        mod = AIModel.query.filter_by(provider_id=p.id, model_id=m_id).first()
+        if not mod:
+            mod = AIModel(provider_id=p.id, model_id=m_id, display_name=d_name, is_default=is_def)
+            db.session.add(mod)
+        else:
+            mod.is_default = is_def
+
+    db.session.commit()
+    return "تم تحديث قاعدة البيانات بنجاح! يمكنك الآن تصفح المنصة بدون أخطاء."
+
+
 
 
 # ========================
