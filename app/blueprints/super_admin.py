@@ -49,6 +49,13 @@ def run_db_fix():
     except Exception as e:
         db.session.rollback()
 
+    try:
+        # إصلاح جداول AI
+        db.session.execute(text('ALTER TABLE ai_providers ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 10;'))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+
     # 3. إعداد مزودي الذكاء الاصطناعي
     providers_data = [
         ('google', 'Google Gemini', 4),
