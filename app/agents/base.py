@@ -259,6 +259,7 @@ class BaseAgent:
                     tools=tools,
                     max_iterations=self.MAX_ITERATIONS,
                     verbose=False,
+                    return_intermediate_steps=True,
                     handle_parsing_errors=True,
                 )
 
