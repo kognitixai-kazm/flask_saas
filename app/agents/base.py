@@ -221,7 +221,11 @@ class BaseAgent:
         # 4. بناء الرسائل
         messages = []
         system_prompt = self.get_system_prompt()
+        
+        language_directive = "\n\n[هام جداً]: التزم دائماً بالرد بنفس لغة المستخدم. إذا تحدث بالإنجليزية أجب بالإنجليزية، وإذا تحدث بالعربية أجب بالعربية، وهكذا لجميع اللغات."
+        
         if system_prompt:
+            system_prompt += language_directive
             messages.append(SystemMessage(content=system_prompt))
 
         # تحميل التاريخ
