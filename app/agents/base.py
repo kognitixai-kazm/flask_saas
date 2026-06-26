@@ -294,6 +294,8 @@ class BaseAgent:
 
             # 7. تسجيل الاستهلاك
             price_charged = self._track_usage(tokens_in, tokens_out)
+            
+            logger.info("AI Request Completed")
 
             return AgentResponse(
                 success=True,

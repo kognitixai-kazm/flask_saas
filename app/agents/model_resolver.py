@@ -35,11 +35,17 @@ class ModelResolver:
     def resolve(tenant_id: int, agent_type: str = 'general') -> Optional[ResolvedModel]:
         """
         تحديد النموذج والمفتاح المناسب.
-        يبحث في جميع المزودين المتاحين مرتبين حسب الأولوية، ويختار أول مزود يمتلك مفتاح API ونموذج فعال.
+        يبحث في جميع المزودين المتاحين مرتبين حسب الأولوية، ويختار أول مزود يمتلك مفتاح API صالح.
         """
+        import logging
+        from app.services.ai_service import AIService
+        logger = logging.getLogger(__name__)
+
         providers = AIProvider.query.filter_by(is_active=True).order_by(AIProvider.priority.asc()).all()
         
         for provider in providers:
+            logger.info(f"Selected Provider: {provider.name}")
+            
             # استخدام مفتاح المزود إذا كان موجوداً، أو جلب من الإعدادات
             api_key = getattr(provider, 'api_key_decrypted', None)
             
@@ -47,13 +53,26 @@ class ModelResolver:
             db_model = AIModel.query.filter_by(provider_id=provider.id, is_active=True).first()
             
             if not db_model:
+                logger.info(f"{provider.name} → No active AIModel Found → Trying Next Provider")
                 continue
                 
             if not api_key:
                 api_key = ModelResolver._get_platform_key(provider.slug)
                 
             if not api_key:
+                logger.info(f"{provider.name} → API Key Missing → Trying Next Provider")
                 continue
+                
+            logger.info(f"Selected Provider: {provider.name}")
+            logger.info("API Key Found")
+            
+            # تحقق من صلاحية المفتاح فعلياً
+            is_valid, reason = AIService.validate_api_key(provider.slug, api_key)
+            if not is_valid:
+                logger.warning(f"{provider.name} → Invalid API Key ({reason}) → Trying Next Provider")
+                continue
+
+            logger.info("AI Request Started")
 
             return ResolvedModel(
                 provider=provider.slug,
@@ -66,6 +85,8 @@ class ModelResolver:
                 is_tenant_key=False,
             )
             
+        logger.warning("No Available AI Provider")
+        logger.warning("Falling Back To Local Reply")
         return None
 
     @staticmethod

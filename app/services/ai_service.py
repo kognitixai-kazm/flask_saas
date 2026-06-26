@@ -237,35 +237,27 @@ class AIService:
                 model_override, tenant_id, user_message, system_prompt, history
             )
 
-        from app.models.ai_provider import AIProvider
-        # البحث عن جميع المزودين المتاحين مرتبين حسب الأولوية
-        providers = AIProvider.query.filter_by(is_active=True).order_by(AIProvider.priority.asc()).all()
+        from app.agents.model_resolver import ModelResolver
+        resolved = ModelResolver.resolve(tenant_id)
+        
+        if not resolved:
+            current_app.logger.error('[AIService] No Available AI Provider - Falling Back To Local Reply')
+            return AIResult(success=False, error=last_error)
 
-        for provider in providers:
-            model = AIModel.query.filter_by(provider_id=provider.id, is_active=True).first()
-            if not model:
-                model = AIModel.query.filter_by(is_active=True, is_default=True).first()
-                if not model:
-                    continue
-            
-            # محاولة الاستدعاء
-            result = AIService._try_generate_with_model(
-                model, tenant_id, user_message, system_prompt, history
-            )
-            
-            if result.success:
-                current_app.logger.info(f'[AIService] تم استخدام المزود بنجاح: {model.provider}')
-                return result
-            else:
-                last_error = result.error
-                current_app.logger.warning(f'[AIService] فشل المزود {model.provider}. السبب: {result.error} - سيتم تجربة المزود التالي.')
+        model = AIModel.query.get(resolved.ai_model_db_id)
+        if not model:
+            return AIResult(success=False, error='Resolved model not found in DB')
 
-        current_app.logger.error(f'[AIService] فشلت جميع المزودات في تلبية الطلب. آخر خطأ: {last_error}')
-        # في حال فشل الجميع، يتم إرجاع خطأ ليتم تفعيل الرد المحلي
-        return AIResult(
-            success=False,
-            error=last_error
+        result = AIService._try_generate_with_model(
+            model, tenant_id, user_message, system_prompt, history
         )
+        
+        if result.success:
+            current_app.logger.info("AI Request Completed")
+        else:
+            current_app.logger.warning(f"AI Request Failed: {result.error}")
+            
+        return result
 
     @staticmethod
     def _try_generate_with_model(
