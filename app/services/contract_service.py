@@ -142,8 +142,10 @@ class ContractService:
             file_url = f'/static/uploads/contracts/tenant_{contract.tenant_id}/{filename}'
             
             contract.contract_pdf_url = file_url
-            contract.status = 'signed'
-            contract.signed_at = datetime.utcnow()
+            if contract.status != 'signed':
+                contract.status = 'pending_signature'
+            else:
+                contract.signed_at = contract.signed_at or datetime.utcnow()
             
             return {'success': True, 'url': file_url}
 
@@ -367,17 +369,23 @@ class ContractService:
 
         # التوقيع
         story.append(Spacer(1, 0.8 * cm))
+        if contract.status == 'signed' and contract.signed_at:
+            sig_text = f"تم التوقيع إلكترونياً بواسطة العميل\nIP: {contract.signature_ip or '-'}\nالوقت: {contract.signed_at.strftime('%Y/%m/%d %H:%M')}"
+            sig_p = Paragraph(shape(sig_text), small)
+        else:
+            sig_p = Paragraph(shape('بانتظار توقيع العميل إلكترونياً...'), body)
+            
         sig_data = [
             [
                 Paragraph(shape('توقيع الطرف الثاني (المستأجر):'), body),
                 Paragraph(shape('توقيع الطرف الأول (المؤجر):'), body)
             ],
             [
-                Paragraph(shape('الاسم: ____________________'), body),
-                Paragraph(shape('الاسم: ____________________'), body)
+                Paragraph(shape(f"الاسم: {fv.get('full_name') or contract.customer_name or '-'}"), body),
+                Paragraph(shape(f"الاسم: {template.lessor_name or tenant.business_name or '-'}"), body)
             ],
             [
-                Paragraph(shape('التوقيع: ____________________'), body),
+                sig_p,
                 Paragraph(shape('التوقيع: ____________________'), body)
             ]
         ]
@@ -620,6 +628,36 @@ class ContractService:
         if not url:
             return False
 
+        from flask import request, url_for
+        try:
+            base_url = request.host_url.rstrip('/')
+        except RuntimeError:
+            base_url = current_app.config.get('BASE_URL', 'https://kognitixai.com').rstrip('/')
+
+        # تحويل المسار النسبي لمطلق
+        if url.startswith('/'):
+            absolute_pdf_url = base_url + url
+        else:
+            absolute_pdf_url = url
+
+        if contract.status == 'pending_signature':
+            try:
+                action_url = base_url + url_for('public.sign_contract', token=contract.signature_token)
+            except RuntimeError:
+                action_url = f"{base_url}/contract/sign/{contract.signature_token}"
+            action_text = "✍️ اقرأ ووقّع العقد إلكترونياً"
+            email_title = "عقدك جاهز للتوقيع ✍️"
+            email_msg = "تم إعداد العقد، يرجى مراجعته وتوقيعه إلكترونياً واعتماده."
+            whatsapp_msg = f'عقدك رقم {contract.contract_number} جاهز. يرجى الضغط على الرابط التالي لقراءته وتوقيعه:\n{action_url}'
+            send_as_document = False
+        else:
+            action_url = absolute_pdf_url
+            action_text = "📄 تحميل العقد"
+            email_title = "تم الانتهاء من عقدك ✅"
+            email_msg = "تم توقيع واعتماد العقد بنجاح. يمكنك تحميل نسختك من الرابط أدناه."
+            whatsapp_msg = f'عقدك رقم {contract.contract_number} المعتمد جاهز.'
+            send_as_document = True
+
         sent = False
 
         # Email — يُرسل افتراضياً إذا توفر البريد
@@ -628,13 +666,15 @@ class ContractService:
                 from app.services.email_service import EmailService
                 EmailService._send(
                     to=contract.customer_email,
-                    subject=f'عقدك جاهز — {contract.contract_number}',
+                    subject=f'عقدك — {contract.contract_number}',
                     body_html=f'''
                     <div dir="rtl" style="font-family:Tahoma,Arial;padding:20px;">
-                      <h2>تم إعداد عقدك بنجاح ✅</h2>
+                      <h2>{email_title}</h2>
                       <p>عزيزي {contract.customer_name},</p>
-                      <p>تم إعداد العقد رقم <strong>{contract.contract_number}</strong>.</p>
-                      <p><a href="{url}" style="background:#2563eb;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;">📄 تحميل العقد</a></p>
+                      <p>{email_msg}</p>
+                      <p>رقم العقد: <strong>{contract.contract_number}</strong></p>
+                      <br/>
+                      <p><a href="{action_url}" style="background:#2563eb;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;display:inline-block;margin-top:10px;">{action_text}</a></p>
                     </div>
                     ''',
                 )
@@ -646,13 +686,20 @@ class ContractService:
         if contract.customer_phone:
             try:
                 from app.services.whatsapp_service import WhatsAppService
-                WhatsAppService.send_document(
-                    tenant_id=contract.tenant_id,
-                    to_phone=contract.customer_phone,
-                    doc_url=url,
-                    filename=f'contract_{contract.contract_number}.pdf',
-                    caption=f'عقدك رقم {contract.contract_number}',
-                )
+                if send_as_document:
+                    WhatsAppService.send_document(
+                        tenant_id=contract.tenant_id,
+                        to_phone=contract.customer_phone,
+                        doc_url=absolute_pdf_url,
+                        filename=f'contract_{contract.contract_number}.pdf',
+                        caption=whatsapp_msg,
+                    )
+                else:
+                    WhatsAppService.send_text(
+                        tenant_id=contract.tenant_id,
+                        to_phone=contract.customer_phone,
+                        text=whatsapp_msg,
+                    )
                 sent = True
             except Exception as e:
                 current_app.logger.warning(f'[ContractService] whatsapp send error: {e}')

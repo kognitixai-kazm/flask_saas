@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توقيع العقد - {{ contract.tenant.business_name }}</title>
+    <!-- Tailwind CSS (via CDN for simplicity, though the project might have it locally) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 p-8 text-center text-white relative">
+            {% if contract.tenant.logo_path %}
+                <img src="{{ contract.tenant.logo_path }}" alt="Logo" class="h-16 mx-auto mb-4 bg-white p-2 rounded-lg shadow-sm">
+            {% else %}
+                <div class="h-16 w-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
+                    {{ contract.tenant.business_name[0] if contract.tenant.business_name else '🏢' }}
+                </div>
+            {% endif %}
+            
+            <h1 class="text-2xl font-bold mb-2">توقيع عقد إلكتروني</h1>
+            <p class="text-blue-100">مقدم من: {{ contract.tenant.business_name }}</p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p class="text-sm text-slate-500 mb-1">الطرف الثاني (المستأجر / العميل)</p>
+                    <p class="font-bold text-lg">{{ contract.customer_name or '-' }}</p>
+                    <p class="text-slate-600 text-sm mt-1">{{ contract.customer_phone or '-' }}</p>
+                </div>
+                
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p class="text-sm text-slate-500 mb-1">تفاصيل العقد</p>
+                    <p class="font-bold text-lg">رقم: {{ contract.contract_number }}</p>
+                    <p class="text-slate-600 text-sm mt-1">تاريخ الإنشاء: {{ contract.created_at.strftime('%Y-%m-%d') if contract.created_at else '-' }}</p>
+                </div>
+            </div>
+
+            {% if contract.status == 'signed' %}
+                <!-- Already Signed -->
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-6 rounded-xl text-center mb-6">
+                    <div class="text-4xl mb-3">✅</div>
+                    <h2 class="text-xl font-bold mb-2">تم توقيع هذا العقد مسبقاً</h2>
+                    <p class="text-sm mb-4">تم تسجيل التوقيع الإلكتروني بنجاح في وقت سابق.</p>
+                    <p class="text-xs text-emerald-600 font-mono mb-4">IP: {{ contract.signature_ip }} | Date: {{ contract.signed_at.strftime('%Y-%m-%d %H:%M') if contract.signed_at else '' }}</p>
+                    
+                    <a href="{{ contract.contract_pdf_url }}" target="_blank" class="inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors">
+                        تحميل العقد النهائي الموقّع
+                    </a>
+                </div>
+            {% else %}
+                <!-- Pending Signature -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold mb-4 border-b pb-2">خطوات التوقيع:</h3>
+                    <ol class="list-decimal list-inside space-y-3 text-slate-600">
+                        <li>يرجى قراءة مسودة العقد بدقة من خلال الرابط أدناه.</li>
+                        <li>التأكد من صحة بياناتك والمبلغ المتفق عليه.</li>
+                        <li>الضغط على زر "قرأت العقد وأوافق عليه" لاعتماده إلكترونياً.</li>
+                    </ol>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8 pt-6 border-t border-slate-100">
+                    <a href="{{ contract.contract_pdf_url }}" target="_blank" class="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors text-center border border-slate-300">
+                        📄 قراءة العقد (المسودة)
+                    </a>
+                    
+                    <form method="POST" class="w-full sm:w-auto">
+                        <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
+                            <span>✍️</span> قرأت العقد وأوافق عليه
+                        </button>
+                    </form>
+                </div>
+                
+                <p class="text-xs text-center text-slate-400 mt-6 mt-4">
+                    ملاحظة: بالضغط على زر الموافقة، أنت تقر بصحة البيانات المدخلة وتوافق على الشروط والأحكام المذكورة في العقد. سيتم تسجيل عنوان الـ IP الخاص بك كدليل على التوقيع الإلكتروني.
+                </p>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <div class="mt-8 text-center text-sm text-slate-400">
+        مشغّل بواسطة <a href="https://kognitixai.com" class="font-bold hover:text-slate-600">KognitixAI</a>
+    </div>
+
+</body>
+</html>

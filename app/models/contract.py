@@ -10,6 +10,7 @@ app/models/contract.py — العقود الموقّعة من العملاء.
 6. cancelled / expired
 """
 from datetime import datetime
+import uuid
 from ..extensions import db
 
 
@@ -67,6 +68,10 @@ class Contract(db.Model):
     external_contract_id = db.Column(db.String(200), default='')
     external_contract_url = db.Column(db.String(500), default='')
 
+    # ========== التوقيع الإلكتروني ==========
+    signature_token = db.Column(db.String(100), unique=True, index=True)
+    signature_ip = db.Column(db.String(50), nullable=True)
+
     # ========== التواريخ ==========
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -85,6 +90,7 @@ class Contract(db.Model):
         'pending_payment': '⏳ بانتظار الدفع',
         'awaiting_approval': '🔍 بانتظار التحقق من التحويل',
         'paid': '💰 مدفوع',
+        'pending_signature': '✍️ بانتظار التوقيع',
         'signed': '✍️ موقّع',
         'sent': '✅ مُرسل',
         'cancelled': '❌ ملغي',
@@ -97,7 +103,10 @@ class Contract(db.Model):
         return self.STATUS_LABELS.get(self.status, self.status)
 
     def generate_contract_number(self):
-        """توليد رقم عقد فريد."""
+        """توليد رقم عقد فريد وتوكن توقيع."""
+        if not self.signature_token:
+            self.signature_token = str(uuid.uuid4())
+            
         if self.contract_number:
             return self.contract_number
         from datetime import datetime as dt
