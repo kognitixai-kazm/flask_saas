@@ -115,6 +115,141 @@ def create_draft_contract(
 
 
 @tool
+def process_booking_request(
+    tenant_id: int,
+    customer_name: str,
+    customer_phone: str,
+    unit_id: int,
+    check_in_date: str,
+    duration_months: int,
+    payment_method: str,
+    conversation_id: int = 0,
+) -> str:
+    """معالجة طلب الحجز كاملاً بعد استيفاء البيانات.
+    استخدم هذه الأداة عندما يكتمل جمع بيانات الحجز (الوحدة، التواريخ، طريقة الدفع).
+
+    Args:
+        tenant_id: معرف التاجر
+        customer_name: اسم العميل
+        customer_phone: جوال العميل
+        unit_id: معرف الوحدة
+        check_in_date: تاريخ الدخول (YYYY-MM-DD)
+        duration_months: مدة الإقامة بالأشهر (أو الليالي إذا كان الإيجار يومي)
+        payment_method: طريقة الدفع المختارة (cash، transfer، أو online)
+        conversation_id: معرف المحادثة
+    """
+    from datetime import datetime
+    from app.extensions import db
+    from app.models.hotel_models import Unit
+    from app.models.booking import Booking
+    from app.models.tenant import Tenant
+    from app.agents.tools.payment_tools import generate_payment_link, get_tenant_bank_info
+
+    unit = Unit.query.filter_by(id=unit_id, tenant_id=tenant_id).first()
+    if not unit:
+        return 'عذراً، لم يتم العثور على الوحدة المطلوبة.'
+    if not unit.is_available or unit.status != 'available':
+        return f'عذراً، الوحدة رقم {unit.unit_number} غير متاحة حالياً.'
+
+    tenant = Tenant.query.get(tenant_id)
+    pm = payment_method.lower().strip()
+
+    # إنشاء سجل الحجز الأساسي
+    booking = Booking(
+        tenant_id=tenant_id,
+        booking_number=Booking.generate_booking_number(),
+        booking_type='hotel_room',
+        customer_name=customer_name,
+        customer_phone=customer_phone,
+        conversation_id=conversation_id or None,
+        status='new',
+        unit_id=unit.id,
+        branch_id=unit.branch_id,
+        requested_unit_type=unit.unit_type,
+        notes=f"طلب من الذكاء الاصطناعي - الدفع: {pm}",
+    )
+    
+    try:
+        ci_date = datetime.strptime(check_in_date, '%Y-%m-%d')
+        booking.checkin_date = ci_date.date()
+    except ValueError:
+        pass
+
+    db.session.add(booking)
+    db.session.flush()
+
+    response_lines = [f"تم تسجيل طلب الحجز بنجاح برقم {booking.booking_number} للوحدة {unit.unit_number}."]
+
+    # إشعار التاجر بالحجز الجديد
+    try:
+        from app.utils.notification_service import NotificationService
+        NotificationService.notify_tenant(
+            tenant_id=tenant_id,
+            category='booking',
+            title=f'طلب حجز جديد #{booking.booking_number}',
+            body=f'{customer_name} — طريقة الدفع: {pm}',
+            action_url=f'/app/bookings/{booking.id}',
+            icon='📅',
+        )
+    except Exception as e:
+        import logging; logging.getLogger(__name__).warning(f'[Notification] booking notify error: {e}')
+
+    if pm == 'cash':
+        booking.status = 'confirmed' # حجز الكاش قد يُعتبر مؤكداً مبدئياً
+        db.session.commit()
+        response_lines.append("طريقة الدفع المختارة: كاش. تم تأكيد الحجز المبدئي، بانتظار وصولك.")
+        return "\n".join(response_lines)
+    
+    # لخيارات transfer و online نقوم بإنشاء مسودة عقد
+    draft_result = create_draft_contract.invoke({
+        "tenant_id": tenant_id,
+        "customer_name": customer_name,
+        "customer_phone": customer_phone,
+        "unit_id": unit_id,
+        "duration_months": duration_months,
+        "check_in_date": check_in_date,
+        "conversation_id": conversation_id,
+    })
+    
+    # استخراج رقم العقد لو أمكن
+    import re
+    match = re.search(r'\[contract_id=(\d+)\]', draft_result)
+    contract_id = int(match.group(1)) if match else 0
+    
+    if contract_id:
+        from app.models.contract import Contract
+        contract = Contract.query.get(contract_id)
+        if contract:
+            # تحديث العقد ليرتبط برقم الحجز بالملاحظات
+            contract.notes = f"مرتبط بحجز رقم {booking.booking_number}"
+    
+    db.session.commit()
+    
+    if pm == 'transfer':
+        bank_info = get_tenant_bank_info.invoke({"tenant_id": tenant_id})
+        response_lines.append("لقد قمنا بإنشاء مسودة العقد، وبانتظار تأكيد الدفع.")
+        response_lines.append(bank_info)
+        response_lines.append("بمجرد إرسالك للإيصال واعتماده من الإدارة، سيصلك رابط لتوقيع العقد إلكترونياً، وبعد التوقيع ستحصل على نسختك المعتمدة مباشرة.")
+    else:
+        # online
+        if tenant.payment_gateway_enabled:
+            payment_link = generate_payment_link.invoke({
+                "tenant_id": tenant_id,
+                "contract_id": contract_id,
+            })
+            response_lines.append("لقد قمنا بإنشاء العقد. يرجى إتمام الدفع عبر الرابط التالي:")
+            response_lines.append(payment_link)
+            response_lines.append("بعد إتمام الدفع، سيصلك رابط لتوقيع العقد إلكترونياً واعتماده.")
+        else:
+            response_lines.append("عذراً، الدفع الإلكتروني غير مفعل حالياً. يرجى الدفع عبر التحويل البنكي:")
+            bank_info = get_tenant_bank_info.invoke({"tenant_id": tenant_id})
+            response_lines.append(bank_info)
+            response_lines.append("بعد الاعتماد سيصلك رابط توقيع العقد.")
+
+    return "\n".join(response_lines)
+
+
+@tool
 def get_contract_status(tenant_id: int, contract_number: str = '', contract_id: int = 0) -> str:
     """الاستعلام عن حالة عقد.
     استخدم هذه الأداة عندما يسأل العميل عن حالة عقده.

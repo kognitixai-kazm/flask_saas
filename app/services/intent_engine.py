@@ -583,7 +583,6 @@ class IntentEngine:
                 return None
 
         from app.models.hotel_models import Unit
-        from app.models.booking import Booking
 
         # حاول إيجاد الوحدة:
         # 1) أولاً ضمن آخر وحدات معروضة (سياق المحادثة) — أدق
@@ -668,97 +667,27 @@ class IntentEngine:
 
         unit = candidates[0]
 
-        # أنشئ حجز جديد مرتبط بهذه الوحدة
-        ctx = self._booking_customer_context()
-        booking = Booking(
-            tenant_id=self.tenant_id,
-            booking_number=Booking.generate_booking_number(),
-            booking_type='hotel_room',
-            customer_name=ctx['customer_name'],
-            customer_phone=ctx['customer_phone'],
-            customer_email=ctx['customer_email'],
-            conversation_id=ctx['conversation_id'],
-            visitor_id=ctx['visitor_id'],
-            source=ctx['source'],
-            status='new',
-            unit_id=unit.id,
-            branch_id=unit.branch_id,
-            requested_unit_type=unit.unit_type,
-            notes=f"طلب وحدة محددة من الشات: {original}",
+        # بدلاً من إنشاء الحجز هنا بشكل خاطئ وناقص، نمرر تعليمة واضحة لنموذج الذكاء الاصطناعي
+        # ليقوم بجمع باقي البيانات (التواريخ، عدد الأشخاص، طريقة الدفع) ومن ثم استخدام أدواته
+        # لإنشاء الحجز الفعلي بشكل متكامل.
+        ai_instruction = (
+            f"[نظام داخلي مخفي عن الزائر]: العميل يطلب حجز الوحدة التالية:\n"
+            f"النوع: {unit.type_label} | الرقم: {unit.unit_number} | المعرف: {unit.id}\n\n"
+            f"الرجاء إخبار العميل بأن الوحدة متاحة، واطلب منه باقي بيانات الحجز الضرورية "
+            f"(تاريخ الدخول وتاريخ الخروج أو مدة الإقامة، عدد الأشخاص، والاسم الكريم ورقم الجوال إن لم تكن معروفة). "
+            f"واسأله عن طريقة الدفع المفضلة (كاش، تحويل بنكي، أو دفع أونلاين).\n"
+            f"ملاحظة هامة: لا تقم بتأكيد الحجز فوراً، بل اجمع البيانات أولاً ثم استخدم الأداة المناسبة "
+            f"لإنشاء الحجز أو العقد."
         )
-        db.session.add(booking)
-        db.session.commit()
-
-        # ===== إشعار للتاجر =====
-        try:
-            from app.utils.notification_service import NotificationService
-            NotificationService.notify_tenant(
-                tenant_id=self.tenant_id,
-                category='booking',
-                title=f'حجز جديد #{booking.booking_number}',
-                body=f'{booking.customer_name} — {booking.type_label}',
-                action_url=f'/app/bookings/{booking.id}',
-                icon='📅',
-            )
-        except Exception as e:
-            import logging; logging.getLogger(__name__).warning(f'[Notification] booking notify error: {e}')
-
-        # رسالة موجّهة حسب نمط الفندق
-        tenant_obj = getattr(self, 'tenant', None)
-        mode = getattr(tenant_obj, 'hotel_mode', 'both') if tenant_obj else 'both'
-        type_label_ar = {
-            'room': 'الغرفة', 'apartment': 'الشقة',
-            'suite': 'الجناح', 'villa': 'الفيلا',
-        }
-        nice_type = type_label_ar.get(unit.unit_type, 'الوحدة')
-
-        prices = []
-        if unit.daily_price and float(unit.daily_price) > 0 and mode != 'monthly':
-            prices.append(f"{unit.daily_price} ريال/يوم")
-        if unit.monthly_price and float(unit.monthly_price) > 0 and mode != 'daily':
-            # في النمط اليومي قد تكون متاحة، نتركها
-            prices.append(f"{unit.monthly_price} ريال/شهر")
-        elif unit.monthly_price and float(unit.monthly_price) > 0 and mode == 'daily':
-            prices.append(f"{unit.monthly_price} ريال/شهر")
-
-        lines = [
-            f"تمام، تم تسجيل طلبك على {nice_type} رقم {unit.unit_number} برقم حجز {booking.booking_number}.",
-        ]
-        if prices:
-            lines.append("السعر: " + " | ".join(prices))
-
-        if mode == 'monthly':
-            # شهري → نتجه مباشرة لتدفق العقد
-            from app.models.contract_template import ContractTemplate
-            tpls = ContractTemplate.query.filter_by(
-                tenant_id=self.tenant_id, is_active=True,
-            ).first()
-            if tpls:
-                kws = tpls.trigger_keywords_list()[:1]
-                kw = kws[0] if kws else 'عقد'
-                lines.append(
-                    f"\nلإصدار العقد الشهري والدفع: اكتب كلمة «{kw}» "
-                    "وراح نبدأ بجمع بياناتك خطوة بخطوة."
-                )
-            else:
-                lines.append(
-                    "\nنرتّب لك العقد الشهري الآن. "
-                    "اكتب «عقد» لبدء جمع البيانات الرسمية."
-                )
-        else:
-            lines.append(
-                "\nأرسل لي تواريخ الدخول والخروج (مثال: الدخول 5/2 الخروج 7/2) "
-                "وعدد الأشخاص لو حاب تحدّد."
-            )
 
         meta = {
-            'hotel_booking_id': booking.id,
             'listed_unit_ids': [unit.id],
+            'skip_personalize': True, # لمنع إضافة النداء مرتين
         }
         if unit.images:
             meta['image_delivery_unit_ids'] = [unit.id]
 
-        return IntentResult(reply="\n".join(lines), intent='booking', pipeline_meta=meta)
+        return IntentResult(reply=ai_instruction, intent='booking', pipeline_meta=meta)
 
     # ========================================
     # ردود عامة (لأي نشاط غير الفندق/المطعم) — تردّ على النوايا الشائعة محلياً

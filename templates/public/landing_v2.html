@@ -282,14 +282,46 @@
                     <line x1="200" y1="200" x2="80" y2="320" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
                     <line x1="200" y1="200" x2="320" y2="320" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
 
-                    <!-- Central Node (KognitixAI) -->
-                    <circle cx="200" cy="200" r="45" fill="#09090b" stroke="#818cf8" stroke-width="3" filter="url(#glow)"/>
-                    <circle cx="200" cy="200" r="35" fill="#18181b" stroke="#38bdf8" stroke-width="2" class="animate-pulse"/>
-                    <clipPath id="centerLogoClip">
-                        <circle cx="200" cy="200" r="30" />
-                    </clipPath>
-                    <image href="{{ url_for('static', filename='img/logo.jpg') }}" x="170" y="170" width="60" height="60" clip-path="url(#centerLogoClip)" preserveAspectRatio="xMidYMid slice" />
-                    <circle cx="200" cy="200" r="60" fill="none" stroke="#818cf8" stroke-width="1" stroke-dasharray="4 8" class="animate-[spin_10s_linear_infinite]" style="transform-origin: 200px 200px;"/>
+                    <!-- Central Node: Robot with Logo -->
+                    <g transform="translate(200, 200)">
+                        <!-- Outer energy ring -->
+                        <circle cx="0" cy="0" r="70" fill="none" stroke="#818cf8" stroke-width="1" stroke-dasharray="4 8" class="animate-[spin_10s_linear_infinite]" style="transform-origin: 0px 0px;"/>
+                        
+                        <!-- Floating animation for the robot -->
+                        <g class="animate-float">
+                            <!-- Background Glow for Robot -->
+                            <circle cx="0" cy="0" r="45" fill="none" stroke="#38bdf8" stroke-width="0" filter="url(#glow)"/>
+                            
+                            <!-- Antenna -->
+                            <path d="M 0 -35 L 0 -50" stroke="#818cf8" stroke-width="2"/>
+                            <circle cx="0" cy="-52" r="3" fill="#38bdf8" class="animate-pulse"/>
+                            
+                            <!-- Head -->
+                            <rect x="-18" y="-35" width="36" height="24" rx="6" fill="#09090b" stroke="#818cf8" stroke-width="2"/>
+                            <!-- Eyes -->
+                            <rect x="-10" y="-28" width="6" height="3" rx="1.5" fill="#38bdf8" class="animate-pulse"/>
+                            <rect x="4" y="-28" width="6" height="3" rx="1.5" fill="#38bdf8" class="animate-pulse"/>
+                            <!-- Mouth -->
+                            <line x1="-5" y1="-18" x2="5" y2="-18" stroke="#818cf8" stroke-width="2" stroke-linecap="round"/>
+                            
+                            <!-- Neck -->
+                            <rect x="-6" y="-11" width="12" height="6" fill="#18181b" stroke="#818cf8" stroke-width="1"/>
+                            
+                            <!-- Shoulders / Torso -->
+                            <path d="M -30 -5 L 30 -5 Q 40 -5 38 10 L 32 35 Q 30 45 18 45 L -18 45 Q -30 45 -32 35 L -38 10 Q -40 -5 -30 -5 Z" fill="#09090b" stroke="#818cf8" stroke-width="2" filter="url(#glow)"/>
+                            
+                            <!-- Arms -->
+                            <path d="M -36 5 Q -50 5 -50 20 L -50 35" fill="none" stroke="#818cf8" stroke-width="6" stroke-linecap="round"/>
+                            <path d="M 36 5 Q 50 5 50 20 L 50 35" fill="none" stroke="#818cf8" stroke-width="6" stroke-linecap="round"/>
+                            
+                            <!-- Logo on Chest -->
+                            <circle cx="0" cy="20" r="16" fill="#18181b" stroke="#38bdf8" stroke-width="1.5"/>
+                            <clipPath id="robotChestClip">
+                                <circle cx="0" cy="20" r="14" />
+                            </clipPath>
+                            <image href="{{ url_for('static', filename='img/logo.jpg') }}" x="-14" y="6" width="28" height="28" clip-path="url(#robotChestClip)" preserveAspectRatio="xMidYMid slice" />
+                        </g>
+                    </g>
 
                     <!-- Nodes -->
                     <!-- Node 1: WhatsApp -->
