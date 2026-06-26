@@ -284,17 +284,22 @@ class ChatService:
         try:
             from app.services.ai_service import AIService
             from app.services.pricing_service import PricingService
+            from app.agents.model_resolver import ModelResolver
+            from app.models.ai_model import AIModel
 
             current_app.logger.info(f'[Chat/AI] Attempting AI reply for tenant={tenant.slug}')
 
-            # جلب النموذج المختار
-            model = AIService.get_tenant_model(tenant.id)
-            if not model:
-                current_app.logger.warning(f'[Chat/AI] No AI model available/configured for tenant={tenant.slug}')
-                ChatService._notify_ai_failure(tenant.id, "لم يتم اختيار أو تفعيل نموذج ذكاء اصطناعي")
+            # الاعتماد الكلي على نقطة المركز للـ Failover التي ستمر على جميع المزودين (أولويتهم لـ GPT)
+            resolved_model = ModelResolver.resolve(tenant.id)
+            if not resolved_model:
+                current_app.logger.warning(f'[Chat/AI] No AI provider available/configured for tenant={tenant.slug}')
+                ChatService._notify_ai_failure(tenant.id, "لم يتم العثور على مزود صالح أو مفتاح فعال")
                 return None
 
-            current_app.logger.info(f'[Chat/AI] Selected Provider: {model.provider}, Model: {model.model_id}')
+            current_app.logger.info(f'[Chat/AI] Provider {resolved_model.provider} is selected and ready.')
+
+            # جلب كائن النموذج 
+            model = AIModel.query.get(resolved_model.ai_model_db_id)
 
             # التحقق من رصيد التاجر قبل الاستدعاء
             ok, msg, price = PricingService.can_afford(
@@ -305,23 +310,6 @@ class ChatService:
             if not ok:
                 current_app.logger.warning(f'[Chat/AI] Insufficient balance for AI tenant={tenant.slug}: {msg}')
                 return None
-
-            # فحص خفيف وسريع لصلاحية المفتاح (مع كاش TTL)
-            api_key = AIService._get_api_key(model.provider, tenant.id)
-            if not api_key:
-                current_app.logger.warning(f'[Chat/AI] Missing API key for provider={model.provider} tenant={tenant.slug}')
-                ChatService._notify_ai_failure(tenant.id, "مفتاح الربط (API Key) غير موجود")
-                return None
-            
-            current_app.logger.info(f'[Chat/AI] API Key found for provider={model.provider}')
-
-            key_ok, key_reason = AIService.validate_api_key(model.provider, api_key)
-            if not key_ok:
-                current_app.logger.warning(f'[Chat/AI] API key invalid for provider={model.provider}: {key_reason}')
-                ChatService._notify_ai_failure(tenant.id, f"مفتاح الربط غير صالح ({key_reason})")
-                return None
-
-            current_app.logger.info(f'[Chat/AI] API Key is valid.')
 
             system_prompt = ChatService._build_prompt(tenant, conversation)
             if local_context:

@@ -37,26 +37,42 @@ class ModelResolver:
         تحديد النموذج والمفتاح المناسب.
         يبحث في جميع المزودين المتاحين مرتبين حسب الأولوية، ويختار أول مزود يمتلك مفتاح API ونموذج فعال.
         """
-        # التأكد من إعطاء الأولوية لـ openai بشكل ثابت كما طلب المستخدم
+        import logging
+        from app.services.ai_service import AIService
+        logger = logging.getLogger(__name__)
+
         providers = AIProvider.query.filter_by(is_active=True).all()
-        # فرز المزودين بحيث يكون openai في المقدمة دائماً
+        # إعطاء الأولوية لـ OpenAI (GPT) كخيار أول دائماً كما طلب المستخدم
         providers.sort(key=lambda p: 0 if p.slug == 'openai' else p.priority)
         
         for provider in providers:
-            # استخدام مفتاح المزود إذا كان موجوداً، أو جلب من الإعدادات
-            api_key = getattr(provider, 'api_key_decrypted', None)
+            logger.info(f"Selected Provider: {provider.slug}")
             
-            # جلب النموذج الافتراضي للمزود
+            # جلب النموذج الخاص بهذا المزود
             db_model = AIModel.query.filter_by(provider_id=provider.id, is_active=True).first()
-            
             if not db_model:
+                logger.info("No active AIModel Found")
+                logger.info("Trying Next Provider...")
                 continue
                 
+            api_key = getattr(provider, 'api_key_decrypted', None)
             if not api_key:
                 api_key = ModelResolver._get_platform_key(provider.slug)
                 
             if not api_key:
+                logger.warning("Missing API Key")
+                logger.info("Trying Next Provider...")
                 continue
+            
+            # التحقق الفعلي من صحة المفتاح
+            is_valid, reason = AIService.validate_api_key(provider.slug, api_key)
+            if not is_valid:
+                logger.warning(f"Invalid API Key ({reason})")
+                logger.info("Trying Next Provider...")
+                continue
+
+            logger.info("API Key Found")
+            logger.info("Sending AI Request")
 
             return ResolvedModel(
                 provider=provider.slug,
@@ -69,6 +85,8 @@ class ModelResolver:
                 is_tenant_key=False,
             )
             
+        logger.error("No Available AI Provider")
+        logger.error("Fallback Local Reply")
         return None
 
     @staticmethod
