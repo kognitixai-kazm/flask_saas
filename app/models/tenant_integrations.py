@@ -12,7 +12,7 @@ class TenantIntegration(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     
     provider_name = db.Column(db.String(50), nullable=False, default='twilio')
-    api_key = db.Column(db.String(255), nullable=False, default='')
+    api_key = db.Column(db.Text, nullable=False, default='')
     sender_id = db.Column(db.String(50), nullable=False, default='')
     
     is_active = db.Column(db.Boolean, default=False, nullable=False)

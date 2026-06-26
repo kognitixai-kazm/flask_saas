@@ -12,7 +12,7 @@ class AIProvider(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     
     # مفتاح الـ API الخاص بالمزود (مخزن مشفر)
-    api_key = db.Column(db.String(500), default='')
+    api_key = db.Column(db.Text, default='')
     
     # أولوية المزود في نظام Fallback (1 هو الأعلى أولوية)
     priority = db.Column(db.Integer, default=10)

@@ -29,24 +29,24 @@ class BotConfig(db.Model):
     # ========== مفاتيح API ==========
     # معالج صور (Cloudinary / ImgBB / Imgur)
     image_provider = db.Column(db.String(30), default='')
-    image_api_key = db.Column(db.String(300), default='')
-    image_api_secret = db.Column(db.String(300), default='')
+    image_api_key = db.Column(db.Text, default='')
+    image_api_secret = db.Column(db.Text, default='')
 
     # معالج صوت (Google Speech / OpenAI Whisper)
     voice_provider = db.Column(db.String(30), default='')
-    voice_api_key = db.Column(db.String(300), default='')
+    voice_api_key = db.Column(db.Text, default='')
 
     # AI إضافي (خاص بالتاجر — بديل عن المفتاح العام) (DEPRECATED: تم نقلها للإدارة المركزية)
     # openai | anthropic | google_gemini | mistral
     # سيتم إزالتها لاحقاً بالكامل، نتركها الآن كتعليقات لتجنب الأخطاء في أجزاء قديمة
     # ai_provider = db.Column(db.String(30), default='')
-    # ai_api_key = db.Column(db.String(500), default='')
+    # ai_api_key = db.Column(db.Text, default='')
     # ai_model = db.Column(db.String(50), default='')
 
     # بوت الاتصال الصوتي (Twilio / Vonage)
     call_provider = db.Column(db.String(30), default='')  # twilio | vonage | bland
-    call_api_key = db.Column(db.String(300), default='')
-    call_api_secret = db.Column(db.String(300), default='')
+    call_api_key = db.Column(db.Text, default='')
+    call_api_secret = db.Column(db.Text, default='')
     call_phone_number = db.Column(db.String(30), default='')
     call_webhook_url = db.Column(db.String(500), default='')
     call_is_active = db.Column(db.Boolean, default=False)
