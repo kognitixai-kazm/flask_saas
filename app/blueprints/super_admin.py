@@ -56,6 +56,18 @@ def run_db_fix():
     except Exception as e:
         db.session.rollback()
 
+    try:
+        # 4. إزالة النماذج المهملة (glm, minimax)
+        obsolete_slugs = ['glm', 'minimax']
+        for slug in obsolete_slugs:
+            prov = AIProvider.query.filter_by(slug=slug).first()
+            if prov:
+                AIModel.query.filter_by(provider_id=prov.id).delete()
+                db.session.delete(prov)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+
     providers_data = [
         ('google', 'Google Gemini', 4),
         ('anthropic', 'Anthropic Claude', 2),

@@ -50,13 +50,13 @@ class ModelResolver:
                 continue
                 
             if not api_key:
-                api_key = ModelResolver._get_platform_key(db_model.provider)
+                api_key = ModelResolver._get_platform_key(provider.slug)
                 
             if not api_key:
                 continue
 
             return ResolvedModel(
-                provider=db_model.provider,
+                provider=provider.slug,
                 model_id=db_model.model_id,
                 api_key=api_key,
                 display_name=db_model.display_name,

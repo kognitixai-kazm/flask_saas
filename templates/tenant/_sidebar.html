@@ -27,7 +27,7 @@
     <div class="px-5 py-4 border-b border-gray-100 text-right">
         <div class="flex items-center gap-3">
             {% if g.current_tenant.logo_path %}
-                <img src="{{ g.current_tenant.logo_path }}" alt="" class="w-12 h-12 rounded-xl object-contain bg-gray-50 p-1 border border-gray-100">
+                <img src="{{ g.current_tenant.logo_path }}" alt="" class="w-12 h-12 rounded-xl object-contain bg-gray-50 p-1 border border-gray-100" onerror="this.onerror=null; this.outerHTML='<div class=\'w-12 h-12 rounded-xl gradient-brand text-white grid place-items-center font-extrabold\'>{{ (g.current_tenant.business_name or \'?\')[:1] }}</div>';">
             {% else %}
                 <div class="w-12 h-12 rounded-xl gradient-brand text-white grid place-items-center font-extrabold">
                     {{ (g.current_tenant.business_name or '?')[:1] }}
