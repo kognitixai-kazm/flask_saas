@@ -284,6 +284,20 @@ def process_booking_request(
 
     db.session.commit()
 
+    # إرسال رابط التوقيع إلى الإيميل إن وُجد
+    if sign_url and customer_email:
+        try:
+            from app.services.email_service import EmailService
+            EmailService.send_signature_link(
+                to_email=customer_email,
+                tenant_name=tenant.business_name,
+                contract_number=contract.contract_number,
+                sign_url=sign_url
+            )
+            response_lines.append(f'\n📧 تم إرسال رابط توقيع العقد إلى بريدك الإلكتروني ({customer_email}).')
+        except Exception as e:
+            logger.error(f'[Email] Failed to send signature link: {e}')
+
     # ── التحويل البنكي ──────────────────────────────────────────────
     if pm == 'transfer':
         bank_info = get_tenant_bank_info.invoke({'tenant_id': tenant_id})

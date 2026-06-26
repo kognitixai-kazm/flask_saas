@@ -302,6 +302,47 @@ class EmailService:
         return EmailService._send(to_email, subject, body_html)
 
     @staticmethod
+    def send_signature_link(
+        to_email: str,
+        tenant_name: str,
+        contract_number: str,
+        sign_url: str,
+    ) -> bool:
+        """إرسال رابط توقيع العقد للعميل."""
+        import html as _html
+        subject = f"توقيع العقد الإلكتروني - {tenant_name}"
+        
+        safe_tenant = _html.escape(tenant_name)
+        safe_contract = _html.escape(contract_number)
+        
+        body_html = f"""
+        <div dir="rtl" style="font-family:Tahoma,Arial,sans-serif; padding:20px; max-width:600px; margin:0 auto; border:1px solid #e2e8f0; border-radius:10px; background-color:#f8fafc;">
+            <div style="text-align:center; padding-bottom:15px; border-bottom:2px solid #2563eb;">
+                <h2 style="color:#2563eb; margin:0;">{safe_tenant}</h2>
+            </div>
+            
+            <div style="padding:20px 0; color:#333; line-height:1.6;">
+                <h3 style="color:#10b981; margin-top:0;">رابط توقيع العقد ✍️</h3>
+                <p>عزيزي العميل،</p>
+                <p>تم تجهيز مسودة العقد رقم <strong>{safe_contract}</strong>.</p>
+                <p>نرجو منك مراجعة العقد وتوقيعه إلكترونياً عبر الرابط التالي:</p>
+                
+                <div style="text-align:center; margin:30px 0;">
+                    <a href="{sign_url}" style="display:inline-block; background:#10b981; color:#fff; padding:12px 25px; text-decoration:none; border-radius:5px; font-weight:bold; font-size:16px;">
+                        توقيع العقد الآن
+                    </a>
+                </div>
+                
+                <p style="margin-top:25px; font-size:14px; text-align:center; color:#64748b;">
+                    نشكر لكم ثقتكم وحسن تعاونكم،<br>
+                    <strong>إدارة {safe_tenant}</strong>
+                </p>
+            </div>
+        </div>
+        """
+        return EmailService._send(to_email, subject, body_html)
+
+    @staticmethod
     def _send(to: str, subject: str, body_html: str) -> bool:
         """إرسال الإيميل (SMTP أو console)."""
         mail_enabled = current_app.config.get('MAIL_ENABLED', False)

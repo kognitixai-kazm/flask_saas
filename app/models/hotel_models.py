@@ -96,6 +96,7 @@ class Unit(db.Model):
 
     STATUS_LABELS = {
         'available': 'متاحة',
+        'reserved': 'محجوزة مبدئياً',
         'booked': 'مؤجرة / محجوزة',
         'maintenance': 'صيانة',
         'office': 'مكتب',
@@ -105,6 +106,7 @@ class Unit(db.Model):
 
     STATUS_COLORS = {
         'available': 'bg-green-100 text-green-700 border-green-200',
+        'reserved': 'bg-yellow-100 text-yellow-700 border-yellow-200',
         'booked': 'bg-red-100 text-red-700 border-red-200',
         'maintenance': 'bg-yellow-100 text-yellow-800 border-yellow-200',
         'office': 'bg-gray-800 text-gray-100 border-gray-900',

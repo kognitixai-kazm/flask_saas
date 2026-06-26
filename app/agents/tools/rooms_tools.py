@@ -32,7 +32,16 @@ def search_available_rooms(
     query = query.filter(Unit.status == 'available')
 
     if unit_type:
-        query = query.filter_by(unit_type=unit_type.lower())
+        ut = unit_type.lower().strip()
+        if ut in ['شقة', 'شقه', 'apartment', 'شقق']:
+            ut = 'apartment'
+        elif ut in ['غرفة', 'غرفه', 'room', 'غرف']:
+            ut = 'room'
+        elif ut in ['جناح', 'suite', 'اجنحة', 'أجنحة']:
+            ut = 'suite'
+        elif ut in ['فيلا', 'villa', 'فلل']:
+            ut = 'villa'
+        query = query.filter_by(unit_type=ut)
     if max_price > 0:
         query = query.filter(Unit.monthly_price <= max_price)
     if min_bedrooms > 0:

@@ -74,10 +74,7 @@ class FrontDeskAgent(BaseAgent):
             search_available_rooms,
             get_room_details,
             get_branches_list,
-            create_draft_contract,
             get_contract_status,
-            generate_payment_link,
-            get_tenant_bank_info,
             process_booking_request,
         ]
 
