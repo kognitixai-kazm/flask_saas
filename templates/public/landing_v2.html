@@ -24,7 +24,7 @@
                     keyframes: {
                         marquee: {
                             '0%': { transform: 'translateX(0%)' },
-                            '100%': { transform: 'translateX(100%)' },
+                            '100%': { transform: 'translateX(-50%)' },
                         }
                     }
                 }
@@ -218,7 +218,7 @@
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased overflow-x-hidden w-full max-w-[100vw]">
 
     <!-- Glowing Backgrounds -->
     <div class="glow-bg glow-bg-1"></div>
@@ -248,8 +248,8 @@
 
                 <!-- CTA Button -->
                 <div class="hidden md:flex items-center">
-                    <a href="https://wa.me/966538344673" target="_blank" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-full font-bold hover:shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-all transform hover:scale-105">
-                        احجز عرضاً تجريبياً
+                    <a href="{{ url_for('registration.step1') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-full font-bold hover:shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-all transform hover:scale-105">
+                        أنشئ حسابك الآن مجاناً
                     </a>
                 </div>
 
@@ -271,8 +271,8 @@
                 <a href="#dashboard" class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg">المنصة</a>
                 <a href="#contact" class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg">تواصل معنا</a>
                 <div class="mt-4 pt-4 border-t border-gray-800">
-                    <a href="https://wa.me/966538344673" target="_blank" class="block w-full text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full font-bold shadow-lg">
-                        احجز عرضاً تجريبياً
+                    <a href="{{ url_for('registration.step1') }}" class="block w-full text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full font-bold shadow-lg">
+                        أنشئ حسابك الآن مجاناً
                     </a>
                 </div>
             </div>
@@ -302,14 +302,14 @@
                 </p>
                 
                 <div class="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-                    <a href="https://wa.me/966538344673" target="_blank" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:-translate-y-1 glow-blue flex items-center justify-center gap-2">
-                        احجز عرضاً تجريبياً مجاناً
+                    <a href="{{ url_for('registration.step1') }}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:-translate-y-1 glow-blue flex items-center justify-center gap-2">
+                        أنشئ حسابك الآن مجاناً
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     
-                    <a href="#dashboard" class="w-full sm:w-auto glass-card hover:bg-white/10 text-white px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 border border-white/10">
-                        <i class="fas fa-play-circle text-purple-400"></i>
-                        شاهد المنصة في دقيقة
+                    <a href="https://wa.me/966538344673" target="_blank" class="w-full sm:w-auto glass-card hover:bg-white/10 text-white px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 border border-white/10">
+                        <i class="fab fa-whatsapp text-green-400 text-xl"></i>
+                        تواصل معنا
                     </a>
                 </div>
             </div>
@@ -606,6 +606,9 @@
                         
                         <!-- Sidebar -->
                         <div class="hidden md:flex flex-col gap-4 col-span-1 border-l border-white/5 pl-6">
+                            <div class="mb-6 flex items-center justify-start border-b border-white/5 pb-6">
+                                {% with tagline=False, size='small', variant='dark' %}{% include "_brand.html" %}{% endwith %}
+                            </div>
                             <div class="flex items-center gap-3 p-3 bg-blue-500/10 text-blue-400 rounded-xl font-bold">
                                 <i class="fas fa-home"></i> الرئيسية
                             </div>
@@ -725,8 +728,8 @@
                 <p class="mt-4 text-sm text-gray-400 font-mono tracking-wider" dir="ltr">+966 53 834 4673</p>
             </div>
             
-            <a href="https://wa.me/966538344673" target="_blank" class="inline-block mt-4 bg-transparent border border-blue-500/50 hover:bg-blue-500/10 text-white px-8 py-3 rounded-full font-bold transition-all">
-                احجز عرضاً تجريبياً
+            <a href="{{ url_for('registration.step1') }}" class="inline-block mt-4 bg-transparent border border-blue-500/50 hover:bg-blue-500/10 text-white px-8 py-3 rounded-full font-bold transition-all">
+                أنشئ حسابك الآن مجاناً
             </a>
         </div>
     </section>
