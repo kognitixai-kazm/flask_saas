@@ -57,23 +57,7 @@ with app.app_context():
     else:
         openai.priority = 3
 
-    # 4. GLM (Zhipu)
-    glm = AIProvider.query.filter_by(slug='glm').first()
-    if not glm:
-        glm = AIProvider(slug='glm', name='Zhipu GLM', priority=1)
-        db.session.add(glm)
-        db.session.flush()
-    else:
-        glm.priority = 1
 
-    # 5. MiniMax
-    minimax = AIProvider.query.filter_by(slug='minimax').first()
-    if not minimax:
-        minimax = AIProvider(slug='minimax', name='MiniMax', priority=5)
-        db.session.add(minimax)
-        db.session.flush()
-    else:
-        minimax.priority = 5
 
     # ADD MODELS
     models_to_add = [
@@ -83,9 +67,7 @@ with app.app_context():
         (anthropic, 'claude-3-5-sonnet-20240620', 'Claude 3.5 Sonnet', True),
         (anthropic, 'claude-3-haiku-20240307', 'Claude 3 Haiku', False),
         (openai, 'gpt-4o', 'GPT-4o', True),
-        (openai, 'gpt-4o-mini', 'GPT-4o Mini', False),
-        (glm, 'glm-4', 'GLM-4', True),
-        (minimax, 'abab6.5', 'MiniMax abab6.5', True)
+        (openai, 'gpt-4o-mini', 'GPT-4o Mini', False)
     ]
 
     for prov, m_id, d_name, is_def in models_to_add:

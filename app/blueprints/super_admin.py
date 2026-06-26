@@ -56,13 +56,10 @@ def run_db_fix():
     except Exception as e:
         db.session.rollback()
 
-    # 3. إعداد مزودي الذكاء الاصطناعي
     providers_data = [
         ('google', 'Google Gemini', 4),
         ('anthropic', 'Anthropic Claude', 2),
-        ('openai', 'OpenAI', 3),
-        ('glm', 'Zhipu GLM', 1),
-        ('minimax', 'MiniMax', 5)
+        ('openai', 'OpenAI', 3)
     ]
     
     prov_objs = {}
@@ -83,9 +80,7 @@ def run_db_fix():
         ('anthropic', 'claude-3-5-sonnet-20240620', 'Claude 3.5 Sonnet', True),
         ('anthropic', 'claude-3-haiku-20240307', 'Claude 3 Haiku', False),
         ('openai', 'gpt-4o', 'GPT-4o', True),
-        ('openai', 'gpt-4o-mini', 'GPT-4o Mini', False),
-        ('glm', 'glm-4', 'GLM-4', True),
-        ('minimax', 'abab6.5', 'MiniMax abab6.5', True)
+        ('openai', 'gpt-4o-mini', 'GPT-4o Mini', False)
     ]
 
     for p_slug, m_id, d_name, is_def in models_to_add:

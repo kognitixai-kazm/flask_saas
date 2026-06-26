@@ -35,39 +35,38 @@ class ModelResolver:
     def resolve(tenant_id: int, agent_type: str = 'general') -> Optional[ResolvedModel]:
         """
         تحديد النموذج والمفتاح المناسب.
+        يبحث في جميع المزودين المتاحين مرتبين حسب الأولوية، ويختار أول مزود يمتلك مفتاح API ونموذج فعال.
         """
-        # جلب أفضل مزود مفعل حسب الأولوية
-        provider = AIProvider.query.filter_by(is_active=True).order_by(AIProvider.priority.asc()).first()
+        providers = AIProvider.query.filter_by(is_active=True).order_by(AIProvider.priority.asc()).all()
         
-        if not provider:
-            return None
+        for provider in providers:
+            # استخدام مفتاح المزود إذا كان موجوداً، أو جلب من الإعدادات
+            api_key = getattr(provider, 'api_key_decrypted', None)
             
-        # جلب النموذج الافتراضي للمزود
-        db_model = AIModel.query.filter_by(provider_id=provider.id, is_active=True).first()
-        if not db_model:
-            db_model = AIModel.query.filter_by(is_active=True).first()
+            # جلب النموذج الافتراضي للمزود
+            db_model = AIModel.query.filter_by(provider_id=provider.id, is_active=True).first()
             
-        if not db_model:
-            return None
+            if not db_model:
+                continue
+                
+            if not api_key:
+                api_key = ModelResolver._get_platform_key(db_model.provider)
+                
+            if not api_key:
+                continue
 
-        # استخدام مفتاح المزود إذا كان موجوداً، أو جلب من الإعدادات
-        api_key = getattr(provider, 'api_key_decrypted', None)
-        if not api_key:
-            api_key = ModelResolver._get_platform_key(db_model.provider)
+            return ResolvedModel(
+                provider=db_model.provider,
+                model_id=db_model.model_id,
+                api_key=api_key,
+                display_name=db_model.display_name,
+                ai_model_db_id=db_model.id,
+                price_per_message=float(db_model.price_per_message),
+                cost_per_message=float(db_model.cost_per_message),
+                is_tenant_key=False,
+            )
             
-        if not api_key:
-            return None
-
-        return ResolvedModel(
-            provider=db_model.provider,
-            model_id=db_model.model_id,
-            api_key=api_key,
-            display_name=db_model.display_name,
-            ai_model_db_id=db_model.id,
-            price_per_message=float(db_model.price_per_message),
-            cost_per_message=float(db_model.cost_per_message),
-            is_tenant_key=False,
-        )
+        return None
 
     @staticmethod
     def _get_platform_key(provider: str) -> str:

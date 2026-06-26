@@ -230,8 +230,21 @@ def dashboard():
     # === تحليلات ===
     analytics = _build_analytics(tenant)
 
+    # === حالة وكلاء الذكاء الاصطناعي ===
+    ai_status = {'ok': True, 'reason': '', 'message': ''}
+    from app.services.pricing_service import PricingService
+    can_afford, afford_msg, _ = PricingService.can_afford(tenant.id, 'ai_message')
+    
+    if not can_afford:
+        ai_status = {'ok': False, 'reason': 'balance', 'message': f'تم إيقاف الوكلاء مؤقتاً: {afford_msg}'}
+    else:
+        from app.agents.model_resolver import ModelResolver
+        resolved = ModelResolver.resolve(tenant.id)
+        if not resolved:
+            ai_status = {'ok': False, 'reason': 'platform', 'message': 'الوكلاء متوقفون حالياً بسبب عطل فني في المنصة (لا يوجد مزود متاح). جاري العمل على حله.'}
+
     return render_template('tenant/dashboard.html',
-        tenant=tenant, stats=stats, activity_data=activity_data, analytics=analytics)
+        tenant=tenant, stats=stats, activity_data=activity_data, analytics=analytics, ai_status=ai_status)
 
 
 def _build_analytics(tenant):

@@ -1,780 +1,840 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KognitixAI - وكلاء الذكاء الاصطناعي لأعمالك</title>
+    <title>KognitixAI - وكلاء الذكاء الاصطناعي لأعمالك</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        dark: '#0a0d1a',
-                        primary: '#3b82f6',
-                        secondary: '#8b5cf6',
-                        accent: '#06b6d4',
+                        background: '#09090b', /* Zinc 950 */
+                        surface: '#18181b', /* Zinc 900 */
+                        border: 'rgba(255,255,255,0.08)',
+                        primary: '#38bdf8', /* Sky 400 */
+                        secondary: '#818cf8', /* Indigo 400 */
                     },
                     fontFamily: {
                         sans: ['Tajawal', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     animation: {
-                        'marquee': 'marquee 25s linear infinite',
+                        'marquee': 'marquee 40s linear infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
                         marquee: {
                             '0%': { transform: 'translateX(0%)' },
-                            '100%': { transform: 'translateX(-50%)' },
+                            '100%': { transform: 'translateX(50%)' }, /* RTL moves right */
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-12px)' },
                         }
                     }
                 }
             }
         }
     </script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        dark: '#050816',
-                        primary: '#3b82f6',
-                        secondary: '#8b5cf6',
-                        accent: '#06b6d4',
-                    },
-                    fontFamily: {
-                        sans: ['Tajawal', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-                body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #0a0d1a;
-            color: #ffffff;
+        body {
+            background-color: theme('colors.background');
+            color: #d4d4d8; /* zinc-300 */
+            -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            width: 100%;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: #fafafa; /* zinc-50 */
         }
 
-        /* Glassmorphism */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
+        /* Subtle mesh background */
+        .mesh-bg {
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.05) 0px, transparent 40%),
+                radial-gradient(at 100% 100%, rgba(129, 140, 248, 0.05) 0px, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* Hexagon Grid Pattern */
+        .grid-pattern {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        }
+        
+        /* Glass effect */
+        .glass {
+            background: rgba(9, 9, 11, 0.6);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid theme('colors.border');
         }
 
-        .glass-nav {
-            background: rgba(10, 13, 26, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        /* Mouse Tracking Glow Cards */
+        .glow-card {
+            position: relative;
+            background: rgba(24, 24, 27, 0.4);
+            border: 1px solid theme('colors.border');
+            border-radius: 1.5rem;
+            overflow: hidden;
+            transition: border-color 0.3s ease, background 0.3s ease;
+        }
+        .glow-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(600px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(255,255,255,0.06), transparent 40%);
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .glow-card:hover {
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(24, 24, 27, 0.6);
+        }
+        .glow-card:hover::before {
+            opacity: 1;
+        }
+        .glow-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Premium Buttons */
+        .btn-primary {
+            background: #fafafa;
+            color: #09090b;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: #e4e4e7;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
 
-        /* Gradients */
+        .btn-secondary {
+            background: transparent;
+            color: #fafafa;
+            border: 1px solid theme('colors.border');
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        /* Animated SVG Paths */
+        .path-flow {
+            stroke-dasharray: 12;
+            animation: flowDash 15s linear infinite;
+        }
+        @keyframes flowDash {
+            to { stroke-dashoffset: -200; }
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
         .text-gradient {
-            background: linear-gradient(to right, #60a5fa, #a78bfa, #22d3ee);
+            background: linear-gradient(to right, #e4e4e7, #71717a);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        .border-gradient {
-            position: relative;
-            background: rgba(255, 255, 255, 0.03);
-            background-clip: padding-box;
-            border: 1px solid transparent;
-            border-radius: 1rem;
-        }
-
-        .border-gradient::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0; bottom: 0; left: 0;
-            z-index: -1;
-            margin: -1px;
-            border-radius: inherit;
-            background: linear-gradient(to right, #3b82f6, #8b5cf6);
-        }
-
-        /* Glowing Effects */
-        .glow-blue {
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-        }
-
-        .glow-purple {
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
-        }
-
-        .glow-bg {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            z-index: -1;
-            opacity: 0.3;
-        }
-
-        .glow-bg-1 {
-            background: #3b82f6;
-            width: 400px;
-            height: 400px;
-            top: -100px;
-            right: -100px;
-        }
-
-        .glow-bg-2 {
-            background: #8b5cf6;
-            width: 300px;
-            height: 300px;
-            bottom: 100px;
-            left: -50px;
-        }
         
-        .glow-bg-3 {
-            background: #06b6d4;
-            width: 350px;
-            height: 350px;
-            top: 40%;
-            right: 30%;
-        }
-
-        #particles-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-        }
-
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-        
-        .floating-delayed {
-            animation: floating 4s ease-in-out infinite 1s;
-        }
-
-        @keyframes floating {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .hover-card {
-            transition: all 0.4s ease;
-        }
-        
-        .hover-card:hover {
-            transform: translateY(-8px);
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(139, 92, 246, 0.3);
-            box-shadow: 0 10px 25px -10px rgba(139, 92, 246, 0.2);
-        }
-        
-        .neural-bg {
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 100% 100%, 40px 40px, 40px 40px;
-        }
-        
-        html {
-            scroll-behavior: smooth;
-        }
-        
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0a0d1a; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #3b82f6; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #8b5cf6; 
-        }
-        
-        /* Floating FAB */
-        .fab-whatsapp {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 99;
-            animation: pulse-ring 2s infinite;
-        }
-        @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
-            70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        .text-gradient-blue {
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
     </style>
 </head>
-<body class="antialiased overflow-x-hidden w-full max-w-[100vw]">
+<body class="mesh-bg bg-background text-zinc-300">
 
-    <!-- Glowing Backgrounds -->
-    <div class="glow-bg glow-bg-1"></div>
-    <div class="glow-bg glow-bg-2"></div>
-    <div class="glow-bg glow-bg-3"></div>
-    
-    <!-- Particles Canvas -->
-    <canvas id="particles-canvas"></canvas>
+    <!-- Background Grid -->
+    <div class="fixed inset-0 grid-pattern pointer-events-none -z-10"></div>
 
     <!-- Navigation -->
-    <nav class="glass-nav fixed w-full z-50 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
+    <nav class="fixed w-full z-50 glass transition-all duration-300 h-16 md:h-20 flex items-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="flex justify-between items-center h-full">
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center cursor-pointer">
-                    {% with tagline=True, variant='dark' %}{% include "_brand.html" %}{% endwith %}
+                    {% with tagline=False, variant='dark' %}{% include "_brand.html" %}{% endwith %}
                 </div>
 
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex space-x-8 space-x-reverse items-center">
-                    <a href="#home" class="text-gray-300 hover:text-white transition-colors font-medium">الرئيسية</a>
-                    <a href="#solutions" class="text-gray-300 hover:text-white transition-colors font-medium">الحلول</a>
-                    <a href="#agents" class="text-gray-300 hover:text-white transition-colors font-medium">الوكلاء</a>
-                    <a href="#dashboard" class="text-gray-300 hover:text-white transition-colors font-medium">المنصة</a>
-                    <a href="#contact" class="text-gray-300 hover:text-white transition-colors font-medium">تواصل معنا</a>
+                <div class="hidden md:flex space-x-8 space-x-reverse items-center text-sm font-medium">
+                    <a href="#home" class="text-zinc-400 hover:text-white transition-colors">الرئيسية</a>
+                    <a href="#how-it-works" class="text-zinc-400 hover:text-white transition-colors">كيف نعمل</a>
+                    <a href="#solutions" class="text-zinc-400 hover:text-white transition-colors">الحلول</a>
+                    <a href="#agents" class="text-zinc-400 hover:text-white transition-colors">الوكلاء</a>
+                    <a href="#dashboard" class="text-zinc-400 hover:text-white transition-colors">المنصة</a>
                 </div>
 
                 <!-- CTA Button -->
-                <div class="hidden md:flex items-center">
-                    <a href="{{ url_for('registration.step1') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-full font-bold hover:shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-all transform hover:scale-105">
-                        أنشئ حسابك الآن مجاناً
+                <div class="hidden md:flex items-center gap-4">
+                    <a href="{{ url_for('registration.step1') }}" class="text-sm font-bold btn-primary px-5 py-2 rounded-full flex items-center gap-2">
+                        ابدأ الآن
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     </a>
                 </div>
 
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden flex items-center">
-                    <button id="mobile-menu-btn" class="text-gray-300 hover:text-white focus:outline-none">
-                        <i class="fas fa-bars text-2xl"></i>
+                    <button id="mobile-menu-btn" class="text-zinc-300 hover:text-white focus:outline-none p-2 rounded-lg hover:bg-white/5">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Mobile Menu Panel -->
-        <div id="mobile-menu" class="hidden md:hidden glass-card border-t border-gray-800 absolute w-full top-20 left-0 bg-dark/95 z-40">
-            <div class="px-4 pt-2 pb-6 space-y-1">
-                <a href="#home" class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg">الرئيسية</a>
-                <a href="#solutions" class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg">الحلول</a>
-                <a href="#agents" class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg">الوكلاء</a>
-                <a href="#dashboard" class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg">المنصة</a>
-                <a href="#contact" class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg">تواصل معنا</a>
-                <div class="mt-4 pt-4 border-t border-gray-800">
-                    <a href="{{ url_for('registration.step1') }}" class="block w-full text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full font-bold shadow-lg">
-                        أنشئ حسابك الآن مجاناً
-                    </a>
-                </div>
+        <div id="mobile-menu" class="hidden absolute w-full top-[100%] left-0 bg-background border-b border-border z-40">
+            <div class="px-4 py-6 space-y-2 flex flex-col items-center">
+                <a href="#home" class="block w-full text-center py-3 text-base font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl transition">الرئيسية</a>
+                <a href="#how-it-works" class="block w-full text-center py-3 text-base font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl transition">كيف نعمل</a>
+                <a href="#solutions" class="block w-full text-center py-3 text-base font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl transition">الحلول</a>
+                <a href="#agents" class="block w-full text-center py-3 text-base font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl transition">الوكلاء</a>
+                <a href="#dashboard" class="block w-full text-center py-3 text-base font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl transition">المنصة</a>
+                <div class="w-full h-px bg-border my-2"></div>
+                <a href="{{ url_for('registration.step1') }}" class="block w-full text-center btn-primary px-6 py-3 rounded-xl font-bold">
+                    أنشئ حسابك الآن
+                </a>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden neural-bg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full flex flex-col lg:flex-row items-center gap-12">
+    <section id="home" class="relative min-h-[100svh] flex items-center pt-20 md:pt-0 pb-16 overflow-hidden w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
             
             <!-- Hero Content -->
-            <div class="lg:w-1/2 text-center lg:text-right mt-10 lg:mt-0 hero-text">
-                <div class="inline-block px-4 py-1.5 rounded-full glass-card border-blue-500/30 text-blue-400 text-sm font-bold mb-6 backdrop-blur-md">
-                    <span class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                        نظام متطور ومستقبل الأتمتة
-                    </span>
+            <div class="w-full lg:w-1/2 text-center lg:text-right flex flex-col items-center lg:items-start pt-10 lg:pt-0 hero-elem">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/10 text-primary text-xs md:text-sm font-medium mb-6 md:mb-8 backdrop-blur-md">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                    نظام إدارة وأتمتة متطور
                 </div>
                 
-                <h1 class="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight mb-6">
-                    وكلاء ذكاء اصطناعي <br />
-                    <span class="text-gradient">لرفع كفاءة أعمالك</span>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] mb-6 tracking-tight">
+                    وكلاء ذكاء اصطناعي<br class="hidden sm:block" />
+                    <span class="text-gradient-blue">لرفع كفاءة أعمالك</span>
                 </h1>
                 
-                <p class="text-base md:text-lg lg:text-xl text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                    منصة <strong class="text-white">KognitixAI</strong> تقدم لك أكثر من مجرد أدوات؛ نحن نوفر لك فريقاً متكاملاً من وكلاء الذكاء الاصطناعي ليديروا الحجوزات، التحصيل، وخدمة العملاء. أتمت عملياتك لتركز على نمو أعمالك!
+                <p class="text-sm sm:text-base lg:text-lg text-zinc-400 mb-8 md:mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-light">
+                    منصة <strong class="text-white font-medium">KognitixAI</strong> تقدم فريقاً متكاملاً من وكلاء الذكاء الاصطناعي لإدارة الحجوزات، التحصيل، والتواصل الاجتماعي (نشر واستقبال). تتكامل بضغطة زر مع WhatsApp API وجميع مواقعك ومنصاتك لتتمت عملياتك بالكامل.
                 </p>
                 
-                <div class="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-                    <a href="{{ url_for('registration.step1') }}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:-translate-y-1 glow-blue flex items-center justify-center gap-2">
-                        أنشئ حسابك الآن مجاناً
-                        <i class="fas fa-arrow-left"></i>
+                <div class="flex flex-col sm:flex-row items-center gap-3 md:gap-4 w-full sm:w-auto justify-center lg:justify-start">
+                    <a href="{{ url_for('registration.step1') }}" class="w-full sm:w-auto btn-primary px-8 py-3.5 md:py-4 rounded-full font-bold text-sm md:text-base flex items-center justify-center gap-2">
+                        ابدأ رحلة الأتمتة
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
                     </a>
                     
-                    <a href="https://wa.me/966538344673" target="_blank" class="w-full sm:w-auto glass-card hover:bg-white/10 text-white px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 border border-white/10">
-                        <i class="fab fa-whatsapp text-green-400 text-xl"></i>
+                    <a href="https://wa.me/966538344673" target="_blank" class="w-full sm:w-auto btn-secondary px-8 py-3.5 md:py-4 rounded-full font-medium text-sm md:text-base flex items-center justify-center gap-2">
+                        <i data-lucide="message-circle" class="w-5 h-5 text-green-400"></i>
                         تواصل معنا
                     </a>
                 </div>
             </div>
 
-            <!-- Hero Visuals -->
-            <div class="lg:w-1/2 relative h-[300px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center hero-visuals mt-10 lg:mt-0">
+            <!-- Hero Visual (AI Network) -->
+            <div class="w-full lg:w-1/2 relative h-[300px] sm:h-[400px] lg:h-[600px] flex items-center justify-center hero-elem hero-visual">
+                <div class="absolute inset-0 bg-primary/5 rounded-full filter blur-[100px] -z-10 animate-pulse-slow"></div>
                 
-                <!-- Main 3D Robot / AI Core Representation -->
-                <div class="relative z-20 floating w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 p-1 glow-purple">
-                    <div class="w-full h-full rounded-full bg-dark flex items-center justify-center relative overflow-hidden">
-                        <div class="absolute inset-0 bg-blue-500/20 animate-pulse"></div>
-                        <i class="fas fa-robot text-5xl md:text-7xl lg:text-9xl text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400"></i>
-                    </div>
-                </div>
+                <!-- Custom Hub Architecture SVG -->
+                <svg viewBox="0 0 400 400" class="w-full h-full max-w-[600px]" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <!-- Glow filter -->
+                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="4" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                        <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="#818cf8" stop-opacity="0.8"/>
+                        </linearGradient>
+                    </defs>
 
-                <!-- Floating Cards - Hidden on Mobile -->
-                <!-- WhatsApp Card -->
-                <div class="hidden md:flex absolute bottom-10 left-0 lg:-left-10 z-30 glass-card p-4 rounded-2xl items-center gap-4 floating w-64 border border-green-500/30 shadow-lg">
-                    <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
-                        <i class="fab fa-whatsapp text-xl"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-bold text-white">تم الرد على العميل</div>
-                        <div class="text-xs text-gray-400">في أقل من 3 ثوانٍ</div>
-                    </div>
-                </div>
+                    <!-- Connections -->
+                    <line x1="200" y1="200" x2="80" y2="80" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
+                    <line x1="200" y1="200" x2="320" y2="80" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
+                    <line x1="200" y1="200" x2="40" y2="200" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
+                    <line x1="200" y1="200" x2="360" y2="200" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
+                    <line x1="200" y1="200" x2="80" y2="320" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
+                    <line x1="200" y1="200" x2="320" y2="320" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
 
-                <!-- Payment Reminder -->
-                <div class="hidden md:flex absolute top-1/4 -right-5 lg:-right-10 z-10 glass-card p-4 rounded-2xl items-center gap-4 floating-delayed w-56 border border-purple-500/30 shadow-lg">
-                    <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                    </div>
-                    <div>
-                        <div class="text-sm font-bold text-white">تم التحصيل</div>
-                        <div class="text-xs text-gray-400">+4,500 ريال</div>
-                    </div>
-                </div>
+                    <!-- Central Node (KognitixAI) -->
+                    <circle cx="200" cy="200" r="45" fill="#09090b" stroke="#818cf8" stroke-width="3" filter="url(#glow)"/>
+                    <circle cx="200" cy="200" r="35" fill="#18181b" stroke="#38bdf8" stroke-width="2" class="animate-pulse"/>
+                    <clipPath id="centerLogoClip">
+                        <circle cx="200" cy="200" r="30" />
+                    </clipPath>
+                    <image href="{{ url_for('static', filename='img/logo.jpg') }}" x="170" y="170" width="60" height="60" clip-path="url(#centerLogoClip)" preserveAspectRatio="xMidYMid slice" />
+                    <circle cx="200" cy="200" r="60" fill="none" stroke="#818cf8" stroke-width="1" stroke-dasharray="4 8" class="animate-[spin_10s_linear_infinite]" style="transform-origin: 200px 200px;"/>
 
-                <!-- Animated Chart Element -->
-                <div class="hidden md:block absolute bottom-0 right-10 z-10 glass-card p-4 rounded-2xl floating w-48 border border-white/10 opacity-80">
-                    <div class="flex items-end gap-2 h-16 w-full">
-                        <div class="w-1/4 bg-blue-500/50 rounded-t h-1/3"></div>
-                        <div class="w-1/4 bg-blue-500/70 rounded-t h-2/3"></div>
-                        <div class="w-1/4 bg-purple-500/70 rounded-t h-1/2"></div>
-                        <div class="w-1/4 bg-gradient-to-t from-blue-500 to-purple-500 rounded-t h-full"></div>
-                    </div>
-                    <div class="text-xs text-center mt-2 text-gray-300 font-bold">نمو الإيرادات</div>
-                </div>
+                    <!-- Nodes -->
+                    <!-- Node 1: WhatsApp -->
+                    <circle cx="80" cy="80" r="24" fill="#09090b" stroke="#22c55e" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: 0s;"/>
+                    <g transform="translate(68, 68) scale(0.5)" fill="#22c55e">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                    </g>
+                    <text x="80" y="125" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">WhatsApp</text>
 
+                    <!-- Node 2: Facebook/Insta -->
+                    <circle cx="320" cy="80" r="24" fill="#09090b" stroke="#3b82f6" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -1s;"/>
+                    <g transform="translate(308, 68) scale(0.5)" fill="#3b82f6">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </g>
+                    <text x="320" y="125" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">Social Media</text>
+
+                    <!-- Node 3: Hotels (Activity) -->
+                    <circle cx="40" cy="200" r="24" fill="#09090b" stroke="#eab308" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -2s;"/>
+                    <g transform="translate(28, 188) scale(0.5)" fill="#eab308">
+                        <path d="M3 14V3a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v11M10 21v-7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7M14 6h.01M10 6h.01M18 6h.01M18 10h.01M14 10h.01M10 10h.01M2 21h20" stroke="currentColor" stroke-width="2"/>
+                    </g>
+                    <text x="40" y="240" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">الفنادق</text>
+
+                    <!-- Node 4: ERP/PMS -->
+                    <circle cx="360" cy="200" r="24" fill="#09090b" stroke="#a855f7" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -0.5s;"/>
+                    <g transform="translate(348, 188) scale(0.5)" fill="#a855f7" stroke="currentColor" stroke-width="2">
+                        <path d="M4 6h16v12H4zM4 10h16M4 14h16M12 6v12"/>
+                    </g>
+                    <text x="360" y="240" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">ERP / PMS</text>
+
+                    <!-- Node 5: Real Estate -->
+                    <circle cx="80" cy="320" r="24" fill="#09090b" stroke="#f43f5e" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -1.5s;"/>
+                    <g transform="translate(68, 308) scale(0.5)" fill="none" stroke="#f43f5e" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </g>
+                    <text x="80" y="360" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">العقارات</text>
+
+                    <!-- Node 6: Payments -->
+                    <circle cx="320" cy="320" r="24" fill="#09090b" stroke="#06b6d4" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -2.5s;"/>
+                    <g transform="translate(308, 308) scale(0.5)" fill="none" stroke="#06b6d4" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </g>
+                    <text x="320" y="360" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">الدفع</text>
+
+                    <!-- Animated Data Packets (Dots moving along lines) -->
+                    <circle r="3" fill="#22c55e" filter="url(#glow)">
+                        <animateMotion dur="2s" repeatCount="indefinite" path="M80,80 L200,200" />
+                    </circle>
+                    <circle r="3" fill="#eab308" filter="url(#glow)">
+                        <animateMotion dur="3s" repeatCount="indefinite" path="M200,200 L40,200" />
+                    </circle>
+                    <circle r="3" fill="#a855f7" filter="url(#glow)">
+                        <animateMotion dur="2.5s" repeatCount="indefinite" path="M200,200 L360,200" />
+                    </circle>
+                    <circle r="3" fill="#06b6d4" filter="url(#glow)">
+                        <animateMotion dur="2s" repeatCount="indefinite" path="M320,320 L200,200" />
+                    </circle>
+                    <circle r="3" fill="#f43f5e" filter="url(#glow)">
+                        <animateMotion dur="3.5s" repeatCount="indefinite" path="M80,320 L200,200" />
+                    </circle>
+                    <circle r="3" fill="#3b82f6" filter="url(#glow)">
+                        <animateMotion dur="2.8s" repeatCount="indefinite" path="M320,80 L200,200" />
+                    </circle>
+                </svg>
+
+                <!-- Floating Data Cards Removed per request -->
             </div>
         </div>
     </section>
 
-    <!-- Integrations Marquee -->
-    <section class="py-8 border-y border-white/5 bg-white/[0.02] relative z-10 overflow-hidden">
+    <!-- Enterprise Logos Marquee -->
+    <section class="py-10 border-y border-border bg-surface/30 relative z-10 overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 text-center mb-6">
-            <p class="text-gray-400 text-sm font-bold tracking-widest">تكامل سلس مع منصات التواصل الاجتماعي والأنظمة الخارجية</p>
+            <p class="text-zinc-500 text-xs font-semibold tracking-wider uppercase">تكامل سلس مع أقوى الأنظمة والمنصات</p>
         </div>
-        <div class="flex overflow-hidden relative w-full">
-            <div class="flex whitespace-nowrap animate-marquee gap-16 items-center w-max" dir="ltr">
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-whatsapp text-3xl text-green-500"></i> <span class="font-bold text-xl">WhatsApp</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-instagram text-3xl text-pink-500"></i> <span class="font-bold text-xl">Instagram</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-facebook text-3xl text-blue-600"></i> <span class="font-bold text-xl">Facebook</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-tiktok text-3xl text-white"></i> <span class="font-bold text-xl">TikTok</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-twitter text-3xl text-blue-400"></i> <span class="font-bold text-xl">X (Twitter)</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fas fa-hotel text-3xl text-purple-400"></i> <span class="font-bold text-xl">PMS Systems</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fas fa-credit-card text-3xl text-blue-500"></i> <span class="font-bold text-xl">Payment Gateways</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fas fa-database text-3xl text-cyan-400"></i> <span class="font-bold text-xl">ERP / CRM</span></div>
-                
+        <div class="flex overflow-hidden relative w-full mask-edges">
+            <!-- Fade edges using CSS mask -->
+            <div class="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-background via-transparent to-background w-full h-full"></div>
+            
+            <div class="flex whitespace-nowrap animate-marquee items-center" dir="ltr">
+                <!-- Group 1 -->
+                <div class="flex items-center gap-16 md:gap-24 px-8 md:px-12 opacity-50 hover:opacity-100 transition-opacity duration-300">
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="message-square" class="w-6 h-6 text-green-500"></i><span class="font-bold text-lg">WhatsApp API</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="instagram" class="w-6 h-6 text-pink-500"></i><span class="font-bold text-lg">Instagram</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="facebook" class="w-6 h-6 text-blue-600"></i><span class="font-bold text-lg">Facebook</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="database" class="w-6 h-6 text-cyan-400"></i><span class="font-bold text-lg">Oracle ERP</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="layout-dashboard" class="w-6 h-6 text-purple-400"></i><span class="font-bold text-lg">PMS Systems</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="credit-card" class="w-6 h-6 text-blue-400"></i><span class="font-bold text-lg">Stripe / Moyasar</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="webhook" class="w-6 h-6 text-orange-400"></i><span class="font-bold text-lg">Webhooks</span></div>
+                </div>
                 <!-- Duplicate for seamless loop -->
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-whatsapp text-3xl text-green-500"></i> <span class="font-bold text-xl">WhatsApp</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-instagram text-3xl text-pink-500"></i> <span class="font-bold text-xl">Instagram</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-facebook text-3xl text-blue-600"></i> <span class="font-bold text-xl">Facebook</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-tiktok text-3xl text-white"></i> <span class="font-bold text-xl">TikTok</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fab fa-twitter text-3xl text-blue-400"></i> <span class="font-bold text-xl">X (Twitter)</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fas fa-hotel text-3xl text-purple-400"></i> <span class="font-bold text-xl">PMS Systems</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fas fa-credit-card text-3xl text-blue-500"></i> <span class="font-bold text-xl">Payment Gateways</span></div>
-                <div class="flex items-center gap-3 text-gray-400 hover:text-white transition"><i class="fas fa-database text-3xl text-cyan-400"></i> <span class="font-bold text-xl">ERP / CRM</span></div>
+                <div class="flex items-center gap-16 md:gap-24 px-8 md:px-12 opacity-50 hover:opacity-100 transition-opacity duration-300">
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="message-square" class="w-6 h-6 text-green-500"></i><span class="font-bold text-lg">WhatsApp API</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="instagram" class="w-6 h-6 text-pink-500"></i><span class="font-bold text-lg">Instagram</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="facebook" class="w-6 h-6 text-blue-600"></i><span class="font-bold text-lg">Facebook</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="database" class="w-6 h-6 text-cyan-400"></i><span class="font-bold text-lg">Oracle ERP</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="layout-dashboard" class="w-6 h-6 text-purple-400"></i><span class="font-bold text-lg">PMS Systems</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="credit-card" class="w-6 h-6 text-blue-400"></i><span class="font-bold text-lg">Stripe / Moyasar</span></div>
+                    <div class="flex items-center gap-2 grayscale hover:grayscale-0 transition"><i data-lucide="webhook" class="w-6 h-6 text-orange-400"></i><span class="font-bold text-lg">Webhooks</span></div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- How It Works Section -->
-    <section class="py-20 relative z-10">
+    <!-- How It Works (Bento Box) -->
+    <section id="how-it-works" class="py-20 md:py-32 relative z-10 w-full overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 section-header">
-                <h2 class="text-blue-400 font-bold tracking-widest text-sm uppercase mb-2">البساطة في الاستخدام</h2>
-                <h3 class="text-3xl md:text-4xl font-black mb-4">كيف تعمل المنصة؟</h3>
-                <p class="text-gray-400 max-w-2xl mx-auto text-lg">ثلاث خطوات بسيطة لتنطلق نحو أتمتة شاملة لأعمالك.</p>
+            <div class="text-center mb-16 section-elem">
+                <h2 class="text-primary font-semibold tracking-wide text-xs uppercase mb-3">آلية العمل</h2>
+                <h3 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">أتمتة متكاملة في ثلاث خطوات</h3>
+                <p class="text-zinc-400 max-w-2xl mx-auto text-sm md:text-base font-light">بنية تحتية متطورة مصممة لتكون سهلة الإعداد، قوية الأداء، وقابلة للتوسع.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center p-8 glass-card rounded-3xl hover-card border-t border-blue-500/30">
-                    <div class="w-20 h-20 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-3xl mx-auto mb-6 border border-blue-500/30 shadow-lg">1</div>
-                    <h4 class="text-2xl font-bold mb-3">اربط حساباتك</h4>
-                    <p class="text-gray-400 text-sm leading-relaxed">قم بربط قنوات التواصل كواتساب والأنظمة الخارجية المعتمدة لديك بضغطة زر وبكل أمان وموثوقية.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-fr">
+                <!-- Step 1 -->
+                <div class="glow-card p-8 md:p-10 flex flex-col items-start section-elem bg-gradient-to-br from-surface to-background border-t border-t-primary/20">
+                    <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-6 shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    </div>
+                    <div class="text-primary font-mono text-xs mb-2">01. INTEGRATION</div>
+                    <h4 class="text-xl font-bold mb-3">ربط الأنظمة</h4>
+                    <p class="text-zinc-400 text-sm leading-relaxed font-light">اربط قنوات التواصل كواتساب وأنظمة ERP/PMS الخاصة بك من خلال واجهات برمجية (APIs) آمنة وموثوقة بضغطة زر.</p>
                 </div>
-                <div class="text-center p-8 glass-card rounded-3xl hover-card border-t border-purple-500/30">
-                    <div class="w-20 h-20 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-3xl mx-auto mb-6 border border-purple-500/30 shadow-lg">2</div>
-                    <h4 class="text-2xl font-bold mb-3">خصص وكلاءك</h4>
-                    <p class="text-gray-400 text-sm leading-relaxed">حدد مهام الوكلاء ودربهم على طبيعة عملك وخدماتك ليصبحوا خبراء في التعامل مع عملائك بأفضل صورة.</p>
+                
+                <!-- Step 2 -->
+                <div class="glow-card p-8 md:p-10 flex flex-col items-start section-elem bg-gradient-to-br from-surface to-background border-t border-t-secondary/20">
+                    <div class="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary mb-6 shadow-[0_0_15px_rgba(129,140,248,0.2)]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+                    </div>
+                    <div class="text-secondary font-mono text-xs mb-2">02. CONFIGURATION</div>
+                    <h4 class="text-xl font-bold mb-3">إضافة بيانات نشاطك</h4>
+                    <p class="text-zinc-400 text-sm leading-relaxed font-light">أضف فروعك، خدماتك، ومعلومات الدفع. سيتكيف وكلاؤنا مع بياناتك فوراً ويبدأون العمل تلقائياً دون أي تدريب معقد.</p>
                 </div>
-                <div class="text-center p-8 glass-card rounded-3xl hover-card border-t border-cyan-500/30">
-                    <div class="w-20 h-20 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-3xl mx-auto mb-6 border border-cyan-500/30 shadow-lg">3</div>
-                    <h4 class="text-2xl font-bold mb-3">انطلق للأتمتة</h4>
-                    <p class="text-gray-400 text-sm leading-relaxed">دع النظام يعمل 24/7 نيابة عنك، وراقب نمو مبيعاتك وانخفاض تكاليفك التشغيلية في الوقت الفعلي.</p>
+                
+                <!-- Step 3 -->
+                <div class="glow-card p-8 md:p-10 flex flex-col items-start section-elem bg-gradient-to-br from-surface to-background border-t border-t-white/20">
+                    <div class="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white mb-6 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    </div>
+                    <div class="text-white font-mono text-xs mb-2">03. AUTOMATION</div>
+                    <h4 class="text-xl font-bold mb-3">التشغيل الآلي</h4>
+                    <p class="text-zinc-400 text-sm leading-relaxed font-light">دع الوكلاء يعملون 24/7. تابع أداءهم من خلال لوحة تحكم فورية واستمتع بخفض التكاليف التشغيلية وزيادة المبيعات.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Solutions Section -->
-    <section id="solutions" class="py-24 relative z-10">
+    <section id="solutions" class="py-20 md:py-32 relative z-10 w-full bg-surface/20 border-y border-border">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 section-header">
-                <h2 class="text-blue-400 font-bold tracking-widest text-sm uppercase mb-2">حلول متخصصة</h2>
-                <h3 class="text-3xl md:text-5xl font-black mb-4">مصممة خصيصاً لقطاعك</h3>
-                <p class="text-gray-400 max-w-2xl mx-auto text-lg">منصة مرنة تتكيف مع احتياجات عملك لتوفير تجربة استثنائية لعملائك.</p>
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 section-elem">
+                <div class="max-w-2xl text-center md:text-right w-full">
+                    <h2 class="text-secondary font-semibold tracking-wide text-xs uppercase mb-3">حلول مخصصة</h2>
+                    <h3 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">نماذج ذكاء اصطناعي لقطاعك</h3>
+                    <p class="text-zinc-400 text-sm md:text-base font-light">تم تدريب وكلاءنا مسبقاً على سيناريوهات الأعمال المعقدة لتقديم أداء بشري متفوق.</p>
+                </div>
+                <div class="hidden md:block">
+                    <a href="#contact" class="btn-secondary px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2">
+                        تصفح كل الحلول <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    </a>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Card 1 -->
-                <div class="glass-card rounded-3xl p-8 hover-card border-t border-blue-500/30 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full -z-10 transition-transform group-hover:scale-150"></div>
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-2xl text-white mb-6 shadow-lg shadow-blue-500/30">
-                        <i class="fas fa-hotel"></i>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Hotel Card -->
+                <div class="glow-card group section-elem">
+                    <div class="h-48 bg-gradient-to-br from-surface to-background border-b border-border relative overflow-hidden flex items-center justify-center">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542314831-c6a4d27ce6a2?q=80&w=800&auto=format&fit=crop')] bg-cover bg-center opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
+                        <i data-lucide="building-2" class="w-16 h-16 text-white group-hover:text-primary transition-colors duration-500 relative z-10 drop-shadow-lg"></i>
                     </div>
-                    <h4 class="text-2xl font-bold mb-4">الفنادق</h4>
-                    <ul class="space-y-4 text-gray-300">
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-blue-400"></i>
-                            <span>إدارة الحجوزات بذكاء</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-blue-400"></i>
-                            <span>الرد الفوري على استفسارات العملاء</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-blue-400"></i>
-                            <span>إرسال وتوثيق العقود آلياً</span>
-                        </li>
-                    </ul>
+                    <div class="p-8">
+                        <h4 class="text-xl font-bold mb-4 text-white">قطاع الضيافة والفنادق</h4>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-primary shrink-0"></i>
+                                <span>إدارة الحجوزات المعقدة آلياً</span>
+                            </li>
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-primary shrink-0"></i>
+                                <span>دعم النزلاء بلغات متعددة 24/7</span>
+                            </li>
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-primary shrink-0"></i>
+                                <span>إصدار الفواتير والعقود رقمياً</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
-                <!-- Card 2 -->
-                <div class="glass-card rounded-3xl p-8 hover-card border-t border-purple-500/30 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-bl-full -z-10 transition-transform group-hover:scale-150"></div>
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-700 flex items-center justify-center text-2xl text-white mb-6 shadow-lg shadow-purple-500/30">
-                        <i class="fas fa-building"></i>
+                <!-- Real Estate Card -->
+                <div class="glow-card group section-elem">
+                    <div class="h-48 bg-gradient-to-br from-surface to-background border-b border-border relative overflow-hidden flex items-center justify-center">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
+                        <i data-lucide="home" class="w-16 h-16 text-white group-hover:text-secondary transition-colors duration-500 relative z-10 drop-shadow-lg"></i>
                     </div>
-                    <h4 class="text-2xl font-bold mb-4">الشقق المفروشة</h4>
-                    <ul class="space-y-4 text-gray-300">
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-purple-400"></i>
-                            <span>إدارة العقود وتجديدها</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-purple-400"></i>
-                            <span>التحصيل الآلي للإيجارات</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-purple-400"></i>
-                            <span>متابعة تنبيهات انتهاء العقود</span>
-                        </li>
-                    </ul>
+                    <div class="p-8">
+                        <h4 class="text-xl font-bold mb-4 text-white">العقارات والشقق المخدومة</h4>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-secondary shrink-0"></i>
+                                <span>جدولة مواعيد المعاينة الذكية</span>
+                            </li>
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-secondary shrink-0"></i>
+                                <span>تحصيل الإيجارات وإرسال التنبيهات</span>
+                            </li>
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-secondary shrink-0"></i>
+                                <span>متابعة بلاغات الصيانة آلياً</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
-                <!-- Card 3 -->
-                <div class="glass-card rounded-3xl p-8 hover-card border-t border-cyan-500/30 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-bl-full -z-10 transition-transform group-hover:scale-150"></div>
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-2xl text-white mb-6 shadow-lg shadow-cyan-500/30">
-                        <i class="fas fa-utensils"></i>
+                <!-- Restaurants Card -->
+                <div class="glow-card group section-elem">
+                    <div class="h-48 bg-gradient-to-br from-surface to-background border-b border-border relative overflow-hidden flex items-center justify-center">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
+                        <i data-lucide="utensils" class="w-16 h-16 text-white group-hover:text-primary transition-colors duration-500 relative z-10 drop-shadow-lg"></i>
                     </div>
-                    <h4 class="text-2xl font-bold mb-4">المطاعم والمقاهي</h4>
-                    <ul class="space-y-4 text-gray-300">
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-cyan-400"></i>
-                            <span>استقبال الطلبات بذكاء</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-cyan-400"></i>
-                            <span>إدارة حجوزات الطاولات</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check-circle text-cyan-400"></i>
-                            <span>خدمة عملاء فائقة السرعة</span>
-                        </li>
-                    </ul>
+                    <div class="p-8">
+                        <h4 class="text-xl font-bold mb-4 text-white">المطاعم والمقاهي</h4>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-white shrink-0"></i>
+                                <span>استقبال الطلبات عبر واتساب</span>
+                            </li>
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-white shrink-0"></i>
+                                <span>إدارة حجوزات الطاولات</span>
+                            </li>
+                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                                <i data-lucide="check" class="w-5 h-5 text-white shrink-0"></i>
+                                <span>الإجابة على استفسارات المنيو</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- Mobile CTA for Solutions -->
+            <div class="mt-8 text-center md:hidden">
+                <a href="#contact" class="btn-secondary px-6 py-3 rounded-full text-sm font-medium inline-flex items-center gap-2">
+                    تصفح كل الحلول <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                </a>
             </div>
         </div>
     </section>
 
-    <!-- AI Agents Section -->
-    <section id="agents" class="py-24 relative z-10 bg-dark/50">
+    <!-- AI Agents Component Section -->
+    <section id="agents" class="py-20 md:py-32 relative z-10 w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 section-header">
-                <h2 class="text-purple-400 font-bold tracking-widest text-sm uppercase mb-2">فريقك الذكي</h2>
-                <h3 class="text-3xl md:text-5xl font-black mb-4">تعرف على وكلاء الذكاء الاصطناعي</h3>
-                <p class="text-gray-400 max-w-2xl mx-auto text-lg mb-6">موظفون افتراضيون يعملون بكفاءة 100% بدون إجازات أو أخطاء.</p>
-                <div class="inline-block px-6 py-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-bold shadow-[0_0_15px_rgba(139,92,246,0.15)] max-w-3xl">
-                    <i class="fas fa-bolt mr-2 text-yellow-400"></i> <span class="text-white">نحن لا نقدم مجرد "شات بوت"!</span> بل نقدم وكلاء ذكاء اصطناعي متطورين ينفذون المهام المعقدة، يتكاملون مع أنظمتك، ويتطورون مستقبلاً لخدمة أعمالك.
+            <div class="text-center mb-16 section-elem">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-zinc-300 text-xs md:text-sm font-medium mb-4">
+                    <i data-lucide="cpu" class="w-4 h-4 text-primary"></i> أكثر من مجرد شات بوت
                 </div>
+                <h3 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">تعرف على وكلاء الذكاء الاصطناعي</h3>
+                <p class="text-zinc-400 max-w-2xl mx-auto text-sm md:text-base font-light">وحدات برمجية ذكية قادرة على اتخاذ القرارات، تنفيذ المهام، والتكامل المباشر مع قواعد البيانات الخاصة بك.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Agent 1 -->
-                <div class="border-gradient p-1 hover-card agent-card">
-                    <div class="bg-dark h-full rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden">
-                        <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
-                        <div class="w-24 h-24 rounded-full bg-blue-900/40 border border-blue-500/50 flex items-center justify-center mb-6 glow-blue relative">
-                            <div class="absolute inset-0 border-2 border-blue-400 rounded-full animate-[spin_4s_linear_infinite] border-t-transparent"></div>
-                            <i class="fas fa-headset text-3xl text-blue-400"></i>
-                        </div>
-                        <h4 class="text-2xl font-bold mb-2">وكيل الاستقبال الذكي</h4>
-                        <p class="text-gray-400 mb-6 text-sm">يرد على العملاء، يستقبل الحجوزات، ويقدم الدعم الفني على مدار الساعة عبر الواتساب والموقع.</p>
-                        <div class="w-full bg-gray-900/80 rounded-xl p-4 border border-white/5 flex justify-between items-center mt-auto">
-                            <span class="text-xs text-gray-500">متاح</span>
-                            <span class="text-sm font-bold text-blue-400">24/7</span>
-                        </div>
+                <div class="bg-surface border border-border rounded-2xl p-6 md:p-8 hover:border-primary/50 transition duration-300 section-elem relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg border border-border flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden bg-background">
+                        <img src="{{ url_for('static', filename='images/sarah.png') }}" alt="سارة" class="w-full h-full object-cover">
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-lg font-bold text-white">سارة - موظفة الاستقبال</h4>
+                        <span class="text-[10px] font-mono px-2 py-1 rounded bg-background border border-border text-zinc-400">v2.4.1</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 font-light mb-6">تتحدث بعدة لغات، تتعامل مع كافة استفسارات العملاء الأولية، توجه الطلبات، وتدير الحجوزات بأسلوب احترافي يحاكي الموظف البشري.</p>
+                    <div class="w-full h-1 bg-background rounded-full overflow-hidden">
+                        <div class="h-full bg-primary w-[98%]"></div>
+                    </div>
+                    <div class="mt-2 text-[10px] font-mono text-zinc-500 flex justify-between">
+                        <span>معدل الدقة</span>
+                        <span class="text-primary">98.5%</span>
                     </div>
                 </div>
 
                 <!-- Agent 2 -->
-                <div class="border-gradient p-1 hover-card agent-card">
-                    <div class="bg-dark h-full rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden">
-                        <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-purple-400 to-purple-600"></div>
-                        <div class="w-24 h-24 rounded-full bg-purple-900/40 border border-purple-500/50 flex items-center justify-center mb-6 glow-purple relative">
-                            <div class="absolute inset-0 border-2 border-purple-400 rounded-full animate-[spin_4s_linear_infinite_reverse] border-b-transparent"></div>
-                            <i class="fas fa-wallet text-3xl text-purple-400"></i>
-                        </div>
-                        <h4 class="text-2xl font-bold mb-2">وكيل التحصيل الذكي</h4>
-                        <p class="text-gray-400 mb-6 text-sm">يتابع الفواتير، يرسل رسائل تذكير لطيفة، ويدير عمليات الدفع بكفاءة وأمان تام.</p>
-                        <div class="w-full bg-gray-900/80 rounded-xl p-4 border border-white/5 flex justify-between items-center mt-auto">
-                            <span class="text-xs text-gray-500">أداء</span>
-                            <span class="text-sm font-bold text-purple-400">آلي 100%</span>
-                        </div>
+                <div class="bg-surface border border-border rounded-2xl p-6 md:p-8 hover:border-secondary/50 transition duration-300 section-elem relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg border border-border flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden bg-background">
+                        <img src="{{ url_for('static', filename='images/khalid.png') }}" alt="خالد" class="w-full h-full object-cover">
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75" style="animation-delay: 0.5s"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-lg font-bold text-white">خالد - وكيل التحصيل</h4>
+                        <span class="text-[10px] font-mono px-2 py-1 rounded bg-background border border-border text-zinc-400">v1.8.0</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 font-light mb-6">يصدر الفواتير ويقوم بإنشاء العقود الإلكترونية. يتابع الفواتير المستحقة ويرسل روابط الدفع الآمنة بشكل تلقائي.</p>
+                    <div class="w-full h-1 bg-background rounded-full overflow-hidden">
+                        <div class="h-full bg-secondary w-[100%]"></div>
+                    </div>
+                    <div class="mt-2 text-[10px] font-mono text-zinc-500 flex justify-between">
+                        <span>التشغيل الآلي</span>
+                        <span class="text-secondary">100%</span>
                     </div>
                 </div>
 
                 <!-- Agent 3 -->
-                <div class="border-gradient p-1 hover-card agent-card">
-                    <div class="bg-dark h-full rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden">
-                        <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-cyan-600"></div>
-                        <div class="w-24 h-24 rounded-full bg-cyan-900/40 border border-cyan-500/50 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(6,182,212,0.5)] relative">
-                            <div class="absolute inset-0 border-2 border-cyan-400 rounded-full animate-[spin_3s_linear_infinite] border-l-transparent border-r-transparent"></div>
-                            <i class="fas fa-chart-line text-3xl text-cyan-400"></i>
-                        </div>
-                        <h4 class="text-2xl font-bold mb-2">المستشار المالي الذكي</h4>
-                        <p class="text-gray-400 mb-6 text-sm">يحلل الإيرادات والمصروفات، يقدم تقارير دقيقة، ويقترح استراتيجيات لزيادة الأرباح.</p>
-                        <div class="w-full bg-gray-900/80 rounded-xl p-4 border border-white/5 flex justify-between items-center mt-auto">
-                            <span class="text-xs text-gray-500">دقة</span>
-                            <span class="text-sm font-bold text-cyan-400">عالية</span>
-                        </div>
+                <div class="bg-surface border border-border rounded-2xl p-6 md:p-8 hover:border-white/30 transition duration-300 section-elem relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg border border-border flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden bg-background">
+                        <img src="{{ url_for('static', filename='images/tariq.png') }}" alt="طارق" class="w-full h-full object-cover">
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" style="animation-delay: 1s"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-lg font-bold text-white">طارق - المستشار المالي</h4>
+                        <span class="text-[10px] font-mono px-2 py-1 rounded bg-background border border-border text-zinc-400">v3.0.beta</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 font-light mb-6">يحلل البيانات المالية، يكتشف أنماط الإنفاق، ويصدر تقارير وتوصيات دقيقة لزيادة الربحية وتحسين الأداء.</p>
+                    <div class="w-full h-1 bg-background rounded-full overflow-hidden">
+                        <div class="h-full bg-white w-[92%]"></div>
+                    </div>
+                    <div class="mt-2 text-[10px] font-mono text-zinc-500 flex justify-between">
+                        <span>دقة التحليل</span>
+                        <span class="text-white">92.4%</span>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
 
     <!-- Dashboard Preview Section -->
-    <section id="dashboard" class="py-24 relative z-10 overflow-hidden">
+    <section id="dashboard" class="py-20 md:py-32 relative z-10 overflow-hidden bg-surface/30 border-t border-border w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 section-header">
-                <h2 class="text-blue-400 font-bold tracking-widest text-sm uppercase mb-2">مركز التحكم</h2>
-                <h3 class="text-3xl md:text-5xl font-black mb-4">كل شيء أمام عينيك</h3>
-                <p class="text-gray-400 max-w-2xl mx-auto text-lg">لوحة تحكم ذكية متكاملة توفر لك رؤية شاملة لأداء عملك في الوقت الفعلي.</p>
+            <div class="text-center mb-12 md:mb-20 section-elem">
+                <h2 class="text-zinc-400 font-semibold tracking-wide text-xs uppercase mb-3">مركز القيادة</h2>
+                <h3 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">لوحة تحكم مصممة للسرعة</h3>
+                <p class="text-zinc-400 max-w-2xl mx-auto text-sm md:text-base font-light">واجهة مستخدم احترافية توفر لك رؤية كاملة لعملياتك ومؤشرات الأداء في الوقت الفعلي.</p>
             </div>
 
-            <div class="relative dashboard-preview">
+            <div class="relative dashboard-elem max-w-5xl mx-auto w-full">
                 <!-- Dashboard Glow -->
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-blue-500/20 rounded-full filter blur-[120px] -z-10"></div>
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-primary/20 rounded-full filter blur-[100px] md:blur-[150px] -z-10 pointer-events-none"></div>
                 
-                <!-- Main Dashboard Image/Container -->
-                <div class="w-full overflow-x-auto pb-6">
-                <div class="glass-card rounded-2xl md:rounded-[2rem] border border-white/10 shadow-2xl shadow-blue-900/50 overflow-hidden relative backdrop-blur-2xl bg-dark/60 min-w-[800px] md:min-w-0">
+                <!-- Dashboard Container -->
+                <div class="rounded-xl md:rounded-2xl border border-border bg-[#09090b]/80 backdrop-blur-xl shadow-2xl overflow-hidden w-full">
                     
-                    <!-- Top Bar -->
-                    <div class="h-12 border-b border-white/5 flex items-center px-6 gap-4 bg-white/5">
+                    <!-- Mac Window Controls -->
+                    <div class="h-10 border-b border-border flex items-center px-4 gap-4 bg-surface/50">
                         <div class="flex gap-2">
-                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-zinc-700"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-zinc-700"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-zinc-700"></div>
                         </div>
-                        <div class="mx-auto w-1/3 h-6 bg-white/5 rounded flex items-center px-4">
-                            <i class="fas fa-search text-gray-500 text-xs"></i>
-                            <span class="text-gray-500 text-xs mr-3">بحث في المنصة...</span>
+                        <div class="mx-auto w-1/2 max-w-[200px] h-6 bg-background rounded-md border border-border flex items-center px-3 justify-center">
+                            <i data-lucide="lock" class="w-3 h-3 text-zinc-500 ml-1"></i>
+                            <span class="text-[10px] font-mono text-zinc-500">app.kognitixai.com</span>
                         </div>
                     </div>
 
-                    <!-- Dashboard Grid -->
-                    <div class="p-6 md:p-10 grid grid-cols-1 md:grid-cols-4 gap-6">
-                        
-                        <!-- Sidebar -->
-                        <div class="hidden md:flex flex-col gap-4 col-span-1 border-l border-white/5 pl-6">
-                            <div class="mb-6 flex items-center justify-start border-b border-white/5 pb-6">
+                    <!-- Inner App Layout -->
+                    <div class="flex h-[400px] md:h-[600px] w-full">
+                        <!-- Sidebar (Hidden on mobile mockup view for cleaner look, or narrow) -->
+                        <div class="hidden md:flex flex-col w-64 border-l border-border bg-surface/30 p-4">
+                            <div class="mb-8 mt-2">
                                 {% with tagline=False, size='small', variant='dark' %}{% include "_brand.html" %}{% endwith %}
                             </div>
-                            <div class="flex items-center gap-3 p-3 bg-blue-500/10 text-blue-400 rounded-xl font-bold">
-                                <i class="fas fa-home"></i> الرئيسية
-                            </div>
-                            <div class="flex items-center gap-3 p-3 text-gray-400 hover:bg-white/5 rounded-xl cursor-pointer transition">
-                                <i class="fas fa-calendar-check"></i> الحجوزات
-                            </div>
-                            <div class="flex items-center gap-3 p-3 text-gray-400 hover:bg-white/5 rounded-xl cursor-pointer transition">
-                                <i class="fas fa-users"></i> العملاء
-                            </div>
-                            <div class="flex items-center gap-3 p-3 text-gray-400 hover:bg-white/5 rounded-xl cursor-pointer transition">
-                                <i class="fas fa-robot"></i> وكلاء الذكاء
-                            </div>
-                            <div class="flex items-center gap-3 p-3 text-gray-400 hover:bg-white/5 rounded-xl cursor-pointer transition">
-                                <i class="fas fa-chart-pie"></i> التقارير
-                            </div>
+                            <nav class="space-y-1 text-sm font-medium">
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg">
+                                    <i data-lucide="layout-grid" class="w-4 h-4"></i> نظرة عامة
+                                </a>
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-surface rounded-lg transition">
+                                    <i data-lucide="calendar" class="w-4 h-4"></i> الحجوزات
+                                </a>
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-surface rounded-lg transition">
+                                    <i data-lucide="users" class="w-4 h-4"></i> العملاء
+                                </a>
+                                <a href="#" class="flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-surface rounded-lg transition">
+                                    <i data-lucide="bot" class="w-4 h-4"></i> وكلاء الذكاء
+                                </a>
+                            </nav>
                         </div>
 
-                        <!-- Main Content -->
-                        <div class="col-span-1 md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
-                            <!-- KPI 1 -->
-                            <div class="bg-gray-800/50 rounded-2xl p-6 border border-white/5">
-                                <div class="flex justify-between items-start mb-4">
-                                    <div>
-                                        <p class="text-gray-400 text-sm mb-1">إجمالي الإيرادات</p>
-                                        <h4 class="text-2xl font-bold">124,500 <span class="text-sm text-gray-500">ر.س</span></h4>
-                                    </div>
-                                    <div class="w-10 h-10 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
-                                        <i class="fas fa-arrow-up"></i>
-                                    </div>
+                        <!-- Main Content Area -->
+                        <div class="flex-1 p-4 md:p-8 overflow-y-auto no-scrollbar w-full">
+                            <div class="flex justify-between items-center mb-6 md:mb-8">
+                                <h4 class="text-lg md:text-xl font-bold">نظرة عامة</h4>
+                                <div class="flex items-center gap-2 md:gap-4">
+                                    <span class="text-[10px] md:text-xs text-zinc-500 font-mono">اخر تحديث: الآن</span>
                                 </div>
-                                <div class="w-full bg-gray-700/50 rounded-full h-1.5 mt-4">
-                                    <div class="bg-green-400 h-1.5 rounded-full" style="width: 75%"></div>
-                                </div>
-                                <p class="text-xs text-green-400 mt-2">+12.5% من الشهر الماضي</p>
                             </div>
 
-                            <!-- KPI 2 -->
-                            <div class="bg-gray-800/50 rounded-2xl p-6 border border-white/5">
-                                <div class="flex justify-between items-start mb-4">
-                                    <div>
-                                        <p class="text-gray-400 text-sm mb-1">معدل التحصيل</p>
-                                        <h4 class="text-2xl font-bold">98.2%</h4>
+                            <!-- KPIs -->
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+                                <div class="bg-surface/50 border border-border rounded-xl p-4 md:p-5">
+                                    <p class="text-[10px] md:text-xs text-zinc-400 mb-2">الإيرادات (هذا الشهر)</p>
+                                    <div class="flex items-end gap-2 mb-2">
+                                        <h5 class="text-xl md:text-3xl font-bold font-mono">SAR 124k</h5>
                                     </div>
-                                    <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
-                                        <i class="fas fa-wallet"></i>
+                                    <div class="text-[10px] md:text-xs text-green-400 flex items-center gap-1 font-mono">
+                                        <i data-lucide="trending-up" class="w-3 h-3 md:w-4 md:h-4"></i> +12.5%
                                     </div>
                                 </div>
-                                <div class="w-full bg-gray-700/50 rounded-full h-1.5 mt-4">
-                                    <div class="bg-blue-400 h-1.5 rounded-full" style="width: 98%"></div>
+                                <div class="bg-surface/50 border border-border rounded-xl p-4 md:p-5">
+                                    <p class="text-[10px] md:text-xs text-zinc-400 mb-2">معدل التحصيل</p>
+                                    <div class="flex items-end gap-2 mb-2">
+                                        <h5 class="text-xl md:text-3xl font-bold font-mono">98.2%</h5>
+                                    </div>
+                                    <div class="w-full bg-background rounded-full h-1 mt-2">
+                                        <div class="bg-primary h-1 rounded-full" style="width: 98.2%"></div>
+                                    </div>
                                 </div>
-                                <p class="text-xs text-blue-400 mt-2">ممتاز جداً</p>
+                                <div class="bg-surface/50 border border-border rounded-xl p-4 md:p-5 hidden md:block">
+                                    <p class="text-[10px] md:text-xs text-zinc-400 mb-2">الرسائل المؤتمتة</p>
+                                    <div class="flex items-end gap-2 mb-2">
+                                        <h5 class="text-xl md:text-3xl font-bold font-mono">8,432</h5>
+                                    </div>
+                                    <div class="text-[10px] md:text-xs text-zinc-500 font-light mt-2">
+                                        تم توفير 140 ساعة عمل
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Chart Placeholder 1 -->
-                            <div class="bg-gray-800/50 rounded-2xl p-6 border border-white/5 md:col-span-2 relative h-64 overflow-hidden">
-                                <h4 class="text-sm font-bold text-gray-300 mb-4">تحليل الحجوزات (اخر 7 أيام)</h4>
-                                <div class="absolute bottom-6 left-6 right-6 top-16 flex items-end gap-2 sm:gap-4">
-                                    <!-- Bar elements simulating a chart -->
-                                    <div class="flex-1 bg-gradient-to-t from-blue-600/80 to-blue-400 rounded-t-md relative group hover:opacity-80 transition" style="height: 40%">
-                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">40</div>
-                                    </div>
-                                    <div class="flex-1 bg-gradient-to-t from-blue-600/80 to-blue-400 rounded-t-md relative group hover:opacity-80 transition" style="height: 60%">
-                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">60</div>
-                                    </div>
-                                    <div class="flex-1 bg-gradient-to-t from-blue-600/80 to-blue-400 rounded-t-md relative group hover:opacity-80 transition" style="height: 55%">
-                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">55</div>
-                                    </div>
-                                    <div class="flex-1 bg-gradient-to-t from-blue-600/80 to-blue-400 rounded-t-md relative group hover:opacity-80 transition" style="height: 80%">
-                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">80</div>
-                                    </div>
-                                    <div class="flex-1 bg-gradient-to-t from-purple-600/80 to-purple-400 rounded-t-md relative group hover:opacity-80 transition" style="height: 95%">
-                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">95</div>
-                                    </div>
-                                    <div class="flex-1 bg-gradient-to-t from-blue-600/80 to-blue-400 rounded-t-md relative group hover:opacity-80 transition" style="height: 70%">
-                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">70</div>
-                                    </div>
-                                    <div class="flex-1 bg-gradient-to-t from-blue-600/80 to-blue-400 rounded-t-md relative group hover:opacity-80 transition" style="height: 85%">
-                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">85</div>
-                                    </div>
+                            <!-- Chart Area -->
+                            <div class="bg-surface/50 border border-border rounded-xl p-4 md:p-6 h-48 md:h-64 relative flex flex-col justify-end">
+                                <div class="absolute top-4 md:top-6 right-4 md:right-6">
+                                    <h6 class="text-xs md:text-sm font-medium text-zinc-300">نشاط الوكلاء</h6>
+                                </div>
+                                <div class="flex items-end justify-between gap-1 md:gap-2 h-[80%] pt-6">
+                                    <!-- Bars -->
+                                    <div class="w-full bg-primary/20 hover:bg-primary/50 transition rounded-t-sm md:rounded-t-md relative group" style="height: 30%"><div class="hidden md:block absolute -top-6 left-1/2 transform -translate-x-1/2 bg-surface border border-border text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition font-mono text-zinc-300">30</div></div>
+                                    <div class="w-full bg-primary/40 hover:bg-primary/50 transition rounded-t-sm md:rounded-t-md relative group" style="height: 50%"><div class="hidden md:block absolute -top-6 left-1/2 transform -translate-x-1/2 bg-surface border border-border text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition font-mono text-zinc-300">50</div></div>
+                                    <div class="w-full bg-primary/30 hover:bg-primary/50 transition rounded-t-sm md:rounded-t-md relative group" style="height: 45%"></div>
+                                    <div class="w-full bg-primary/70 hover:bg-primary/50 transition rounded-t-sm md:rounded-t-md relative group" style="height: 80%"><div class="hidden md:block absolute -top-6 left-1/2 transform -translate-x-1/2 bg-surface border border-border text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition font-mono text-zinc-300">80</div></div>
+                                    <div class="w-full bg-secondary/80 hover:bg-secondary transition rounded-t-sm md:rounded-t-md relative group shadow-[0_0_15px_rgba(129,140,248,0.5)]" style="height: 95%"><div class="hidden md:block absolute -top-6 left-1/2 transform -translate-x-1/2 bg-surface border border-border text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition font-mono text-white">95</div></div>
+                                    <div class="w-full bg-primary/50 hover:bg-primary/80 transition rounded-t-sm md:rounded-t-md relative group" style="height: 65%"></div>
+                                    <div class="w-full bg-primary/60 hover:bg-primary/80 transition rounded-t-sm md:rounded-t-md relative group" style="height: 75%"></div>
+                                    <div class="w-full bg-primary/40 hover:bg-primary/80 transition rounded-t-sm md:rounded-t-md relative group hidden sm:block" style="height: 55%"></div>
+                                    <div class="w-full bg-primary/80 hover:bg-primary transition rounded-t-sm md:rounded-t-md relative group hidden sm:block" style="height: 85%"></div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    </div>
-    <!-- Bottom CTA Section & Contact -->
-    <section id="contact" class="py-32 relative z-10 overflow-hidden">
-        <!-- Background Elements -->
-        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-blue-900/20 -z-10"></div>
-        <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
-        
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative cta-content">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-3xl mb-8 animate-bounce">
-                <i class="fas fa-rocket"></i>
-            </div>
-            
-            <h2 class="text-4xl md:text-6xl font-black mb-6 leading-tight">
-                ابدأ رحلة <span class="text-gradient">التحول الذكي</span> اليوم
-            </h2>
-            <p class="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-                انضم إلى المئات من الشركات التي ضاعفت أرباحها وقللت تكاليف التشغيل باستخدام منصة KognitixAI.
-            </p>
-            
-            <!-- WhatsApp Communication Card -->
-            <div class="max-w-md mx-auto bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md mb-8 hover-card">
-                <p class="text-gray-300 mb-4 font-medium text-lg">يسعدنا تواصلكم ومناقشة كيف يمكننا مساعدة أعمالكم على النمو</p>
-                <a href="https://wa.me/966538344673" target="_blank" class="flex items-center justify-center gap-3 w-full bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white px-8 py-4 rounded-xl font-bold text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(37,211,102,0.4)]">
-                    <i class="fab fa-whatsapp text-2xl"></i>
-                    تواصل معنا عبر واتساب
-                </a>
-                <p class="mt-4 text-sm text-gray-400 font-mono tracking-wider" dir="ltr">+966 53 834 4673</p>
-            </div>
-            
-            <a href="{{ url_for('registration.step1') }}" class="inline-block mt-4 bg-transparent border border-blue-500/50 hover:bg-blue-500/10 text-white px-8 py-3 rounded-full font-bold transition-all">
-                أنشئ حسابك الآن مجاناً
-            </a>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-dark py-12 border-t border-white/5 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="flex items-center">
-                    {% with tagline=False, variant='dark' %}{% include "_brand.html" %}{% endwith %}
+    <footer id="contact" class="border-t border-border bg-background pt-16 md:pt-20 pb-8 relative overflow-hidden w-full">
+        <!-- Abstract footer glow -->
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-2xl h-1/2 bg-primary/5 rounded-t-full filter blur-[80px] pointer-events-none"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 mb-12 md:mb-16">
+                <div class="col-span-1 sm:col-span-2 md:col-span-1">
+                    <div class="mb-6">
+                        {% with tagline=False, variant='dark' %}{% include "_brand.html" %}{% endwith %}
+                    </div>
+                    <p class="text-zinc-400 text-sm font-light leading-relaxed mb-6">
+                        نمكن الشركات من تحقيق أقصى إمكاناتها التشغيلية من خلال وكلاء ذكاء اصطناعي متخصصين.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://wa.me/966538344673" target="_blank" class="w-10 h-10 rounded-full border border-border flex items-center justify-center text-green-500 hover:text-green-400 hover:border-green-500 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        </a>
+                        <a href="https://wa.me/967773216649" target="_blank" class="w-10 h-10 rounded-full border border-border flex items-center justify-center text-green-500 hover:text-green-400 hover:border-green-500 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        </a>
+                        <a href="https://www.tiktok.com/@kognitixai?_r=1&_t=ZS-97WI5SRooYm" target="_blank" class="w-10 h-10 rounded-full border border-border flex items-center justify-center text-white hover:text-white hover:border-zinc-500 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
+                        </a>
+                        <a href="https://www.facebook.com/share/1CyPSZ3nYY/" target="_blank" class="w-10 h-10 rounded-full border border-border flex items-center justify-center text-blue-500 hover:text-blue-400 hover:border-blue-500 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                        </a>
+                    </div>
                 </div>
                 
-                <p class="text-gray-500 text-sm">
+                <div>
+                    <h4 class="text-white font-bold mb-4 md:mb-6">المنصة</h4>
+                    <ul class="space-y-3 md:space-y-4">
+                        <li><a href="#how-it-works" class="text-sm text-zinc-400 hover:text-white transition font-light">آلية العمل</a></li>
+                        <li><a href="#solutions" class="text-sm text-zinc-400 hover:text-white transition font-light">الحلول</a></li>
+                        <li><a href="#agents" class="text-sm text-zinc-400 hover:text-white transition font-light">الوكلاء</a></li>
+                        <li><a href="{{ url_for('public.pricing') }}" class="text-sm text-zinc-400 hover:text-white transition font-light">الأسعار</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-white font-bold mb-4 md:mb-6">الشركة</h4>
+                    <ul class="space-y-3 md:space-y-4">
+                        <li><a href="{{ url_for('public.contact') }}" class="text-sm text-zinc-400 hover:text-white transition font-light">تواصل معنا</a></li>
+                        <li><a href="{{ url_for('public.terms') }}" class="text-sm text-zinc-400 hover:text-white transition font-light">الشروط والأحكام</a></li>
+                        <li><a href="{{ url_for('public.privacy') }}" class="text-sm text-zinc-400 hover:text-white transition font-light">سياسة الخصوصية</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-white font-bold mb-4 md:mb-6">تواصل معنا</h4>
+                    <ul class="space-y-3 md:space-y-4">
+                        <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-1 text-zinc-500 shrink-0"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                            <div class="flex flex-col">
+                                <a href="mailto:Kazm@kognitixai.com" class="hover:text-white transition">Kazm@kognitixai.com</a>
+                                <a href="mailto:kognitixai@gmail.com" class="hover:text-white transition mt-1">kognitixai@gmail.com</a>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3 text-sm text-zinc-400 font-light mt-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-1 text-zinc-500 shrink-0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <div class="flex flex-col">
+                                <a href="https://wa.me/966538344673" dir="ltr" class="hover:text-white transition">+966 53 834 4673</a>
+                                <a href="https://wa.me/967773216649" dir="ltr" class="hover:text-white transition mt-1">+967 773 216 649</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-xs text-zinc-500 font-light text-center md:text-right">
                     &copy; 2026 KognitixAI. جميع الحقوق محفوظة.
                 </p>
-                
-                <div class="flex space-x-4 space-x-reverse">
-                    <a href="https://wa.me/966538344673" target="_blank" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-[#25D366] hover:bg-white/10 transition">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
-                    <a href="https://www.facebook.com/share/1CyPSZ3nYY/" target="_blank" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-white/10 transition">
-                        <i class="fab fa-facebook-f"></i>
-                    </a>
-                    <a href="https://www.tiktok.com/@kognitixai?_r=1&_t=ZS-97WI5SRooYm" target="_blank" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition">
-                        <i class="fab fa-tiktok"></i>
-                    </a>
-                    <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-white/10 transition">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-white/10 transition">
-                        <i class="fab fa-linkedin-in"></i>
-                    </a>
+                <div class="flex items-center gap-2 text-xs text-zinc-500 font-mono">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    Systems Operational
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Sticky WhatsApp FAB -->
-    <a href="https://wa.me/966538344673" target="_blank" class="fab-whatsapp w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center text-3xl shadow-lg hover:scale-110 transition-transform">
-        <i class="fab fa-whatsapp"></i>
-    </a>
-
-    <!-- Animations & Logic -->
+    <!-- Scripts -->
     <script>
-        // Mobile Menu Toggle
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Mobile Menu Logic
         const mobileBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         
@@ -782,177 +842,72 @@
             mobileMenu.classList.toggle('hidden');
         });
 
-        // Close menu on link click
         document.querySelectorAll('#mobile-menu a').forEach(link => {
             link.addEventListener('click', () => {
                 mobileMenu.classList.add('hidden');
             });
         });
 
+        // Mouse Tracking Glow Effect for Cards
+        document.querySelectorAll('.glow-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
         // Navbar blur effect on scroll
         window.addEventListener('scroll', () => {
             const nav = document.querySelector('nav');
-            if (window.scrollY > 50) {
-                nav.classList.add('shadow-lg', 'bg-dark/90');
-                nav.classList.remove('bg-dark/80', 'glass-nav');
+            if (window.scrollY > 10) {
+                nav.classList.add('shadow-lg', 'bg-background/90');
+                nav.classList.remove('glass');
             } else {
-                nav.classList.remove('shadow-lg', 'bg-dark/90');
-                nav.classList.add('bg-dark/80', 'glass-nav');
+                nav.classList.remove('shadow-lg', 'bg-background/90');
+                nav.classList.add('glass');
             }
         });
 
-        // GSAP Animations
+        // GSAP Animations (Subtle & Luxurious)
         gsap.registerPlugin(ScrollTrigger);
 
-        // Hero Animations
-        gsap.from(".hero-text > *", {
-            y: 30,
+        // Hero Elements Reveal
+        gsap.from(".hero-elem", {
+            y: 20,
             opacity: 0,
             duration: 1,
-            stagger: 0.2,
-            ease: "power3.out"
+            stagger: 0.15,
+            ease: "power2.out",
+            delay: 0.1
         });
 
-        gsap.from(".hero-visuals", {
-            x: -50,
-            opacity: 0,
-            duration: 1.5,
-            delay: 0.5,
-            ease: "power3.out"
-        });
-
-        // Sections Scroll Reveal
-        gsap.utils.toArray('.section-header').forEach(header => {
-            gsap.from(header, {
+        // Sections Reveal
+        gsap.utils.toArray('.section-elem').forEach((elem) => {
+            gsap.from(elem, {
                 scrollTrigger: {
-                    trigger: header,
-                    start: "top 80%",
+                    trigger: elem,
+                    start: "top 85%",
                 },
-                y: 30,
+                y: 20,
                 opacity: 0,
                 duration: 0.8,
                 ease: "power2.out"
             });
         });
 
-        gsap.utils.toArray('.hover-card, .agent-card').forEach((card, i) => {
-            gsap.from(card, {
-                scrollTrigger: {
-                    trigger: card,
-                    start: "top 85%",
-                },
-                y: 50,
-                opacity: 0,
-                duration: 0.8,
-                delay: (i % 3) * 0.2,
-                ease: "power3.out"
-            });
-        });
-
-        gsap.from(".dashboard-preview", {
+        // Dashboard Mockup Reveal
+        gsap.from(".dashboard-elem", {
             scrollTrigger: {
-                trigger: ".dashboard-preview",
-                start: "top 75%",
-            },
-            y: 100,
-            opacity: 0,
-            rotationX: 10,
-            duration: 1.2,
-            ease: "power3.out"
-        });
-
-        gsap.from(".cta-content > *", {
-            scrollTrigger: {
-                trigger: ".cta-content",
+                trigger: ".dashboard-elem",
                 start: "top 80%",
             },
-            y: 30,
+            y: 40,
             opacity: 0,
-            duration: 0.8,
-            stagger: 0.2,
+            duration: 1,
             ease: "power3.out"
-        });
-
-        // Particles Animation Script (Vanilla JS)
-        const canvas = document.getElementById('particles-canvas');
-        const ctx = canvas.getContext('2d');
-        
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        let particles = [];
-        const particleCount = 70;
-        
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 2;
-                this.color = Math.random() > 0.5 ? '#3b82f6' : '#8b5cf6';
-                this.alpha = Math.random() * 0.5 + 0.1;
-            }
-            
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-            }
-            
-            draw() {
-                ctx.globalAlpha = this.alpha;
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
-        
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw particles
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            
-            // Draw connecting lines
-            ctx.globalAlpha = 0.05;
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 0.5;
-            
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < 100) {
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-            
-            requestAnimationFrame(animateParticles);
-        }
-        
-        animateParticles();
-        
-        // Handle resize
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
         });
     </script>
 </body>

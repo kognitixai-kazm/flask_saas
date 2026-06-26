@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from typing import List, Dict, Optional, Any
 
 from flask import current_app
@@ -34,7 +34,7 @@ class AIRouter:
             return AIResult(success=False, error="No active AI providers available.")
 
         task_mapping = {
-            'simple': ['minimax', 'glm'],
+            'simple': ['google', 'gemini'],
             'sensitive': ['anthropic', 'claude'],
             'complex': ['openai', 'gpt'],
             'fallback': ['google', 'gemini']
@@ -96,14 +96,6 @@ class AIRouter:
                     )
                 elif 'google' in provider_slug or 'gemini' in provider_slug:
                     result = AIService._call_gemini(
-                        api_key=api_key,
-                        model_id=model.model_id,
-                        system_prompt=system_prompt,
-                        history=history,
-                        user_message=user_message
-                    )
-                elif 'minimax' in provider_slug or 'glm' in provider_slug:
-                    result = AIService._call_openai(
                         api_key=api_key,
                         model_id=model.model_id,
                         system_prompt=system_prompt,

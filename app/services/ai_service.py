@@ -175,6 +175,9 @@ class AIService:
     @staticmethod
     def _get_api_key(provider: str, tenant_id: int = None) -> str:
         """جلب مفتاح API للمزوّد."""
+        if not provider:
+            return ''
+            
         from app.models.ai_provider import AIProvider
         p = AIProvider.query.filter_by(name=provider, is_active=True).first()
         if p and getattr(p, 'api_key_decrypted', None):
@@ -223,32 +226,63 @@ class AIService:
         model_override: Optional[AIModel] = None,
     ) -> AIResult:
         """
-        توليد رد من AI للتاجر المحدد.
-
-        يستخدم النموذج المختار للتاجر تلقائياً.
+        توليد رد من AI للتاجر المحدد مع دعم الانتقال التلقائي (Fallback) لأول مزود متوفر ومفعل.
         """
-        # جلب النموذج
-        model = model_override or AIService.get_tenant_model(tenant_id)
-        if not model:
-            return AIResult(
-                success=False,
-                error='لا يوجد نموذج AI متاح. تواصل مع الدعم.',
+        history = history or []
+        last_error = 'لا يوجد مزود AI متاح.'
+
+        # إذا تم تحديد نموذج محدد بشكل إجباري، نستخدمه ونكتفي به بدون Fallback
+        if model_override:
+            return AIService._try_generate_with_model(
+                model_override, tenant_id, user_message, system_prompt, history
             )
 
-        # جلب مفتاح API
+        from app.models.ai_provider import AIProvider
+        # البحث عن جميع المزودين المتاحين مرتبين حسب الأولوية
+        providers = AIProvider.query.filter_by(is_active=True).order_by(AIProvider.priority.asc()).all()
+
+        for provider in providers:
+            model = AIModel.query.filter_by(provider_id=provider.id, is_active=True).first()
+            if not model:
+                model = AIModel.query.filter_by(is_active=True, is_default=True).first()
+                if not model:
+                    continue
+            
+            # محاولة الاستدعاء
+            result = AIService._try_generate_with_model(
+                model, tenant_id, user_message, system_prompt, history
+            )
+            
+            if result.success:
+                current_app.logger.info(f'[AIService] تم استخدام المزود بنجاح: {model.provider}')
+                return result
+            else:
+                last_error = result.error
+                current_app.logger.warning(f'[AIService] فشل المزود {model.provider}. السبب: {result.error} - سيتم تجربة المزود التالي.')
+
+        current_app.logger.error(f'[AIService] فشلت جميع المزودات في تلبية الطلب. آخر خطأ: {last_error}')
+        # في حال فشل الجميع، يتم إرجاع خطأ ليتم تفعيل الرد المحلي
+        return AIResult(
+            success=False,
+            error=last_error
+        )
+
+    @staticmethod
+    def _try_generate_with_model(
+        model: AIModel,
+        tenant_id: int,
+        user_message: str,
+        system_prompt: str,
+        history: List[Dict],
+    ) -> AIResult:
+        """استدعاء الموديل الخاص وإرجاع النتيجة أو الخطأ للاستمرار."""
+        if not model.provider:
+            return AIResult(success=False, error='مزود النموذج فارغ (None)')
+            
         api_key = AIService._get_api_key(model.provider, tenant_id)
         if not api_key:
-            return AIResult(
-                success=False,
-                error=f'مفتاح {model.provider} غير مضبوط',
-                model_id=model.id,
-                provider=model.provider,
-                model_name=model.display_name,
-            )
+            return AIResult(success=False, error=f'مفتاح {model.provider} غير مضبوط')
 
-        history = history or []
-
-        # توجيه للمزوّد المناسب
         try:
             if model.provider == 'anthropic':
                 result = AIService._call_anthropic(
@@ -263,35 +297,17 @@ class AIService:
                     api_key, model.model_id, system_prompt, history, user_message,
                 )
             else:
-                return AIResult(
-                    success=False,
-                    error=f'مزوّد غير مدعوم: {model.provider}',
-                )
+                return AIResult(success=False, error=f'مزوّد غير مدعوم: {model.provider}')
 
-            # إضافة معلومات النموذج
             result.model_id = model.id
             result.provider = model.provider
             result.model_name = model.display_name
             return result
 
         except requests.exceptions.Timeout:
-            current_app.logger.warning(f'[AIService] timeout for {model.provider}')
-            return AIResult(
-                success=False,
-                error='انتهت مهلة الاستجابة من AI',
-                model_id=model.id,
-                provider=model.provider,
-                model_name=model.display_name,
-            )
+            return AIResult(success=False, error=f'انتهت مهلة الاستجابة من AI ({model.provider})')
         except Exception as e:
-            current_app.logger.exception(f'[AIService] {model.provider} error: {e}')
-            return AIResult(
-                success=False,
-                error=f'خطأ: {str(e)[:100]}',
-                model_id=model.id,
-                provider=model.provider,
-                model_name=model.display_name,
-            )
+            return AIResult(success=False, error=f'خطأ: {str(e)[:100]}')
 
     # ========== Anthropic ==========
     @staticmethod
