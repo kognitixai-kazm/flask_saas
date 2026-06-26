@@ -280,76 +280,57 @@ class ChatService:
     # ========================================
     @staticmethod
     def _try_ai_reply(tenant: Tenant, conversation: Conversation, user_message: str, local_context: str = None) -> str:
-        """محاولة استدعاء AI — يخصم تلقائياً عند النجاح. لا يُستدعى إلا بعد فشل القواعد المحلية."""
+        """استدعاء الوكيل الذكي عبر AgentManager لتفعيل الأدوات المتعددة بدلاً من الاستدعاء المباشر البسيط."""
         try:
-            from app.services.ai_service import AIService
-            from app.services.pricing_service import PricingService
-            from app.agents.model_resolver import ModelResolver
-            from app.models.ai_model import AIModel
-
-            current_app.logger.info(f'[Chat/AI] Attempting AI reply for tenant={tenant.slug}')
-
-            # الاعتماد الكلي على نقطة المركز للـ Failover التي ستمر على جميع المزودين (أولويتهم لـ GPT)
-            resolved_model = ModelResolver.resolve(tenant.id)
-            if not resolved_model:
-                current_app.logger.warning(f'[Chat/AI] No AI provider available/configured for tenant={tenant.slug}')
-                ChatService._notify_ai_failure(tenant.id, "لم يتم العثور على مزود صالح أو مفتاح فعال")
-                return None
-
-            current_app.logger.info(f'[Chat/AI] Provider {resolved_model.provider} is selected and ready.')
-
-            # جلب كائن النموذج 
-            model = AIModel.query.get(resolved_model.ai_model_db_id)
-
-            # التحقق من رصيد التاجر قبل الاستدعاء
-            ok, msg, price = PricingService.can_afford(
+            from flask import current_app
+            from app.agents.agent_manager import AgentManager
+            from app.extensions import db
+            
+            current_app.logger.info(f'[Chat/AI] Attempting AgentManager reply for tenant={tenant.slug}')
+            
+            manager = AgentManager(
                 tenant_id=tenant.id,
-                service_key='ai_message',
-                ai_model_id=model.id,
-            )
-            if not ok:
-                current_app.logger.warning(f'[Chat/AI] Insufficient balance for AI tenant={tenant.slug}: {msg}')
-                return None
-
-            system_prompt = ChatService._build_prompt(tenant, conversation)
-            if local_context:
-                system_prompt += f"\n\n[معلومات إضافية من النظام يجب استخدامها في صياغة الرد على الزائر]:\n{local_context}\n"
-
-            current_app.logger.info(f'[Chat/AI] Sending request to {model.provider} ({model.model_id})...')
-            result = AIService.generate(
-                tenant_id=tenant.id,
-                user_message=user_message,
-                system_prompt=system_prompt,
-                history=ChatService._build_history(conversation),
-                model_override=model,
+                conversation_id=conversation.id,
+                channel=conversation.channel or 'web'
             )
             
-            if result.success and result.text:
-                current_app.logger.info(f'[Chat/AI] Successfully received reply from {model.provider}.')
-            else:
-                current_app.logger.warning(f'[Chat/AI] AI request failed: {result.error}')
-                ChatService._notify_ai_failure(tenant.id, f"خطأ في الاتصال ({result.error})")
-                return None
-
-            ChatService._charge_message(
-                tenant_id=tenant.id,
-                service_key='ai_message',
-                conversation_id=conversation.id,
-                ai_model_id=model.id,
-                tokens_in=result.tokens_in,
-                tokens_out=result.tokens_out,
+            extra_context = {}
+            if local_context:
+                extra_context['local_context'] = local_context
+                
+            # إرسال بيانات العميل كـ context
+            if conversation.visitor_name:
+                extra_context['visitor_name'] = conversation.visitor_name
+            if conversation.visitor_phone:
+                extra_context['visitor_phone'] = conversation.visitor_phone
+            if conversation.visitor_email:
+                extra_context['visitor_email'] = conversation.visitor_email
+                
+            response = manager.route_and_run(
+                user_message=user_message,
+                visitor_id=conversation.visitor_id,
+                extra_context=extra_context
             )
-
-            try:
-                if tenant.subscription:
-                    tenant.subscription.increment_ai_calls(1)
-                    db.session.commit()
-            except Exception as e:
-                current_app.logger.warning(f'[Chat] increment_ai_calls failed: {e}')
-
-            return ChatService._sanitize_ai_text(result.text)
-
+            
+            if response.success and response.text:
+                current_app.logger.info(f'[Chat/AI] Successfully received reply from AgentManager ({response.agent_type}).')
+                
+                # Increment AI calls (PricingService.charge is handled inside BaseAgent)
+                try:
+                    if tenant.subscription:
+                        tenant.subscription.increment_ai_calls(1)
+                        db.session.commit()
+                except Exception as e:
+                    current_app.logger.warning(f'[Chat] increment_ai_calls failed: {e}')
+                    
+                return ChatService._sanitize_ai_text(response.text)
+            else:
+                current_app.logger.warning(f'[Chat/AI] Agent request failed: {response.error}')
+                ChatService._notify_ai_failure(tenant.id, f"خطأ في الاتصال ({response.error})")
+                return None
+                
         except Exception as e:
+            from flask import current_app
             current_app.logger.exception(f'[Chat] AI error: {e}')
             return None
 
