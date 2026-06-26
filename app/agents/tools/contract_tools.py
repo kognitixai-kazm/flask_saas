@@ -230,15 +230,7 @@ def process_booking_request(
     except Exception as e:
         logger.warning(f'[Notification] booking notify error: {e}')
 
-    # ── الكاش: تأكيد فوري بدون عقد ────────────────────────────────
-    if pm == 'cash':
-        booking.status = 'confirmed'
-        db.session.commit()
-        response_lines.append('\n💵 طريقة الدفع: كاش')
-        response_lines.append('تم تأكيد الحجز المبدئي. نتطلع لاستقبالك!')
-        return '\n'.join(response_lines)
-
-    # ── Transfer / Online: إنشاء مسودة عقد ────────────────────────
+    # ── إنشاء مسودة العقد (بغض النظر عن الدفع) ────────────────────────
     monthly_price = float(unit.monthly_price or 0)
     total_amount = monthly_price * duration_months
 
@@ -264,17 +256,19 @@ def process_booking_request(
         from app.models.contract import Contract
         contract = Contract.query.get(contract_id)
         if contract:
-            # [إصلاح #3] ربط الحجز بالعقد في field_values
+            # ربط الحجز بالعقد في field_values
             fv = contract.field_values or {}
             fv['booking_id'] = booking.id
             fv['booking_number'] = booking.booking_number
             contract.field_values = fv
 
-            # تحديث حالة العقد
-            contract.status = 'pending_payment'
+            if pm == 'cash':
+                booking.status = 'confirmed'
+                contract.status = 'pending_signature' # نعتبره مدفوع كاش أو قيد التوقيع
+            else:
+                contract.status = 'pending_payment'
 
-            # [إصلاح #4] بناء رابط التوقيع جاهزاً للإرسال لاحقاً (بعد الدفع)
-            # يُرسَل تلقائياً بواسطة ContractService.send_to_customer بعد الدفع
+            # بناء رابط التوقيع جاهزاً للإرسال
             try:
                 site_url = current_app.config.get('SITE_URL', '')
                 if site_url and contract.signature_token:
@@ -294,9 +288,18 @@ def process_booking_request(
                 contract_number=contract.contract_number,
                 sign_url=sign_url
             )
-            response_lines.append(f'\n📧 تم إرسال رابط توقيع العقد إلى بريدك الإلكتروني ({customer_email}).')
+            response_lines.append(f'\n📧 تم إرسال رابط توقيع العقد إلى بريدك الإلكتروني ({customer_email}). يرجى فتحه وتوقيع العقد.')
         except Exception as e:
             logger.error(f'[Email] Failed to send signature link: {e}')
+
+    # ── الكاش ───────────────────────────────────────────────────────
+    if pm == 'cash':
+        response_lines.append('\n💵 طريقة الدفع: نقدي (أو سيتم التحصيل لاحقاً)')
+        response_lines.append(f'• رقم العقد: {contract.contract_number if contract else "—"}')
+        if not customer_email and sign_url:
+            response_lines.append(f'\n📝 رابط التوقيع الإلكتروني (بما أن الإيميل غير متوفر):\n{sign_url}')
+        response_lines.append('\nتم تأكيد الحجز وإنشاء العقد. بانتظار توقيعك. نتطلع لاستقبالك!')
+        return '\n'.join(response_lines)
 
     # ── التحويل البنكي ──────────────────────────────────────────────
     if pm == 'transfer':
@@ -308,45 +311,37 @@ def process_booking_request(
         response_lines.append(bank_info)
         response_lines.append(
             '\nبعد إرسال إيصال التحويل واعتماده من الإدارة، '
-            'ستصلك رسالة برابط توقيع العقد إلكترونياً على جوالك.'
+            'سيتم تأكيد الحجز بشكل نهائي.'
         )
+        if not customer_email and sign_url:
+            response_lines.append(f'\n📝 يرجى توقيع العقد عبر الرابط:\n{sign_url}')
         return '\n'.join(response_lines)
 
     # ── الدفع الإلكتروني ────────────────────────────────────────────
-    # [إصلاح #5] الاعتماد على PaymentService مباشرة بدلاً من payment_gateway_enabled
     if contract_id:
         payment_result = generate_payment_link.invoke({
             'tenant_id': tenant_id,
             'contract_id': contract_id,
         })
 
-        # إذا نجح إنشاء الرابط
         if '✅' in payment_result or 'رابط الدفع' in payment_result:
             response_lines.append('\n📝 تم إنشاء عقدك بنجاح.')
             response_lines.append(f'• رقم العقد: {contract.contract_number if contract else "—"}')
             response_lines.append(f'• المبلغ: {total_amount} ر.س')
             response_lines.append('\n💳 يرجى إتمام الدفع عبر الرابط التالي:')
             response_lines.append(payment_result)
-            response_lines.append(
-                '\nبعد إتمام الدفع ستصلك رسالة تلقائية برابط '
-                'توقيع العقد إلكترونياً. ✍️'
-            )
+            if not customer_email and sign_url:
+                response_lines.append(f'\n📝 ولا تنسَ توقيع العقد عبر الرابط:\n{sign_url}')
             return '\n'.join(response_lines)
         else:
-            # بوابة الدفع غير مفعلة أو خطأ — تحويل بنكي كبديل
             bank_info = get_tenant_bank_info.invoke({'tenant_id': tenant_id})
             response_lines.append('\n📝 تم إنشاء مسودة عقدك.')
-            response_lines.append(
-                '⚠️ الدفع الإلكتروني غير متاح حالياً، '
-                'يمكنك الدفع عبر التحويل البنكي:'
-            )
+            response_lines.append('⚠️ الدفع الإلكتروني غير متاح حالياً، يمكنك الدفع عبر التحويل البنكي:')
             response_lines.append(bank_info)
-            response_lines.append(
-                '\nأرسل إيصال التحويل وسيصلك رابط توقيع العقد بعد الاعتماد.'
-            )
+            if not customer_email and sign_url:
+                response_lines.append(f'\n📝 رابط توقيع العقد:\n{sign_url}')
             return '\n'.join(response_lines)
     else:
-        # فشل إنشاء العقد — خطأ نادر
         response_lines.append('\n⚠️ حدث خطأ في إنشاء العقد. يرجى التواصل مع الإدارة.')
         return '\n'.join(response_lines)
 

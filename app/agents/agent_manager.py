@@ -8,8 +8,7 @@ from typing import Dict, Type
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from .base import BaseAgent, AgentResponse
-from .reception_agent import ReceptionAgent
-from .contract_agent import ContractAgent
+from .front_desk_agent import FrontDeskAgent
 from .accounting_agent import AccountingAgent
 from .collection_agent import CollectionAgent
 
@@ -23,17 +22,16 @@ class AgentManager(BaseAgent):
     SYSTEM_PROMPT = """أنت موجه ذكي (Router) في نظام فندقي/عقاري متعدد الوكلاء.
 مهمتك الوحيدة هي تحديد الوكيل المناسب للرد على رسالة المستخدم بناءً على نيته.
 يجب أن يكون ردك عبارة عن كلمة واحدة فقط من الخيارات التالية:
-- reception : إذا كان المستخدم يستفسر عن الغرف، التوفر، الأسعار، أو يريد البدء بحجز جديد.
-- contract : إذا كان المستخدم يريد إتمام الحجز، إرسال الهوية، إصدار العقد، أو الدفع (روابط الدفع).
+- reception : إذا كان المستخدم يستفسر عن الغرف، التوفر، الأسعار، يريد البدء بحجز جديد، إتمام الحجز، إرسال الهوية، إصدار العقد، أو الدفع.
 - accounting : إذا كان المستخدم (أو التاجر) يسأل عن الأرباح، القيود المحاسبية، الإيرادات والمصروفات، الإشغال أو تقارير مالية.
 - collection : إذا كان المستخدم يسأل عن المديونيات، المتأخرات، أو سداد دفعات سابقة.
 
-لا تضف أي نص آخر، فقط اكتب اسم الوكيل (reception, contract, accounting, collection).
+لا تضف أي نص آخر، فقط اكتب اسم الوكيل (reception, accounting, collection).
 """
 
     AGENT_MAP: Dict[str, Type[BaseAgent]] = {
-        "reception": ReceptionAgent,
-        "contract": ContractAgent,
+        "reception": FrontDeskAgent,
+        "contract": FrontDeskAgent,
         "accounting": AccountingAgent,
         "collection": CollectionAgent,
     }

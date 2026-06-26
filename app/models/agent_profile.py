@@ -40,3 +40,40 @@ class AgentProfile(db.Model):
 
     def __repr__(self):
         return f'<AgentProfile {self.agent_type} for tenant {self.tenant_id}>'
+
+    @property
+    def name(self):
+        return self.agent_name or self.type_label
+
+    @property
+    def role(self):
+        roles = {
+            'reception': 'خدمة العملاء والاستقبال',
+            'contract': 'إدارة العقود والموافقات',
+            'collection': 'التحصيل والمطالبات المالية',
+            'analytics': 'تحليل البيانات والأداء',
+            'accounting': 'المحاسبة والقيود المالية'
+        }
+        return roles.get(self.agent_type, 'وكيل ذكي')
+
+    @property
+    def type_label(self):
+        labels = {
+            'reception': 'وكيل الاستقبال',
+            'contract': 'وكيل العقود',
+            'collection': 'وكيل التحصيل',
+            'analytics': 'محلل البيانات',
+            'accounting': 'المحاسب الذكي'
+        }
+        return labels.get(self.agent_type, 'وكيل ذكي')
+
+    @property
+    def icon(self):
+        icons = {
+            'reception': '💬',
+            'contract': '📝',
+            'collection': '💰',
+            'analytics': '📊',
+            'accounting': '🧮'
+        }
+        return icons.get(self.agent_type, '🤖')
