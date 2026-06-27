@@ -490,7 +490,26 @@ def delete_conversation(slug, conv_id):
     try:
         # تفصيل أي استفسارات/عقود مرتبطة بدلاً من كسر FK
         from app.models.inquiry import Inquiry
+        from app.models.booking import Booking
+        from app.models.contract import Contract
+        from app.models.message_usage import MessageUsage
+
         Inquiry.query.filter_by(
+            conversation_id=conv.id,
+            tenant_id=tenant.id,
+        ).update({'conversation_id': None}, synchronize_session=False)
+
+        Booking.query.filter_by(
+            conversation_id=conv.id,
+            tenant_id=tenant.id,
+        ).update({'conversation_id': None}, synchronize_session=False)
+
+        Contract.query.filter_by(
+            conversation_id=conv.id,
+            tenant_id=tenant.id,
+        ).update({'conversation_id': None}, synchronize_session=False)
+
+        MessageUsage.query.filter_by(
             conversation_id=conv.id,
             tenant_id=tenant.id,
         ).update({'conversation_id': None}, synchronize_session=False)
@@ -521,6 +540,9 @@ def delete_visitor_data(slug):
 
     try:
         from app.models.inquiry import Inquiry
+        from app.models.booking import Booking
+        from app.models.contract import Contract
+        from app.models.message_usage import MessageUsage
 
         conv_ids = [c.id for c in Conversation.query.filter_by(
             tenant_id=tenant.id,
@@ -531,6 +553,21 @@ def delete_visitor_data(slug):
             Inquiry.query.filter(
                 Inquiry.tenant_id == tenant.id,
                 Inquiry.conversation_id.in_(conv_ids),
+            ).update({'conversation_id': None}, synchronize_session=False)
+
+            Booking.query.filter(
+                Booking.tenant_id == tenant.id,
+                Booking.conversation_id.in_(conv_ids),
+            ).update({'conversation_id': None}, synchronize_session=False)
+
+            Contract.query.filter(
+                Contract.tenant_id == tenant.id,
+                Contract.conversation_id.in_(conv_ids),
+            ).update({'conversation_id': None}, synchronize_session=False)
+
+            MessageUsage.query.filter(
+                MessageUsage.tenant_id == tenant.id,
+                MessageUsage.conversation_id.in_(conv_ids),
             ).update({'conversation_id': None}, synchronize_session=False)
 
             for c in Conversation.query.filter(
