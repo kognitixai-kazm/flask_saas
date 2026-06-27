@@ -133,6 +133,7 @@ def process_booking_request(
     payment_method: str,
     conversation_id: int = 0,
     customer_email: str = '',
+    unit_number: str = '',
 ) -> str:
     """معالجة طلب الحجز كاملاً بعد استيفاء البيانات.
     استخدم هذه الأداة عندما يكتمل جمع بيانات الحجز (الوحدة، التواريخ، طريقة الدفع).
@@ -147,6 +148,7 @@ def process_booking_request(
         payment_method: طريقة الدفع المختارة (cash، transfer، أو online)
         conversation_id: معرف المحادثة
         customer_email: البريد الإلكتروني (اختياري)
+        unit_number: رقم الوحدة (استخدمه بدلاً من unit_id إذا أرسل العميل الخيار 1 أو 2)
     """
     import logging
     import re
@@ -161,9 +163,18 @@ def process_booking_request(
     logger = logging.getLogger(__name__)
 
     # ── التحقق من الوحدة ─────────────────────────────────────────
-    unit = Unit.query.filter_by(id=unit_id, tenant_id=tenant_id).first()
+    unit = None
+    if unit_id > 0:
+        unit = Unit.query.filter_by(id=unit_id, tenant_id=tenant_id).first()
+    
+    if not unit and unit_number:
+        unit = Unit.query.filter_by(unit_number=str(unit_number).strip(), tenant_id=tenant_id).first()
+
     if not unit:
+        if unit_id > 0 and unit_id < 100:
+            return 'تنبيه: يبدو أنك مررت رقم الخيار (1 أو 2) بدلاً من unit_id. يرجى استخدام unit_number الصحيح.'
         return 'عذراً، لم يتم العثور على الوحدة المطلوبة.'
+    
     if not unit.is_available or unit.status != 'available':
         return f'عذراً، الوحدة رقم {unit.unit_number} غير متاحة حالياً.'
 

@@ -127,13 +127,14 @@ def get_room_details(tenant_id: int, unit_id: int) -> str:
 
 
 @tool
-def lock_unit_selection(tenant_id: int, unit_id: int) -> str:
+def lock_unit_selection(tenant_id: int, unit_id: int = 0, unit_number: str = '') -> str:
     """تثبيت الوحدة المختارة بعد موافقة العميل عليها لمنع تغييرها بالخطأ.
     استخدم هذه الأداة **فوراً** بعد أن يوافق العميل على وحدة معينة، وقبل أن تطلب منه البيانات أو ملخص الحجز.
 
     Args:
         tenant_id: معرف التاجر
-        unit_id: معرف الوحدة التي اختارها العميل
+        unit_id: معرف الوحدة التي اختارها العميل (الأولوية له)
+        unit_number: رقم الوحدة التي اختارها العميل (استخدمه إذا لم تكن متأكداً من unit_id)
     """
     from flask import g
     from app.models.conversation import Conversation
@@ -148,9 +149,21 @@ def lock_unit_selection(tenant_id: int, unit_id: int) -> str:
     if not conv:
         return 'المحادثة غير موجودة.'
 
-    unit = Unit.query.filter_by(id=unit_id, tenant_id=tenant_id).first()
+    unit = None
+    if unit_id > 0:
+        unit = Unit.query.filter_by(id=unit_id, tenant_id=tenant_id).first()
+    
+    if not unit and unit_number:
+        # إذا أرسل الذكاء الاصطناعي الخيار (مثلاً 2) على أنه unit_id بالخطأ،
+        # يمكننا محاولة البحث برقم الوحدة
+        unit = Unit.query.filter_by(unit_number=str(unit_number).strip(), tenant_id=tenant_id).first()
+
     if not unit:
+        # Fallback in case unit_id was accidentally a sequential number and unit_number was not provided
+        if unit_id > 0 and unit_id < 100:
+            return 'تنبيه: يبدو أنك أرسلت رقم الخيار (1 أو 2) بدلاً من unit_id الفعلي أو رقم الشقة. يرجى تمرير رقم الشقة الفعلي في parameter `unit_number`.'
         return 'الوحدة غير موجودة.'
+
     if not unit.is_available or unit.status != 'available':
         return 'هذه الوحدة لم تعد متاحة حالياً. يرجى البحث عن وحدة أخرى.'
 
@@ -158,7 +171,7 @@ def lock_unit_selection(tenant_id: int, unit_id: int) -> str:
     if 'booking_state' not in ex:
         ex['booking_state'] = {}
     
-    ex['booking_state']['selected_unit_id'] = unit_id
+    ex['booking_state']['selected_unit_id'] = unit.id
     conv.extra_data = ex
     db.session.commit()
 
