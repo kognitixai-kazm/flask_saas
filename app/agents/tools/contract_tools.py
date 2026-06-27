@@ -26,6 +26,7 @@ def create_draft_contract(
     duration_months: int = 1,
     check_in_date: str = '',
     conversation_id: int = 0,
+    ignore_availability: bool = False,
 ) -> str:
     """إنشاء مسودة عقد إيجار جديد.
     استخدم هذه الأداة بعد جمع بيانات العميل وموافقته على الحجز.
@@ -57,7 +58,7 @@ def create_draft_contract(
         if not unit:
             logger.warning(f'[Contract Creation] فشل: لم يتم العثور على الوحدة المحددة (unit_id={unit_id})')
             return 'لم يتم العثور على الوحدة المحددة.'
-        if not unit.is_available or unit.status != 'available':
+        if not ignore_availability and (not unit.is_available or unit.status != 'available'):
             logger.warning(f'[Contract Creation] فشل: الوحدة {unit.unit_number} غير متاحة')
             return f'الوحدة رقم {unit.unit_number} غير متاحة حالياً (الحالة: {unit.status_label}).'
         monthly_price = float(unit.monthly_price or 0)
@@ -272,6 +273,7 @@ def process_booking_request(
         'duration_months': duration_months,
         'check_in_date': check_in_date,
         'conversation_id': conversation_id,
+        'ignore_availability': True,
     })
 
     # استخراج contract_id من نتيجة الأداة
