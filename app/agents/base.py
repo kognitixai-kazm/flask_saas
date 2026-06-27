@@ -240,6 +240,9 @@ class BaseAgent:
         # رسالة المستخدم
         messages.append(HumanMessage(content=user_message))
 
+        from flask import g
+        g.active_conversation_id = self.conversation_id
+
         try:
             # 5. تشغيل الوكيل
             if tools:

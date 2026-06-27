@@ -127,6 +127,45 @@ def get_room_details(tenant_id: int, unit_id: int) -> str:
 
 
 @tool
+def lock_unit_selection(tenant_id: int, unit_id: int) -> str:
+    """تثبيت الوحدة المختارة بعد موافقة العميل عليها لمنع تغييرها بالخطأ.
+    استخدم هذه الأداة **فوراً** بعد أن يوافق العميل على وحدة معينة، وقبل أن تطلب منه البيانات أو ملخص الحجز.
+
+    Args:
+        tenant_id: معرف التاجر
+        unit_id: معرف الوحدة التي اختارها العميل
+    """
+    from flask import g
+    from app.models.conversation import Conversation
+    from app.models.hotel_models import Unit
+    from app.extensions import db
+
+    conv_id = getattr(g, 'active_conversation_id', None)
+    if not conv_id:
+        return 'تم التثبيت (بدون جلسة نشطة).'
+
+    conv = Conversation.query.get(conv_id)
+    if not conv:
+        return 'المحادثة غير موجودة.'
+
+    unit = Unit.query.filter_by(id=unit_id, tenant_id=tenant_id).first()
+    if not unit:
+        return 'الوحدة غير موجودة.'
+    if not unit.is_available or unit.status != 'available':
+        return 'هذه الوحدة لم تعد متاحة حالياً. يرجى البحث عن وحدة أخرى.'
+
+    ex = dict(conv.extra_data or {})
+    if 'booking_state' not in ex:
+        ex['booking_state'] = {}
+    
+    ex['booking_state']['selected_unit_id'] = unit_id
+    conv.extra_data = ex
+    db.session.commit()
+
+    return f'تم تثبيت الوحدة {unit.type_label} رقم {unit.unit_number} بنجاح في الجلسة. لا تقم بتغييرها.'
+
+
+@tool
 def get_branches_list(tenant_id: int) -> str:
     """جلب قائمة الفروع المتاحة للمنشأة.
     استخدم هذه الأداة عندما يسأل العميل عن الفروع أو المواقع.

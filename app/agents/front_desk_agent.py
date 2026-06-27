@@ -17,7 +17,7 @@ app/agents/front_desk_agent.py — وكيل الاستقبال والتعاقد 
 - توجيه العميل للدفع
 """
 from .base import BaseAgent
-from .tools.rooms_tools import search_available_rooms, get_room_details, get_branches_list
+from .tools.rooms_tools import search_available_rooms, get_room_details, get_branches_list, lock_unit_selection
 from .tools.contract_tools import create_draft_contract, get_contract_status, process_booking_request
 from .tools.payment_tools import generate_payment_link, get_tenant_bank_info
 
@@ -38,14 +38,19 @@ class FrontDeskAgent(BaseAgent):
 2. **البحث أولاً قبل أي طلب شخصي**:
    - لا تطلب أبداً الهوية (ID) أو تفاصيل شخصية دقيقة قبل أن تبحث وتجد وحدة متاحة للعميل باستخدام `search_available_rooms` وتخبره بها ويوافق عليها.
 
-3. **حفظ البيانات التلقائي (Auto-save)**:
+3. **تثبيت الوحدة (إجباري جداً ومهم)**:
+   - فور موافقة العميل المبدئية على وحدة معينة، يجب عليك فوراً استدعاء أداة `lock_unit_selection` لحفظ الوحدة في جلسة المحادثة، قبل طلب أي بيانات أخرى.
+   - يُمنع منعاً باتاً تغيير الوحدة المختارة أو البحث من جديد إلا إذا رفضها العميل بوضوح أو أصبحت الوحدة غير متاحة (حُجزت من قبل شخص آخر).
+   - يجب أن تعتمد ردودك دائماً على الوحدة المثبتة في الجلسة.
+
+4. **حفظ البيانات التلقائي (Auto-save)**:
    - التقط أي معلومة يذكرها العميل (الاسم، الجوال، الإيميل) تلقائياً، ولا تسأله عنها مرة أخرى أبداً.
 
-4. **تأكيد البيانات قبل إتمام الحجز (إجباري)**:
-   - بعد موافقة العميل على الوحدة المتاحة وتوفر بياناته الأساسية (الاسم، الجوال، الإيميل، ورقم الهوية)، يجب عليك **عرض ملخص لجميع هذه المعلومات** (اسم، جوال، إيميل، هوية، تواريخ، الوحدة) واطلب من العميل تأكيدها بوضوح (مثال: هل توافق على إصدار العقد بهذه البيانات؟).
+5. **تأكيد البيانات قبل إتمام الحجز (إجباري)**:
+   - بعد موافقة العميل وتثبيت الوحدة، وتوفر بياناته الأساسية (الاسم، الجوال، الإيميل، ورقم الهوية)، يجب عليك **عرض ملخص لجميع هذه المعلومات** (اسم، جوال، إيميل، هوية، تواريخ، الوحدة المثبتة) واطلب من العميل تأكيدها بوضوح.
    - لا تقم باستدعاء `process_booking_request` أبداً قبل أن يراجع العميل الملخص ويقول "نعم" أو ما يعادلها.
 
-5. **إصدار العقد والدفع (نقدي مؤقتاً)**:
+6. **إصدار العقد والدفع (نقدي مؤقتاً)**:
    - بعد موافقة العميل على الملخص، استدعِ فوراً أداة `process_booking_request`.
    - مرر طريقة الدفع دائماً كـ `payment_method='cash'` (لأغراض التطوير حالياً)، وتأكد من تمرير `customer_email`.
    - سيقوم النظام تلقائياً بإنشاء الحجز وإصدار مسودة العقد، وإرسال رابط التوقيع الإلكتروني مباشرة إلى الإيميل.
@@ -57,9 +62,10 @@ class FrontDeskAgent(BaseAgent):
 🎯 تسلسل المحادثة المثالي:
 1. يطلب العميل شقة -> تبحث فوراً باستخدام `search_available_rooms`.
 2. تعرض المتاح -> يوافق العميل.
-3. تطلب البيانات الناقصة فقط (كالهوية إذا لم يذكرها).
-4. تعرض ملخص البيانات ليوافق عليها العميل.
-5. بعد الموافقة -> تستدعي `process_booking_request` وتخبره بانتهاء الإجراء وإرسال رابط التوقيع.
+3. تستدعي فوراً `lock_unit_selection` لتثبيت الوحدة.
+4. تطلب البيانات الناقصة فقط (كالهوية إذا لم يذكرها).
+5. تعرض ملخص البيانات (بما فيها الوحدة المثبتة) ليوافق عليها العميل.
+6. بعد الموافقة -> تستدعي `process_booking_request` وتخبره بإرسال رابط التوقيع.
 """
 
     def __init__(self, tenant_id: int, conversation_id: int = None, channel: str = 'web'):
@@ -70,6 +76,7 @@ class FrontDeskAgent(BaseAgent):
         """أدوات وكيل الاستقبال."""
         return [
             search_available_rooms,
+            lock_unit_selection,
             get_room_details,
             get_branches_list,
             get_contract_status,
@@ -120,5 +127,20 @@ class FrontDeskAgent(BaseAgent):
         channel_name = channel_names.get(self.channel, self.channel)
         base_prompt += f'\n\nالقناة الحالية: {channel_name}'
         base_prompt += f'\nمعرف التاجر (tenant_id) المطلوب في الأدوات: {self.tenant_id}'
+
+        # جلب الوحدة المثبتة إذا وجدت لمنع التغيير العشوائي
+        from app.models.conversation import Conversation
+        if self.conversation_id:
+            conv = Conversation.query.get(self.conversation_id)
+            if conv and conv.extra_data and 'booking_state' in conv.extra_data:
+                state = conv.extra_data['booking_state']
+                selected_unit_id = state.get('selected_unit_id')
+                if selected_unit_id:
+                    from app.models.hotel_models import Unit
+                    unit = Unit.query.filter_by(id=selected_unit_id, tenant_id=self.tenant_id).first()
+                    if unit and unit.is_available and unit.status == 'available':
+                        base_prompt += f'\n\n[حالة الجلسة - هاااام جداً]: لقد قام العميل باختيار وتثبيت الوحدة (رقم {unit.unit_number} - {unit.type_label} | unit_id={unit.id}) في هذه الجلسة. يُمنع منعاً باتاً تغيير هذه الوحدة أو اقتراح بدائل. اعتمد عليها في الحجز والعقد.'
+                    else:
+                        base_prompt += f'\n\n[تنبيه هام]: الوحدة التي اختارها العميل سابقاً (unit_id={selected_unit_id}) لم تعد متاحة الآن! يجب إبلاغ العميل والاعتذار فوراً، ثم البحث عن بديل.'
 
         return base_prompt
