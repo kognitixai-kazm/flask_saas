@@ -305,6 +305,17 @@ def process_booking_request(
         contract.status = 'pending_signature' # نعتبره مدفوع كاش أو قيد التوقيع
     else:
         contract.status = 'pending_payment'
+        
+    # بناء ملف الـ PDF مسبقاً حتى يتمكن العميل من قراءته قبل التوقيع
+    from app.services.contract_service import ContractService
+    try:
+        gen_res = ContractService.generate_contract(contract)
+        if not gen_res.get('success'):
+            logger.error(f"[Contract PDF Generation] فشل توليد ملف الـ PDF: {gen_res.get('error')}")
+        else:
+            logger.info(f"[Contract PDF Generation] تم توليد ملف العقد بنجاح: {gen_res.get('url')}")
+    except Exception as e:
+        logger.error(f"[Contract PDF Generation] خطأ غير متوقع أثناء توليد العقد: {str(e)}")
 
     # بناء رابط التوقيع جاهزاً للإرسال
     sign_url = ''

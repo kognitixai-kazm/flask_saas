@@ -153,6 +153,63 @@ class ContractService:
             current_app.logger.exception(f'[ContractService] PDF gen error: {e}')
             return {'success': False, 'error': str(e)[:200]}
 
+    @staticmethod
+    def format_template_text(text: str, contract: Contract, template: ContractTemplate) -> str:
+        """يستبدل المتغيرات في النص بقيمها من العقد أو بيانات التاجر."""
+        if not text:
+            return ""
+            
+        fv = contract.field_values or {}
+        tenant = contract.tenant
+        ad = tenant.activity_data or {}
+        
+        lessor_name = template.lessor_name or tenant.owner_full_name or tenant.business_name or ""
+        lessor_id = template.lessor_id_number or ad.get('id_number', '') or ad.get('commercial_register', '') or ""
+        lessor_phone = template.lessor_phone or tenant.owner_phone or ""
+        lessor_address = template.lessor_address or ad.get('address', '') or ""
+        
+        context = {
+            'tenant_name': tenant.business_name or "",
+            'lessor_name': lessor_name,
+            'lessor_id_number': lessor_id,
+            'lessor_phone': lessor_phone,
+            'lessor_address': lessor_address,
+            
+            'full_name': fv.get('full_name') or contract.customer_name or "",
+            'customer_name': fv.get('full_name') or contract.customer_name or "",
+            'id_number': fv.get('id_number') or contract.customer_id_number or "",
+            'phone': fv.get('phone') or contract.customer_phone or "",
+            'email': fv.get('email') or contract.customer_email or "",
+            'address': fv.get('address') or "",
+            
+            'unit_name': fv.get('unit_name') or "",
+            'property_type': fv.get('property_type') or "شقة مفروشة",
+            'floor_number': fv.get('floor_number') or "",
+            
+            'check_in_date': fv.get('check_in_date') or "",
+            'check_out_date': fv.get('check_out_date') or "",
+            'duration': fv.get('duration') or "",
+            
+            'monthly_price': fv.get('monthly_price') or "",
+            'amount': str(float(contract.payment_amount or 0)),
+            'total_amount': str(float(contract.payment_amount or 0)),
+            
+            'date': datetime.utcnow().strftime("%Y/%m/%d"),
+            'contract_number': contract.contract_number or "",
+        }
+        
+        class SafeDict(dict):
+            def __missing__(self, key):
+                return '{' + key + '}'
+                
+        safe_context = SafeDict(**context)
+        import string
+        formatter = string.Formatter()
+        try:
+            return formatter.vformat(text, (), safe_context)
+        except Exception:
+            return text
+
     # ========================================
     # قالب PDF جذاب: شعار + ألوان + جداول + شروط
     # ========================================
@@ -233,6 +290,13 @@ class ContractService:
         story.append(Spacer(1, 0.4 * cm))
 
         fv = contract.field_values or {}
+        ad = tenant.activity_data or {}
+        
+        # استخراج بيانات الطرف الأول مع Fallback
+        lessor_name = template.lessor_name or tenant.owner_full_name or tenant.business_name or '-'
+        lessor_id = template.lessor_id_number or ad.get('id_number', '') or ad.get('commercial_register', '') or '-'
+        lessor_phone = template.lessor_phone or tenant.owner_phone or '-'
+        lessor_address = template.lessor_address or ad.get('address', '') or '-'
 
         # الطرف الأول والثاني
         parties_data = [
@@ -242,19 +306,19 @@ class ContractService:
             ],
             [
                 Paragraph(shape(f"الاسم: {fv.get('full_name') or contract.customer_name or '-'}"), body),
-                Paragraph(shape(f"الاسم: {template.lessor_name or tenant.business_name or '-'}"), body)
+                Paragraph(shape(f"الاسم: {lessor_name}"), body)
             ],
             [
                 Paragraph(shape(f"رقم الهوية: {fv.get('id_number') or contract.customer_id_number or '-'}"), body),
-                Paragraph(shape(f"رقم السجل/الهوية: {template.lessor_id_number or '-'}"), body)
+                Paragraph(shape(f"رقم السجل/الهوية: {lessor_id}"), body)
             ],
             [
                 Paragraph(shape(f"رقم الجوال: {fv.get('phone') or contract.customer_phone or '-'}"), body),
-                Paragraph(shape(f"رقم الجوال: {template.lessor_phone or '-'}"), body)
+                Paragraph(shape(f"رقم الجوال: {lessor_phone}"), body)
             ],
             [
                 Paragraph(shape(f"العنوان: {fv.get('address') or '-'}"), body),
-                Paragraph(shape(f"العنوان: {template.lessor_address or '-'}"), body)
+                Paragraph(shape(f"العنوان: {lessor_address}"), body)
             ]
         ]
         
@@ -330,42 +394,54 @@ class ContractService:
         story.append(amount_t)
         story.append(Spacer(1, 0.4 * cm))
 
-        # المفروشات / الميزات
-        if (template.features_text or '').strip():
-            story.append(Paragraph(shape('المفروشات والأجهزة المشمولة'), section_h))
-            features = []
-            for line in template.features_text.split('\n'):
+        # إدراج قالب نصي مخصص بالكامل إذا تم تعريفه، كبديل للجداول التفصيلية السابقة
+        if (template.pdf_template_text or '').strip():
+            story.append(Paragraph(shape('بنود العقد الخاصة'), section_h))
+            custom_text = ContractService.format_template_text(template.pdf_template_text, contract, template)
+            for line in custom_text.split('\n'):
                 line = line.strip()
                 if line:
-                    features.append(Paragraph(shape(f'• {line}'), body))
-            
-            if features:
-                feat_t = Table([[f] for f in features], colWidths=['100%'])
-                feat_t.setStyle(TableStyle([
-                    ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
-                    ('PADDING', (0, 0), (-1, -1), 6),
-                    ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-                ]))
-                story.append(feat_t)
-                story.append(Spacer(1, 0.4 * cm))
-
-        # الشروط
-        if (template.terms_text or '').strip():
-            story.append(Paragraph(shape('الشروط المتفق عليها'), section_h))
-            terms = []
-            for line in template.terms_text.split('\n'):
-                line = line.strip()
-                if line:
-                    terms.append(Paragraph(shape(line), body))
-            
-            if terms:
-                term_t = Table([[t] for t in terms], colWidths=['100%'])
-                term_t.setStyle(TableStyle([
-                    ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
-                    ('PADDING', (0, 0), (-1, -1), 6),
-                    ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-                ]))
-                story.append(term_t)
+                    story.append(Paragraph(shape(line), body))
+            story.append(Spacer(1, 0.4 * cm))
+        else:
+            # المفروشات / الميزات
+            if (template.features_text or '').strip():
+                story.append(Paragraph(shape('المفروشات والأجهزة المشمولة'), section_h))
+                features = []
+                features_fmt = ContractService.format_template_text(template.features_text, contract, template)
+                for line in features_fmt.split('\n'):
+                    line = line.strip()
+                    if line:
+                        features.append(Paragraph(shape(f'• {line}'), body))
+                
+                if features:
+                    feat_t = Table([[f] for f in features], colWidths=['100%'])
+                    feat_t.setStyle(TableStyle([
+                        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+                        ('PADDING', (0, 0), (-1, -1), 6),
+                        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+                    ]))
+                    story.append(feat_t)
+                    story.append(Spacer(1, 0.4 * cm))
+    
+            # الشروط
+            if (template.terms_text or '').strip():
+                story.append(Paragraph(shape('الشروط المتفق عليها'), section_h))
+                terms = []
+                terms_fmt = ContractService.format_template_text(template.terms_text, contract, template)
+                for line in terms_fmt.split('\n'):
+                    line = line.strip()
+                    if line:
+                        terms.append(Paragraph(shape(line), body))
+                
+                if terms:
+                    term_t = Table([[t] for t in terms], colWidths=['100%'])
+                    term_t.setStyle(TableStyle([
+                        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+                        ('PADDING', (0, 0), (-1, -1), 6),
+                        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+                    ]))
+                    story.append(term_t)
 
         # التوقيع
         story.append(Spacer(1, 0.8 * cm))

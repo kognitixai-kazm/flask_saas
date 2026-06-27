@@ -74,6 +74,7 @@
                     </a>
                     
                     <form method="POST" class="w-full sm:w-auto">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
                             <span>✍️</span> قرأت العقد وأوافق عليه
                         </button>
