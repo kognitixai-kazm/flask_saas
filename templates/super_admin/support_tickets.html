@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}تذاكر الدعم الفني — إدارة المنصة{% endblock %}
+{% block body_class %}bg-gray-900{% endblock %}
+{% block body %}
+<div class="flex min-h-screen">
+<aside class="w-60 bg-gray-800 text-gray-300 flex-shrink-0">
+<div class="p-6 border-b border-gray-700"><div class="font-bold text-white">👑 إدارة المنصة</div></div>
+<nav class="p-4 space-y-1">
+<a href="{{ url_for('super_admin.dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📊 الرئيسية</a>
+<a href="{{ url_for('super_admin.tenants_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🏢 المستأجرون</a>
+<a href="{{ url_for('super_admin.tenants_list') }}#bot-settings" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🤖 إعدادات البوت</a>
+<a href="{{ url_for('super_admin.plans_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">💰 الباقات</a>
+<a href="{{ url_for('super_admin.activities_list') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🧩 الأنشطة</a>
+<a href="{{ url_for('super_admin.audit_logs') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📋 السجلات</a>
+<a href="{{ url_for('admin_integrations.list_all') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🔗 التكاملات</a>
+<a href="{{ url_for('super_admin.system_info') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">⚙️ النظام</a>
+<a href="{{ url_for('super_admin.support_tickets') }}" class="block px-4 py-2 rounded-lg bg-gray-700 text-white text-sm">🎫 تذاكر الدعم</a>
+<a href="{{ url_for('super_admin.account_change_password') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🔐 تغيير كلمة المرور</a>
+<hr class="border-gray-700 my-3"><form method="POST" action="{{ url_for('super_admin.logout') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<button class="block w-full text-right px-4 py-2 rounded-lg text-red-400 hover:bg-gray-700 text-sm">🚪 خروج</button>
+</form></nav></aside>
+<main class="flex-1 bg-gray-50 p-8"><div class="max-w-6xl mx-auto">
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">تذاكر الدعم الفني</h1>
+        <p class="text-sm text-gray-500 mt-1">طلبات المساعدة المرسلة من التجار</p>
+    </div>
+</div>
+
+<!-- فلتر الحالة -->
+<div class="mb-6 flex gap-2">
+    <a href="{{ url_for('super_admin.support_tickets') }}" 
+       class="px-4 py-2 rounded-lg text-sm font-medium transition {{ 'bg-gray-800 text-white' if not status_filter else 'bg-white text-gray-700 hover:bg-gray-50 border' }}">
+        الكل
+    </a>
+    <a href="{{ url_for('super_admin.support_tickets', status='open') }}" 
+       class="px-4 py-2 rounded-lg text-sm font-medium transition {{ 'bg-blue-600 text-white' if status_filter == 'open' else 'bg-white text-blue-700 hover:bg-blue-50 border border-blue-200' }}">
+        مفتوح
+    </a>
+    <a href="{{ url_for('super_admin.support_tickets', status='in_progress') }}" 
+       class="px-4 py-2 rounded-lg text-sm font-medium transition {{ 'bg-yellow-500 text-white' if status_filter == 'in_progress' else 'bg-white text-yellow-700 hover:bg-yellow-50 border border-yellow-200' }}">
+        قيد المعالجة
+    </a>
+    <a href="{{ url_for('super_admin.support_tickets', status='resolved') }}" 
+       class="px-4 py-2 rounded-lg text-sm font-medium transition {{ 'bg-green-600 text-white' if status_filter == 'resolved' else 'bg-white text-green-700 hover:bg-green-50 border border-green-200' }}">
+        تم الحل
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    {% if tickets %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-sm">
+            <thead class="bg-gray-50 text-gray-500 border-b">
+                <tr>
+                    <th class="px-6 py-4 font-medium">رقم</th>
+                    <th class="px-6 py-4 font-medium">النشاط</th>
+                    <th class="px-6 py-4 font-medium">الموضوع</th>
+                    <th class="px-6 py-4 font-medium w-1/3">الرسالة</th>
+                    <th class="px-6 py-4 font-medium">الحالة</th>
+                    <th class="px-6 py-4 font-medium">التاريخ</th>
+                    <th class="px-6 py-4 font-medium">إجراء</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for t in tickets %}
+                <tr class="hover:bg-gray-50/50 transition">
+                    <td class="px-6 py-4 font-mono text-gray-500">#{{ t.id }}</td>
+                    <td class="px-6 py-4">
+                        <a href="{{ url_for('super_admin.tenant_detail', id=t.tenant_id) }}" class="font-bold text-blue-600 hover:underline">
+                            {{ t.tenant.business_name }}
+                        </a>
+                        <div class="text-xs text-gray-500 mt-1" dir="ltr">{{ t.tenant.owner_phone }}</div>
+                    </td>
+                    <td class="px-6 py-4 font-medium text-gray-900">{{ t.subject }}</td>
+                    <td class="px-6 py-4">
+                        <div class="text-gray-600 text-sm max-w-md line-clamp-2" title="{{ t.message }}">{{ t.message }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <form method="POST" action="{{ url_for('super_admin.update_ticket_status', id=t.id) }}" class="flex items-center gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <select name="status" onchange="this.form.submit()" class="text-xs font-bold rounded-full px-3 py-1 border-0 focus:ring-2 
+                                {% if t.status == 'open' %}bg-blue-100 text-blue-800 focus:ring-blue-500
+                                {% elif t.status == 'in_progress' %}bg-yellow-100 text-yellow-800 focus:ring-yellow-500
+                                {% elif t.status == 'resolved' %}bg-green-100 text-green-800 focus:ring-green-500
+                                {% else %}bg-gray-100 text-gray-800 focus:ring-gray-500{% endif %}">
+                                <option value="open" {% if t.status == 'open' %}selected{% endif %}>مفتوح</option>
+                                <option value="in_progress" {% if t.status == 'in_progress' %}selected{% endif %}>قيد المعالجة</option>
+                                <option value="resolved" {% if t.status == 'resolved' %}selected{% endif %}>تم الحل</option>
+                                <option value="closed" {% if t.status == 'closed' %}selected{% endif %}>مغلق</option>
+                            </select>
+                        </form>
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 text-xs" dir="ltr">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="px-6 py-4">
+                        <a href="mailto:{{ t.tenant.owner_email }}" class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-lg transition" title="إرسال بريد للتاجر">
+                            📧
+                        </a>
+                        <a href="https://wa.me/{{ t.tenant.owner_phone|replace('+','') }}" target="_blank" class="text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-lg transition" title="تواصل واتساب">
+                            💬
+                        </a>
+                    </td>
+                </tr>
+                {% endendfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <div class="text-4xl mb-4">🙌</div>
+        <h3 class="text-lg font-bold text-gray-900 mb-1">لا توجد تذاكر دعم فني</h3>
+        <p class="text-gray-500">{% if status_filter %}لم يتم العثور على تذاكر بهذه الحالة.{% else %}جميع المشاكل تم حلها!{% endif %}</p>
+    </div>
+    {% endif %}
+</div>
+
+</div>
+</div>
+</main>
+</div>
+{% endblock %}

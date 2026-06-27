@@ -2,7 +2,7 @@
 {% block title %}المشرف الذكي (وكلاء الذكاء الاصطناعي){% endblock %}
 {% block panel_content %}
 
-<div class="flex flex-col md:flex-row h-[calc(100vh-100px)] gap-6 bg-gray-50 p-4 rounded-xl">
+<div class="flex flex-col md:flex-row h-[600px] gap-6 bg-gray-50 p-4 rounded-xl mb-8">
     
     <!-- القسم الجانبي: قائمة الوكلاء -->
     <div class="w-full md:w-1/3 lg:w-1/4 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
@@ -39,15 +39,15 @@
                 </div>
             </div>
             
-            {% for agent in agents %}
+            {% for agent in agents.values() %}
             <!-- أي وكلاء إضافيين من الداتا بيس -->
             <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center gap-4">
                 <div class="w-12 h-12 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-2xl">
                     {{ agent.icon or '⚙️' }}
                 </div>
                 <div>
-                    <h4 class="font-bold text-sm text-gray-800">{{ agent.name }}</h4>
-                    <p class="text-xs text-gray-500">{{ agent.role }}</p>
+                    <h4 class="font-bold text-sm text-gray-800">{{ agent.agent_name }}</h4>
+                    <p class="text-xs text-gray-500">{{ agent.agent_type }}</p>
                 </div>
             </div>
             {% endfor %}
@@ -106,6 +106,49 @@
         </div>
     </div>
 </div>
+
+<!-- إعدادات وكلاء الذكاء الاصطناعي -->
+<form method="POST" action="{{ url_for('tenant.ai_agents') }}" class="bg-white p-6 rounded-xl shadow-sm border mt-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h3 class="text-lg font-bold mb-4">⚙️ إعدادات وكلاء الذكاء الاصطناعي</h3>
+    <p class="text-sm text-gray-500 mb-6">قم بتخصيص اسم ونبرة كل وكيل ذكاء اصطناعي في نظامك.</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% set agent_types = [
+            ('reception', 'موظف الاستقبال', 'يرد على استفسارات العملاء العامة'),
+            ('contract', 'موظف العقود', 'يدير إنشاء وتوقيع العقود'),
+            ('accounting', 'المحاسب', 'يتعامل مع الفواتير والمدفوعات'),
+            ('collection', 'موظف التحصيل', 'يتابع الدفعات المتأخرة')
+        ] %}
+        
+        {% for atype, label, desc in agent_types %}
+        {% set agent = agents.get(atype) if agents else None %}
+        <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 hover:shadow-sm transition">
+            <h5 class="font-bold text-md mb-1 text-gray-800">{{ label }}</h5>
+            <p class="text-xs text-gray-500 mb-4">{{ desc }}</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-700 block mb-1">الاسم:</label>
+                    <input type="text" name="agent_{{ atype }}_name" value="{{ agent.agent_name if agent else ('مساعد ذكي' if not loop.first else 'موظف الاستقبال') }}" class="w-full border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:border-purple-500 focus:ring-purple-500" required>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-700 block mb-1">نبرة التحدث:</label>
+                    <select name="agent_{{ atype }}_tone" class="w-full border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:border-purple-500 focus:ring-purple-500">
+                        <option value="professional" {% if agent and agent.tone == 'professional' %}selected{% endif %}>رسمي ومهني</option>
+                        <option value="friendly" {% if agent and agent.tone == 'friendly' %}selected{% endif %}>ودود وترحيبي</option>
+                        <option value="strict" {% if agent and agent.tone == 'strict' %}selected{% endif %}>حازم (للتحصيل)</option>
+                        <option value="funny" {% if agent and agent.tone == 'funny' %}selected{% endif %}>مرح</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="mt-8 w-full bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 transition shadow-md">
+        💾 حفظ إعدادات الوكلاء
+    </button>
+</form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

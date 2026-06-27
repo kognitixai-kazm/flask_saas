@@ -379,10 +379,68 @@ def profile():
             if saved_path:
                 tenant.logo_path = saved_path
 
+        # إعدادات التذكير
+        if 'reminder_send_email' in request.form or 'rem_before_msg' in request.form:
+            tenant.settings = tenant.settings or {}
+            req_email = 'reminder_send_email' in request.form
+            req_whatsapp = 'reminder_send_whatsapp' in request.form
+            req_sms = 'reminder_send_sms' in request.form
+            
+            if req_whatsapp:
+                from app.services.whatsapp_service import WhatsAppService
+                wa_config = WhatsAppService._get_config(tenant.id)
+                if not wa_config or not wa_config.is_active:
+                    req_whatsapp = False
+                    flash('لم يتم تفعيل الواتساب كقناة للتذكير.', 'danger')
+            
+            if req_sms:
+                from app.models.tenant_integrations import TenantIntegration
+                sms_config = TenantIntegration.query.filter_by(tenant_id=tenant.id, is_active=True).first()
+                if not sms_config or not sms_config.api_key:
+                    req_sms = False
+                    flash('لم يتم تفعيل الرسائل النصية للتذكير.', 'danger')
+                    
+            tenant.settings['reminder_send_email'] = req_email
+            tenant.settings['reminder_send_whatsapp'] = req_whatsapp
+            tenant.settings['reminder_send_sms'] = req_sms
+            tenant.settings['reminders'] = {
+                'before': {
+                    'active': 'rem_before_active' in request.form,
+                    'days_offset': int(request.form.get('rem_before_days', 3)),
+                    'msg': request.form.get('rem_before_msg', '').strip()
+                },
+                'on': {
+                    'active': 'rem_on_active' in request.form,
+                    'days_offset': 0,
+                    'msg': request.form.get('rem_on_msg', '').strip()
+                },
+                'after': {
+                    'active': 'rem_after_active' in request.form,
+                    'days_offset': int(request.form.get('rem_after_days', 2)),
+                    'msg': request.form.get('rem_after_msg', '').strip()
+                }
+            }
+            from sqlalchemy.orm.attributes import flag_modified
+            flag_modified(tenant, "settings")
+
+        # إعدادات النشاط الإضافية
+        has_activity = False
+        tenant.activity_data = tenant.activity_data or {}
+        for key in request.form:
+            if key.startswith('activity_'):
+                has_activity = True
+                field_key = key.replace('activity_', '')
+                tenant.activity_data[field_key] = request.form[key]
+        if has_activity:
+            from sqlalchemy.orm.attributes import flag_modified
+            flag_modified(tenant, "activity_data")
+
         db.session.commit()
         flash('تم حفظ التعديلات', 'success')
         return redirect(url_for('tenant.profile'))
-    return render_template('tenant/profile.html', tenant=tenant)
+    
+    activity = tenant.activity
+    return render_template('tenant/profile.html', tenant=tenant, activity=activity)
 
 
 @bp.route('/profile/change-password', methods=['POST'])
@@ -480,87 +538,7 @@ def _save_logo(tenant, file):
 @bp.route('/settings', methods=['GET', 'POST'])
 @tenant_required
 def settings():
-    tenant = g.current_tenant
-    from app.models.agent_profile import AgentProfile
-    agent_types = ['reception', 'contract', 'accounting', 'collection']
-    agents = {a.agent_type: a for a in AgentProfile.query.filter_by(tenant_id=tenant.id).all()}
-
-    if request.method == 'POST':
-        # إعدادات التذكير العامة
-        tenant.settings = tenant.settings or {}
-        
-        req_email = 'reminder_send_email' in request.form
-        req_whatsapp = 'reminder_send_whatsapp' in request.form
-        req_sms = 'reminder_send_sms' in request.form
-        
-        # التحقق من الواتساب
-        if req_whatsapp:
-            from app.services.whatsapp_service import WhatsAppService
-            wa_config = WhatsAppService._get_config(tenant.id)
-            if not wa_config or not wa_config.is_active:
-                req_whatsapp = False
-                flash('لم يتم تفعيل الواتساب كقناة للتذكير. الرجاء ربطه وتفعيله أولاً.', 'danger')
-                
-        # التحقق من الـ SMS
-        if req_sms:
-            from app.models.tenant_integrations import TenantIntegration
-            sms_config = TenantIntegration.query.filter_by(tenant_id=tenant.id, is_active=True).first()
-            if not sms_config or not sms_config.api_key:
-                req_sms = False
-                flash('لم يتم تفعيل الرسائل النصية للتذكير. الرجاء ربط مزود SMS أولاً.', 'danger')
-                
-        tenant.settings['reminder_send_email'] = req_email
-        tenant.settings['reminder_send_whatsapp'] = req_whatsapp
-        tenant.settings['reminder_send_sms'] = req_sms
-        # إعدادات التذكير التفصيلية
-        tenant.settings['reminders'] = {
-            'before': {
-                'active': 'rem_before_active' in request.form,
-                'days_offset': int(request.form.get('rem_before_days', 3)),
-                'msg': request.form.get('rem_before_msg', '').strip()
-            },
-            'on': {
-                'active': 'rem_on_active' in request.form,
-                'days_offset': 0,
-                'msg': request.form.get('rem_on_msg', '').strip()
-            },
-            'after': {
-                'active': 'rem_after_active' in request.form,
-                'days_offset': int(request.form.get('rem_after_days', 2)),
-                'msg': request.form.get('rem_after_msg', '').strip()
-            }
-        }
-
-        # حفظ activity_data كـ JSON
-        tenant.activity_data = tenant.activity_data or {}
-        for key in request.form:
-            if key.startswith('activity_'):
-                field_key = key.replace('activity_', '')
-                tenant.activity_data[field_key] = request.form[key]
-                
-        from sqlalchemy.orm.attributes import flag_modified
-        flag_modified(tenant, "settings")
-        flag_modified(tenant, "activity_data")
-
-        # Save Agent Profiles
-        for atype in agent_types:
-            agent_name = request.form.get(f'agent_{atype}_name')
-            tone = request.form.get(f'agent_{atype}_tone')
-            if agent_name and tone:
-                if atype in agents:
-                    agents[atype].agent_name = agent_name
-                    agents[atype].tone = tone
-                else:
-                    new_agent = AgentProfile(tenant_id=tenant.id, agent_type=atype, agent_name=agent_name, tone=tone)
-                    db.session.add(new_agent)
-
-        db.session.commit()
-        flash('تم حفظ الإعدادات بنجاح', 'success')
-        return redirect(url_for('tenant.settings'))
-
-    activity = tenant.activity
-    return render_template('tenant/settings.html',
-        tenant=tenant, activity=activity, agents=agents)
+    return redirect(url_for('tenant.profile'))
 
 
 # ========================
@@ -673,12 +651,29 @@ def team():
 # ========================
 # AI Agents (فريق الذكاء الاصطناعي)
 # ========================
-@bp.route('/ai-agents')
+@bp.route('/ai-agents', methods=['GET', 'POST'])
 @tenant_required
 def ai_agents():
     tenant = g.current_tenant
     from app.models.agent_profile import AgentProfile
-    agents = AgentProfile.query.filter_by(tenant_id=tenant.id).all()
+    agent_types = ['reception', 'contract', 'accounting', 'collection']
+    agents = {a.agent_type: a for a in AgentProfile.query.filter_by(tenant_id=tenant.id).all()}
+
+    if request.method == 'POST':
+        for atype in agent_types:
+            agent_name = request.form.get(f'agent_{atype}_name')
+            tone = request.form.get(f'agent_{atype}_tone')
+            if agent_name and tone:
+                if atype in agents:
+                    agents[atype].agent_name = agent_name
+                    agents[atype].tone = tone
+                else:
+                    new_agent = AgentProfile(tenant_id=tenant.id, agent_type=atype, agent_name=agent_name, tone=tone)
+                    db.session.add(new_agent)
+        db.session.commit()
+        flash('تم حفظ إعدادات وكلاء الذكاء الاصطناعي بنجاح', 'success')
+        return redirect(url_for('tenant.ai_agents'))
+
     return render_template('tenant/ai_agents.html', tenant=tenant, agents=agents)
 
 @bp.route('/ai-agents/chat', methods=['POST'])
@@ -873,6 +868,48 @@ def delete_account():
 
     masked = _mask_email(tenant.owner_email or '')
     return render_template('tenant/delete_account.html', tenant=tenant, owner_email_masked=masked)
+
+
+# ========================
+# الدعم والمساعدة
+# ========================
+@bp.route('/support', methods=['GET', 'POST'])
+@tenant_required
+def support():
+    tenant = g.current_tenant
+    from app.models.support_ticket import SupportTicket
+    
+    if request.method == 'POST':
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+        
+        if not subject or not message:
+            flash('الرجاء إدخال الموضوع ونص الرسالة.', 'danger')
+            return redirect(url_for('tenant.support'))
+            
+        ticket = SupportTicket(
+            tenant_id=tenant.id,
+            subject=subject,
+            message=message
+        )
+        db.session.add(ticket)
+        db.session.commit()
+        
+        # log it
+        from app.services.audit_service import AuditService
+        AuditService.log(
+            actor_type='tenant_user',
+            actor_id=g.current_user.id,
+            tenant_id=tenant.id,
+            action='create_support_ticket',
+            target=f'ticket:{ticket.id}',
+        )
+        
+        flash('تم إرسال طلب الدعم بنجاح. سيتم التواصل معك قريباً.', 'success')
+        return redirect(url_for('tenant.support'))
+        
+    tickets = SupportTicket.query.filter_by(tenant_id=tenant.id).order_by(SupportTicket.created_at.desc()).all()
+    return render_template('tenant/support.html', tenant=tenant, tickets=tickets)
 
 
 def _mask_email(email: str) -> str:

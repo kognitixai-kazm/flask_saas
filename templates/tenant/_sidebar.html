@@ -43,73 +43,101 @@
     <!-- Navigation -->
     <nav class="p-3 space-y-1 text-sm pb-24">
 
-        <a href="{{ url_for('tenant.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition font-medium {% if request.endpoint == 'tenant.dashboard' %}bg-blue-50 text-blue-700 font-bold{% endif %}">
-            <span class="text-xl">🏠</span> الرئيسية
+        <a href="{{ url_for('tenant.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium {% if request.endpoint == 'tenant.dashboard' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">🏠</span> لوحة القيادة
         </a>
 
-        {# ---------- Property Management (Accordion) ---------- #}
-        {% if _act in ('hotel','restaurant') %}
-        <details class="group [&_summary::-webkit-details-marker]:hidden">
-            <summary class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition font-medium list-none">
-                <span class="text-xl">{% if _act == 'hotel' %}🏨{% else %}🍽️{% endif %}</span> 
-                <span class="flex-1">{% if _act == 'hotel' %}إدارة الأملاك{% else %}إدارة المطعم{% endif %}</span>
-                <span class="transition duration-300 group-open:-rotate-180">
-                    <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </span>
-            </summary>
-            <div class="mt-1 space-y-1 px-4 border-r-2 border-gray-100 mr-5">
-                {% if _act == 'hotel' %}
-                <a href="{{ url_for('tenant.branches') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">🏢 الفروع</a>
-                <a href="{{ url_for('tenant_hotel.mode_settings') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">🎯 أنماط الإيجار</a>
-                <a href="{{ url_for('tenant_hotel.floors') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">🏗️ الطوابق</a>
-                <a href="{{ url_for('tenant_hotel.units_dashboard') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">🏠 الوحدات</a>
-                <a href="{{ url_for('tenant_hotel.services') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">🛎️ الخدمات</a>
-                {% if g.current_tenant.hotel_supports_contracts %}
-                <a href="{{ url_for('tenant_contracts.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">📄 العقود <span class="bg-blue-100 text-blue-700 text-[9px] rounded px-1.5 py-0.5 ms-1">شهري</span></a>
-                {% endif %}
-                {% else %}
-                <a href="{{ url_for('tenant_restaurant.categories') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">📂 التصنيفات</a>
-                <a href="{{ url_for('tenant_restaurant.menu_items') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">📋 المنيو</a>
-                <a href="{{ url_for('tenant_restaurant.services') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50/50">🛵 الخدمات</a>
-                {% endif %}
-            </div>
-        </details>
-        {% endif %}
-
-        {# ---------- Customer Center ---------- #}
-        <a href="{{ url_for('tenant.conversations') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition font-medium">
-            <span class="text-xl relative">💬
-                {% if new_inq or new_bookings %}
+        <!-- العمليات التشغيلية -->
+        <div class="mt-5 mb-2 px-4 text-xs font-black text-gray-400 uppercase tracking-wider">العمليات التشغيلية</div>
+        <a href="{{ url_for('tenant_bookings.list_bookings') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_bookings.list_bookings' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl relative">📅
+                {% if new_bookings %}
                 <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
                 {% endif %}
-            </span>
-            <span class="flex-1">مركز العملاء</span>
+            </span> الحجوزات والطلبات
+        </a>
+        <a href="{{ url_for('tenant.conversations') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint in ('tenant.conversations', 'tenant_inquiries.list_inquiries') %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl relative">💬
+                {% if new_inq %}
+                <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
+                {% endif %}
+            </span> صندوق الرسائل
+        </a>
+        {% if g.current_tenant.subscription and g.current_tenant.subscription.plan and g.current_tenant.subscription.plan.has_feature('whatsapp') %}
+        <a href="{{ url_for('tenant_whatsapp.index') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_whatsapp.index' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">📱</span> رسائل واتساب
+        </a>
+        {% endif %}
+
+        <!-- إدارة النشاط -->
+        <div class="mt-5 mb-2 px-4 text-xs font-black text-gray-400 uppercase tracking-wider">إدارة النشاط</div>
+        {% if _act == 'hotel' %}
+        <a href="{{ url_for('tenant.branches') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant.branches' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">🏢</span> الفروع
+        </a>
+        <a href="{{ url_for('tenant_hotel.units_dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_hotel.units_dashboard' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">🛌</span> الوحدات والشقق
+        </a>
+        <a href="{{ url_for('tenant_hotel.services') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_hotel.services' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">🛎️</span> الخدمات الإضافية
+        </a>
+        {% if g.current_tenant.hotel_supports_contracts %}
+        <a href="{{ url_for('tenant_contracts.index') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_contracts.index' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">📑</span> العقود
+        </a>
+        {% endif %}
+        {% else %}
+        <a href="{{ url_for('tenant_restaurant.categories') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_restaurant.categories' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">📂</span> التصنيفات
+        </a>
+        <a href="{{ url_for('tenant_restaurant.menu_items') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_restaurant.menu_items' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">📋</span> المنيو والأصناف
+        </a>
+        <a href="{{ url_for('tenant_restaurant.services') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_restaurant.services' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">🛎️</span> الخدمات الإضافية
+        </a>
+        {% endif %}
+
+        <!-- المالية -->
+        <div class="mt-5 mb-2 px-4 text-xs font-black text-gray-400 uppercase tracking-wider">المالية</div>
+        <a href="{{ url_for('tenant_accounting.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_accounting.dashboard' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">📊</span> ملخص المالية
+        </a>
+        <a href="{{ url_for('tenant_accounting.list_expenses') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_accounting.list_expenses' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">🧾</span> المصاريف والقيود
         </a>
 
-        {# ---------- Finance ---------- #}
-        <a href="{{ url_for('tenant_accounting.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition font-medium">
-            <span class="text-xl">💰</span> <span class="flex-1">المالية والمحاسبة</span>
-        </a>
-
-        {# ---------- Integrations ---------- #}
-        <a href="{{ url_for('tenant_integrations.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition font-medium">
-            <span class="text-xl">🔗</span> <span class="flex-1">الربط والتكامل</span>
-        </a>
-
-        {# ---------- Settings ---------- #}
-        <a href="{{ url_for('tenant.settings') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition font-medium">
-            <span class="text-xl">⚙️</span> <span class="flex-1">الإعدادات</span>
-        </a>
-
-        {# ---------- AI Agents ---------- #}
-        <a href="{{ url_for('tenant.ai_agents') }}" class="flex items-center justify-between px-4 py-3 rounded-xl text-purple-700 bg-purple-50 hover:bg-purple-100 transition font-black border border-purple-100 mt-2">
+        <!-- الذكاء الاصطناعي -->
+        <div class="mt-5 mb-2 px-4 text-xs font-black text-purple-400 uppercase tracking-wider">الذكاء الاصطناعي</div>
+        <a href="{{ url_for('tenant.ai_agents') }}" class="flex items-center justify-between px-4 py-3 rounded-xl transition font-black border {% if request.endpoint == 'tenant.ai_agents' %}text-purple-800 bg-purple-100 border-purple-200{% else %}text-purple-700 bg-purple-50 hover:bg-purple-100 border-purple-100{% endif %}">
             <div class="flex items-center gap-3">
                 <span class="text-xl">🤖</span> <span>وكلاء الذكاء الاصطناعي</span>
             </div>
             <span class="bg-purple-200 text-purple-800 text-[10px] rounded px-2 py-0.5">NEW</span>
         </a>
 
-        <hr class="my-4 border-gray-100">
+        <!-- إعدادات النظام -->
+        <div class="mt-5 mb-2 px-4 text-xs font-black text-gray-400 uppercase tracking-wider">إعدادات النظام</div>
+        <a href="{{ url_for('tenant.profile') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant.profile' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">⚙️</span> إعدادات النشاط والهوية
+        </a>
+        <a href="{{ url_for('tenant.team') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant.team' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">👥</span> إدارة الفريق والصلاحيات
+        </a>
+        <a href="{{ url_for('tenant.billing') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant.billing' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">💳</span> الاشتراك والباقات
+        </a>
+        <a href="{{ url_for('tenant_integrations.index') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant_integrations.index' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">🔗</span> الربط والتكامل
+        </a>
+
+        <!-- مساعدة -->
+        <div class="mt-5 mb-2 px-4 text-xs font-black text-gray-400 uppercase tracking-wider">مساعدة</div>
+        <a href="{{ url_for('tenant.support') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition font-medium {% if request.endpoint == 'tenant.support' %}bg-blue-50 text-blue-700 font-bold{% else %}text-gray-700 hover:bg-blue-50 hover:text-blue-700{% endif %}">
+            <span class="text-xl">🎧</span> الدعم الفني
+        </a>
+
+        <hr class="my-6 border-gray-100">
 
         <form method="POST" action="{{ url_for('tenant.logout') }}" class="mt-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

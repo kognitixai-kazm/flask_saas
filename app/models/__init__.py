@@ -41,3 +41,5 @@ __all__ = [
     'AIProvider', 'AIModel', 'AgentProfile'
 ]
 
+
+from .support_ticket import SupportTicket

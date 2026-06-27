@@ -6,6 +6,7 @@
 <aside class="w-60 bg-gray-800 text-gray-300 flex-shrink-0">
 <div class="p-6 border-b border-gray-700"><div class="font-bold text-white">👑 إدارة المنصة</div></div>
 <nav class="p-4 space-y-1">
+<a href="{{ url_for('super_admin.support_tickets') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🎫 تذاكر الدعم</a>
 <a href="{{ url_for('super_admin.dashboard') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">📊 الرئيسية</a>
 <a href="{{ url_for('super_admin.tenants_list') }}" class="block px-4 py-2 rounded-lg bg-gray-700 text-white text-sm">🏢 المستأجرون</a>
 <a href="{{ url_for('super_admin.tenants_list') }}#bot-settings" class="block px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">🤖 إعدادات البوت</a>

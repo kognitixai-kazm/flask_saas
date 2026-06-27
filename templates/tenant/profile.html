@@ -1,5 +1,5 @@
-{% extends "tenant/_settings_wrapper.html" %}
-{% block settings_content %}
+{% extends "tenant/_base_panel.html" %}
+{% block panel_content %}
 
 <div class="grid md:grid-cols-3 gap-6">
   <!-- الشعار -->
@@ -120,6 +120,106 @@
         💾 حفظ بيانات الحساب
       </button>
     </form>
+
+    <!-- إعدادات التذكير التلقائي (منسوخة من settings.html) -->
+    <form method="POST" action="{{ url_for('tenant.profile') }}" class="bg-white rounded-xl p-6 shadow-sm mt-4 space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h3 class="font-bold text-sm text-gray-700 mb-2">🔔 إعدادات التذكير التلقائي</h3>
+      <p class="text-xs text-gray-500 mb-4">اختر القنوات التي سيتم إرسال تذكيرات الدفع للعملاء من خلالها. يتم إرسال التذكير تلقائياً قبل الانتهاء بـ 3 أيام ويستمر يومياً حتى يتم الدفع.</p>
+      
+      <div class="space-y-3 mb-6">
+          <label class="flex items-center gap-3">
+              <input type="checkbox" name="reminder_send_whatsapp" class="w-5 h-5 text-blue-600 rounded" 
+                     {% if tenant.settings.get('reminder_send_whatsapp') %}checked{% endif %}>
+              <span class="font-medium text-sm">واتساب (WhatsApp)</span>
+          </label>
+          <label class="flex items-center gap-3">
+              <input type="checkbox" name="reminder_send_email" class="w-5 h-5 text-blue-600 rounded"
+                     {% if tenant.settings.get('reminder_send_email') %}checked{% endif %}>
+              <span class="font-medium text-sm">البريد الإلكتروني (Email)</span>
+          </label>
+          <label class="flex items-center gap-3">
+              <input type="checkbox" name="reminder_send_sms" class="w-5 h-5 text-blue-600 rounded"
+                     {% if tenant.settings.get('reminder_send_sms') %}checked{% endif %}>
+              <span class="font-medium text-sm">رسائل نصية (SMS)</span>
+          </label>
+      </div>
+
+      <!-- قوالب التذكير المخصصة -->
+      <div class="space-y-4 mt-4 border-t pt-4">
+          <h4 class="font-bold text-gray-800 text-sm">قوالب التذكيرات المخصصة</h4>
+          <p class="text-xs text-gray-500 mb-2">يمكنك استخدام المتغيرات التالية: {name} لاسم النزيل، {unit} لاسم الوحدة، {days} لعدد الأيام، {amount} للمبلغ، {payment_link} لرابط الدفع.</p>
+          
+          {% set rems = tenant.settings.get('reminders', {}) %}
+          
+          <!-- قالب 1: قبل الانتهاء -->
+          <div class="bg-gray-50 p-4 rounded-lg border">
+              <div class="flex items-center justify-between mb-2">
+                  <label class="flex items-center gap-2 font-bold text-sm">
+                      <input type="checkbox" name="rem_before_active" value="1" {% if rems.get('before', {}).get('active', True) %}checked{% endif %}>
+                      تذكير قبل الانتهاء
+                  </label>
+                  <div class="flex items-center gap-2 text-sm">
+                      <span>قبل</span>
+                      <input type="number" name="rem_before_days" class="w-12 border rounded px-1 py-1 text-center" value="{{ rems.get('before', {}).get('days_offset', 3) }}" min="1" max="30">
+                      <span>أيام</span>
+                  </div>
+              </div>
+              <textarea name="rem_before_msg" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm">{{ rems.get('before', {}).get('msg', 'مرحباً {name}، نود تذكيرك بأن عقدك للوحدة {unit} سينتهي بعد {days} أيام. يرجى سداد المبلغ المتبقي {amount} عبر الرابط: {payment_link}') }}</textarea>
+          </div>
+
+          <!-- قالب 2: يوم الانتهاء -->
+          <div class="bg-gray-50 p-4 rounded-lg border">
+              <div class="flex items-center justify-between mb-2">
+                  <label class="flex items-center gap-2 font-bold text-sm">
+                      <input type="checkbox" name="rem_on_active" value="1" {% if rems.get('on', {}).get('active', True) %}checked{% endif %}>
+                      تذكير يوم الانتهاء
+                  </label>
+              </div>
+              <textarea name="rem_on_msg" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm">{{ rems.get('on', {}).get('msg', 'مرحباً {name}، نود تذكيرك بأن عقدك للوحدة {unit} ينتهي اليوم. يرجى المبادرة بسداد {amount} لتجنب أي غرامات: {payment_link}') }}</textarea>
+          </div>
+
+          <!-- قالب 3: بعد الانتهاء (متأخر) -->
+          <div class="bg-gray-50 p-4 rounded-lg border">
+              <div class="flex items-center justify-between mb-2">
+                  <label class="flex items-center gap-2 font-bold text-sm">
+                      <input type="checkbox" name="rem_after_active" value="1" {% if rems.get('after', {}).get('active', True) %}checked{% endif %}>
+                      تذكير الدفع المتأخر
+                  </label>
+                  <div class="flex items-center gap-2 text-sm">
+                      <span>بعد</span>
+                      <input type="number" name="rem_after_days" class="w-12 border rounded px-1 py-1 text-center" value="{{ rems.get('after', {}).get('days_offset', 2) }}" min="1" max="30">
+                      <span>أيام</span>
+                  </div>
+              </div>
+              <textarea name="rem_after_msg" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm">{{ rems.get('after', {}).get('msg', 'مرحباً {name}، لقد تأخر سداد إيجار الوحدة {unit} بمقدار {days} أيام. نرجو السداد الفوري للمبلغ {amount} عبر الرابط التالي: {payment_link}') }}</textarea>
+          </div>
+      </div>
+      <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-blue-700 mt-4">💾 حفظ إعدادات التذكير</button>
+    </form>
+
+    <!-- إعدادات النشاط الإضافية -->
+    {% if activity %}
+    <form method="POST" action="{{ url_for('tenant.profile') }}" class="bg-white rounded-xl p-6 shadow-sm mt-4 space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <h3 class="font-bold text-sm text-gray-700 mb-2">📋 إعدادات نشاط {{ activity.name_ar }}</h3>
+        <p class="text-xs text-gray-500 mb-4">أدخل أي بيانات إضافية يطلبها هذا النشاط (تستخدم في العقود والفواتير).</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for field in activity.extra_fields %}
+            <div>
+                <label class="block text-xs font-bold mb-1">{{ field.label }} {% if field.required %}*{% endif %}</label>
+                <input type="{{ field.type }}" name="activity_{{ field.key }}" value="{{ tenant.activity_data.get(field.key, '') }}" {% if field.required %}required{% endif %} class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="{{ field.placeholder or '' }}">
+            </div>
+            {% endfor %}
+        </div>
+        {% if activity.extra_fields %}
+        <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-blue-700 mt-4">💾 حفظ بيانات النشاط</button>
+        {% else %}
+        <p class="text-xs text-gray-500 italic">لا توجد إعدادات إضافية لهذا النشاط حالياً.</p>
+        {% endif %}
+    </form>
+    {% endif %}
 
     <!-- تغيير كلمة المرور -->
     <div class="bg-white rounded-xl p-6 shadow-sm mt-4">

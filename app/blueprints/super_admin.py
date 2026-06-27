@@ -638,3 +638,32 @@ def audit_logs():
 def system_info():
     """نفس صفحة إعدادات النظام — التوجيه لتفادي عرض القالب بدون سياق (settings_by_cat)."""
     return redirect(url_for('admin_system.index'))
+
+
+# ========================
+# Support Tickets
+# ========================
+@bp.route('/support-tickets')
+@super_admin_required
+def support_tickets():
+    from app.models.support_ticket import SupportTicket
+    status_filter = request.args.get('status')
+    
+    q = SupportTicket.query
+    if status_filter:
+        q = q.filter_by(status=status_filter)
+        
+    tickets = q.order_by(SupportTicket.created_at.desc()).all()
+    return render_template('super_admin/support_tickets.html', tickets=tickets, status_filter=status_filter)
+
+@bp.route('/support-tickets/<int:id>/status', methods=['POST'])
+@super_admin_required
+def update_ticket_status(id):
+    from app.models.support_ticket import SupportTicket
+    ticket = SupportTicket.query.get_or_404(id)
+    new_status = request.form.get('status')
+    if new_status in ['open', 'in_progress', 'resolved', 'closed']:
+        ticket.status = new_status
+        db.session.commit()
+        flash('تم تحديث حالة التذكرة', 'success')
+    return redirect(url_for('super_admin.support_tickets'))
