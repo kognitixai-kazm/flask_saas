@@ -1,12 +1,105 @@
 {% extends "base.html" %}
-{% block title %}privacy — {{ SITE_NAME }}{% endblock %}
+{% block title %}سياسة الخصوصية — {{ SITE_NAME }}{% endblock %}
 {% block body %}
-<nav class="bg-white shadow-sm py-4 px-6"><div class="max-w-6xl mx-auto flex justify-between items-center">
-<a href="/" class="text-xl font-bold text-blue-600">🤖 {{ SITE_NAME }}</a>
-<a href="/" class="text-sm text-gray-500 hover:text-blue-600">← الرئيسية</a>
-</div></nav>
-<div class="max-w-4xl mx-auto py-16 px-6">
-<h1 class="text-3xl font-bold mb-8">privacy</h1>
-<p class="text-gray-500">محتوى هذه الصفحة سيُضاف لاحقاً.</p>
+<nav class="bg-white shadow-sm py-4 px-6 border-b border-gray-100">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+        <a href="/" class="text-xl font-bold text-blue-600 flex items-center gap-2">
+            🤖 {{ SITE_NAME }}
+        </a>
+        <a href="/" class="text-sm text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+            <i data-lucide="arrow-right" class="w-4 h-4"></i> العودة للرئيسية
+        </a>
+    </div>
+</nav>
+
+<div class="max-w-4xl mx-auto py-16 px-6 leading-relaxed text-gray-700">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-4">سياسة الخصوصية</h1>
+    <p class="text-sm text-gray-500 mb-10">تاريخ السريان: 27 يونيو 2026</p>
+
+    <div class="prose prose-blue max-w-none space-y-8">
+        <section>
+            <p class="text-lg">تلتزم <strong>{{ SITE_NAME }}</strong> بحماية خصوصية مستخدمي منصتنا. توضح هذه السياسة كيفية جمعنا واستخدامنا وحمايتنا للمعلومات الشخصية عند استخدامك لمنصة {{ SITE_NAME }}، وهي حل SaaS متكامل يعتمد على وكلاء الذكاء الاصطناعي لأتمتة الأعمال وتحسين الكفاءة التشغيلية.</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-r-4 border-blue-600 pr-4">1. المعلومات التي نجمعها</h2>
+            <p>نحن نجمع أنواعاً مختلفة من المعلومات لتقديم وتحسين خدماتنا المعتمدة على الذكاء الاصطناعي:</p>
+            <ul class="list-disc pr-6 space-y-2 mt-4">
+                <li><strong>معلومات التسجيل والحساب:</strong> اسمك، بريدك الإلكتروني، رقم هاتفك، معلومات الشركة، ومعلومات تسجيل الدخول.</li>
+                <li><strong>بيانات الاستخدام:</strong> تفاعلاتك مع المنصة، الصفحات التي تزورها، الميزات المستخدمة، وعنوان IP.</li>
+                <li><strong>بيانات العملاء التي تتم معالجتها بواسطة الوكلاء:</strong> معلومات الحجوزات، تفاصيل الفواتير، سجلات التواصل عبر واتساب.</li>
+                <li><strong>معلومات الدفع:</strong> تفاصيل بطاقة الائتمان أو معلومات الحساب المصرفي (تتم معالجتها بواسطة جهات خارجية).</li>
+                <li><strong>ملفات تعريف الارتباط (Cookies) وتقنيات التتبع:</strong> لتحسين وظائف الموقع، تخصيص تجربتك، وتحليل حركة المرور لتحسين محركات البحث (SEO).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-r-4 border-blue-600 pr-4">2. كيفية استخدامنا للمعلومات</h2>
+            <p>نستخدم المعلومات التي نجمعها لأغراض متعددة، بما في ذلك:</p>
+            <ul class="list-disc pr-6 space-y-2 mt-4">
+                <li>تقديم وصيانة الخدمة.</li>
+                <li>تحسين وتخصيص الخدمة وأداء وكلاء الذكاء الاصطناعي.</li>
+                <li>التسويق والاتصالات (مع إمكانية إلغاء الاشتراك).</li>
+                <li>الأمان ومنع الاحتيال.</li>
+                <li>الامتثال القانوني.</li>
+                <li>تحليل البيانات لأغراض تحسين محركات البحث (SEO) واستراتيجيات التسويق.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-r-4 border-blue-600 pr-4">3. كيفية حماية البيانات</h2>
+            <p>نتخذ تدابير أمنية تقنية وتنظيمية مناسبة لحماية معلوماتك الشخصية، وتشمل:</p>
+            <ul class="list-disc pr-6 space-y-2 mt-4">
+                <li>التشفير.</li>
+                <li>التحكم في الوصول.</li>
+                <li>المراقبة المستمرة.</li>
+                <li>النسخ الاحتياطي.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-r-4 border-blue-600 pr-4">4. مشاركة البيانات مع أطراف ثالثة</h2>
+            <p>قد نشارك معلوماتك الشخصية مع أطراف ثالثة في الظروف التالية:</p>
+            <ul class="list-disc pr-6 space-y-2 mt-4">
+                <li>مزودي الخدمة (مثل استضافة السحابة، بوابات الدفع، خدمات تحليل البيانات).</li>
+                <li>الشركاء التجاريون (بيانات مجمعة أو مجهولة الهوية).</li>
+                <li>المتطلبات القانونية.</li>
+                <li>بموافقتك الصريحة.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-r-4 border-blue-600 pr-4">5. حقوق المستخدمين</h2>
+            <p>لديك الحقوق التالية فيما يتعلق ببياناتك الشخصية:</p>
+            <ul class="list-disc pr-6 space-y-2 mt-4">
+                <li>حق الوصول.</li>
+                <li>حق التصحيح.</li>
+                <li>حق الحذف.</li>
+                <li>حق الاعتراض.</li>
+                <li>حق سحب الموافقة.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-r-4 border-blue-600 pr-4">6. معلومات الاتصال للاستفسارات المتعلقة بالخصوصية</h2>
+            <p>إذا كانت لديك أي أسئلة أو مخاوف بشأن سياسة الخصوصية هذه، يرجى التواصل معنا عبر:</p>
+            <ul class="list-disc pr-6 space-y-2 mt-4">
+                <li>**البريد الإلكتروني:** Kazm@kognitixai.com أو kognitixai@gmail.com</li>
+                <li>**واتساب:** +966 53 834 4673 أو +967 773 216 649</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-r-4 border-blue-600 pr-4">7. التعديلات على سياسة الخصوصية</h2>
+            <p>قد نقوم بتحديث سياسة الخصوصية هذه من وقت لآخر. سيتم نشر أي تغييرات على هذه الصفحة، ويعتبر استمرارك في استخدام الخدمة بعد نشر التغييرات بمثابة موافقة منك على السياسة المعدلة. ننصحك بمراجعة هذه السياسة بشكل دوري.</p>
+        </section>
+    </div>
 </div>
+
+<script>
+    // Initialize Lucide icons if available
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
 {% endblock %}

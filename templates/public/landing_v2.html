@@ -165,6 +165,18 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        
+        .glass-card {
+            background: rgba(9, 9, 11, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        .glass-card:hover {
+            background: rgba(24, 24, 27, 0.85);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
     </style>
 </head>
 <body class="mesh-bg bg-background text-zinc-300">
@@ -257,138 +269,218 @@
             </div>
 
             <!-- Hero Visual (AI Network) -->
-            <div class="w-full lg:w-1/2 relative h-[300px] sm:h-[400px] lg:h-[600px] flex items-center justify-center hero-elem hero-visual">
+            <div class="w-full lg:w-1/2 relative h-[400px] sm:h-[500px] lg:h-[600px] flex items-center justify-center hero-elem">
                 <div class="absolute inset-0 bg-primary/5 rounded-full filter blur-[100px] -z-10 animate-pulse-slow"></div>
                 
-                <!-- Custom Hub Architecture SVG -->
-                <svg viewBox="0 0 400 400" class="w-full h-full max-w-[600px]" preserveAspectRatio="xMidYMid meet">
-                    <defs>
-                        <!-- Glow filter -->
-                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur stdDeviation="4" result="blur" />
-                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                        </filter>
-                        <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/>
-                            <stop offset="100%" stop-color="#818cf8" stop-opacity="0.8"/>
-                        </linearGradient>
-                    </defs>
+                <div class="relative w-full aspect-square max-w-[600px] mx-auto flex items-center justify-center mt-8 lg:mt-0">
+                    
+                    <!-- Connection Lines (Two-way Data Flow) -->
+                    <svg viewBox="0 0 600 600" class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <filter id="glow-line" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="2" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                            <linearGradient id="grad-tl" x1="100%" y1="100%" x2="0%" y2="0%">
+                                <stop offset="0%" stop-color="#22c55e" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#22c55e" stop-opacity="0.0" />
+                            </linearGradient>
+                            <linearGradient id="grad-ml" x1="100%" y1="50%" x2="0%" y2="50%">
+                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0" />
+                            </linearGradient>
+                            <linearGradient id="grad-bl" x1="100%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.0" />
+                            </linearGradient>
+                            <linearGradient id="grad-tr" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#ec4899" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#ec4899" stop-opacity="0.0" />
+                            </linearGradient>
+                            <linearGradient id="grad-mr" x1="0%" y1="50%" x2="100%" y2="50%">
+                                <stop offset="0%" stop-color="#a855f7" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#a855f7" stop-opacity="0.0" />
+                            </linearGradient>
+                            <linearGradient id="grad-br" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0" />
+                            </linearGradient>
+                        </defs>
 
-                    <!-- Connections -->
-                    <line x1="200" y1="200" x2="80" y2="80" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
-                    <line x1="200" y1="200" x2="320" y2="80" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
-                    <line x1="200" y1="200" x2="40" y2="200" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
-                    <line x1="200" y1="200" x2="360" y2="200" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
-                    <line x1="200" y1="200" x2="80" y2="320" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
-                    <line x1="200" y1="200" x2="320" y2="320" stroke="url(#lineGrad)" stroke-width="2" stroke-dasharray="6 4" class="opacity-50 animate-pulse" />
-
-                    <!-- Central Node: Robot with Logo -->
-                    <g transform="translate(200, 200)">
-                        <!-- Outer energy ring -->
-                        <circle cx="0" cy="0" r="70" fill="none" stroke="#818cf8" stroke-width="1" stroke-dasharray="4 8" class="animate-[spin_10s_linear_infinite]" style="transform-origin: 0px 0px;"/>
+                        <!-- Static Lines -->
+                        <line x1="300" y1="300" x2="100" y2="80" stroke="url(#grad-tl)" stroke-width="2" filter="url(#glow-line)" />
+                        <line x1="300" y1="300" x2="50" y2="300" stroke="url(#grad-ml)" stroke-width="2" filter="url(#glow-line)" />
+                        <line x1="300" y1="300" x2="100" y2="520" stroke="url(#grad-bl)" stroke-width="2" filter="url(#glow-line)" />
                         
-                        <!-- Floating animation for the robot -->
-                        <g class="animate-float">
-                            <!-- Background Glow for Robot -->
-                            <circle cx="0" cy="0" r="45" fill="none" stroke="#38bdf8" stroke-width="0" filter="url(#glow)"/>
-                            
-                            <!-- Antenna -->
-                            <path d="M 0 -35 L 0 -50" stroke="#818cf8" stroke-width="2"/>
-                            <circle cx="0" cy="-52" r="3" fill="#38bdf8" class="animate-pulse"/>
-                            
-                            <!-- Head -->
-                            <rect x="-18" y="-35" width="36" height="24" rx="6" fill="#09090b" stroke="#818cf8" stroke-width="2"/>
-                            <!-- Eyes -->
-                            <rect x="-10" y="-28" width="6" height="3" rx="1.5" fill="#38bdf8" class="animate-pulse"/>
-                            <rect x="4" y="-28" width="6" height="3" rx="1.5" fill="#38bdf8" class="animate-pulse"/>
-                            <!-- Mouth -->
-                            <line x1="-5" y1="-18" x2="5" y2="-18" stroke="#818cf8" stroke-width="2" stroke-linecap="round"/>
-                            
-                            <!-- Neck -->
-                            <rect x="-6" y="-11" width="12" height="6" fill="#18181b" stroke="#818cf8" stroke-width="1"/>
-                            
-                            <!-- Shoulders / Torso -->
-                            <path d="M -30 -5 L 30 -5 Q 40 -5 38 10 L 32 35 Q 30 45 18 45 L -18 45 Q -30 45 -32 35 L -38 10 Q -40 -5 -30 -5 Z" fill="#09090b" stroke="#818cf8" stroke-width="2" filter="url(#glow)"/>
-                            
-                            <!-- Arms -->
-                            <path d="M -36 5 Q -50 5 -50 20 L -50 35" fill="none" stroke="#818cf8" stroke-width="6" stroke-linecap="round"/>
-                            <path d="M 36 5 Q 50 5 50 20 L 50 35" fill="none" stroke="#818cf8" stroke-width="6" stroke-linecap="round"/>
-                            
-                            <!-- Logo on Chest -->
-                            <circle cx="0" cy="20" r="16" fill="#18181b" stroke="#38bdf8" stroke-width="1.5"/>
-                            <clipPath id="robotChestClip">
-                                <circle cx="0" cy="20" r="14" />
-                            </clipPath>
-                            <image href="{{ url_for('static', filename='img/logo.jpg') }}" x="-14" y="6" width="28" height="28" clip-path="url(#robotChestClip)" preserveAspectRatio="xMidYMid slice" />
-                        </g>
-                    </g>
+                        <line x1="300" y1="300" x2="500" y2="80" stroke="url(#grad-tr)" stroke-width="2" filter="url(#glow-line)" />
+                        <line x1="300" y1="300" x2="550" y2="300" stroke="url(#grad-mr)" stroke-width="2" filter="url(#glow-line)" />
+                        <line x1="300" y1="300" x2="500" y2="520" stroke="url(#grad-br)" stroke-width="2" filter="url(#glow-line)" />
 
-                    <!-- Nodes -->
-                    <!-- Node 1: WhatsApp -->
-                    <circle cx="80" cy="80" r="24" fill="#09090b" stroke="#22c55e" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: 0s;"/>
-                    <g transform="translate(68, 68) scale(0.5)" fill="#22c55e">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                    </g>
-                    <text x="80" y="125" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">WhatsApp</text>
+                        <!-- Two-way Animated Data Particles -->
+                        <!-- WhatsApp (Top Left) -->
+                        <circle r="3" fill="#22c55e" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="300; 100" dur="2s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="300; 80" dur="2s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                        <circle r="2" fill="#fff" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="100; 300" dur="1.5s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="80; 300" dur="1.5s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="1.5s" repeatCount="indefinite" />
+                        </circle>
 
-                    <!-- Node 2: Facebook/Insta -->
-                    <circle cx="320" cy="80" r="24" fill="#09090b" stroke="#3b82f6" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -1s;"/>
-                    <g transform="translate(308, 68) scale(0.5)" fill="#3b82f6">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                    </g>
-                    <text x="320" y="125" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">Social Media</text>
+                        <!-- Website (Middle Left) -->
+                        <circle r="3" fill="#3b82f6" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="300; 50" dur="2.5s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="300; 300" dur="2.5s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="2.5s" repeatCount="indefinite" />
+                        </circle>
+                        <circle r="2" fill="#fff" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="50; 300" dur="1.8s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="300; 300" dur="1.8s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="1.8s" repeatCount="indefinite" />
+                        </circle>
 
-                    <!-- Node 3: Hotels (Activity) -->
-                    <circle cx="40" cy="200" r="24" fill="#09090b" stroke="#eab308" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -2s;"/>
-                    <g transform="translate(28, 188) scale(0.5)" fill="#eab308">
-                        <path d="M3 14V3a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v11M10 21v-7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7M14 6h.01M10 6h.01M18 6h.01M18 10h.01M14 10h.01M10 10h.01M2 21h20" stroke="currentColor" stroke-width="2"/>
-                    </g>
-                    <text x="40" y="240" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">الفنادق</text>
+                        <!-- Properties (Bottom Left) -->
+                        <circle r="3" fill="#f43f5e" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="300; 100" dur="3s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="300; 520" dur="3s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="3s" repeatCount="indefinite" />
+                        </circle>
+                        <circle r="2" fill="#fff" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="100; 300" dur="2.2s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="520; 300" dur="2.2s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="2.2s" repeatCount="indefinite" />
+                        </circle>
 
-                    <!-- Node 4: ERP/PMS -->
-                    <circle cx="360" cy="200" r="24" fill="#09090b" stroke="#a855f7" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -0.5s;"/>
-                    <g transform="translate(348, 188) scale(0.5)" fill="#a855f7" stroke="currentColor" stroke-width="2">
-                        <path d="M4 6h16v12H4zM4 10h16M4 14h16M12 6v12"/>
-                    </g>
-                    <text x="360" y="240" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">ERP / PMS</text>
+                        <!-- Social Media (Top Right) -->
+                        <circle r="3" fill="#ec4899" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="500; 300" dur="2.2s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="80; 300" dur="2.2s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="2.2s" repeatCount="indefinite" />
+                        </circle>
+                        <circle r="2" fill="#fff" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="300; 500" dur="1.6s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="300; 80" dur="1.6s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="1.6s" repeatCount="indefinite" />
+                        </circle>
 
-                    <!-- Node 5: Real Estate -->
-                    <circle cx="80" cy="320" r="24" fill="#09090b" stroke="#f43f5e" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -1.5s;"/>
-                    <g transform="translate(68, 308) scale(0.5)" fill="none" stroke="#f43f5e" stroke-width="2">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                        <polyline points="9 22 9 12 15 12 15 22"/>
-                    </g>
-                    <text x="80" y="360" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">العقارات</text>
+                        <!-- ERP/PMS (Middle Right) -->
+                        <circle r="3" fill="#a855f7" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="550; 300" dur="2.8s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="300; 300" dur="2.8s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="2.8s" repeatCount="indefinite" />
+                        </circle>
+                        <circle r="2" fill="#fff" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="300; 550" dur="2.1s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="300; 300" dur="2.1s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="2.1s" repeatCount="indefinite" />
+                        </circle>
 
-                    <!-- Node 6: Payments -->
-                    <circle cx="320" cy="320" r="24" fill="#09090b" stroke="#06b6d4" stroke-width="2" filter="url(#glow)" class="animate-float" style="animation-delay: -2.5s;"/>
-                    <g transform="translate(308, 308) scale(0.5)" fill="none" stroke="#06b6d4" stroke-width="2">
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                    </g>
-                    <text x="320" y="360" fill="#a1a1aa" font-size="12" font-family="sans-serif" text-anchor="middle">الدفع</text>
+                        <!-- Payment (Bottom Right) -->
+                        <circle r="3" fill="#06b6d4" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="500; 300" dur="2.6s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="520; 300" dur="2.6s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="2.6s" repeatCount="indefinite" />
+                        </circle>
+                        <circle r="2" fill="#fff" filter="url(#glow-line)">
+                            <animate attributeName="cx" values="300; 500" dur="1.9s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="300; 520" dur="1.9s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0; 1; 0" dur="1.9s" repeatCount="indefinite" />
+                        </circle>
+                    </svg>
 
-                    <!-- Animated Data Packets (Dots moving along lines) -->
-                    <circle r="3" fill="#22c55e" filter="url(#glow)">
-                        <animateMotion dur="2s" repeatCount="indefinite" path="M80,80 L200,200" />
-                    </circle>
-                    <circle r="3" fill="#eab308" filter="url(#glow)">
-                        <animateMotion dur="3s" repeatCount="indefinite" path="M200,200 L40,200" />
-                    </circle>
-                    <circle r="3" fill="#a855f7" filter="url(#glow)">
-                        <animateMotion dur="2.5s" repeatCount="indefinite" path="M200,200 L360,200" />
-                    </circle>
-                    <circle r="3" fill="#06b6d4" filter="url(#glow)">
-                        <animateMotion dur="2s" repeatCount="indefinite" path="M320,320 L200,200" />
-                    </circle>
-                    <circle r="3" fill="#f43f5e" filter="url(#glow)">
-                        <animateMotion dur="3.5s" repeatCount="indefinite" path="M80,320 L200,200" />
-                    </circle>
-                    <circle r="3" fill="#3b82f6" filter="url(#glow)">
-                        <animateMotion dur="2.8s" repeatCount="indefinite" path="M320,80 L200,200" />
-                    </circle>
-                </svg>
+                    <!-- Central Platform Core -->
+                    <div class="relative z-10 w-[120px] sm:w-[160px] h-[120px] sm:h-[160px] animate-float flex flex-col items-center justify-center">
+                        <!-- Rotating Energy Rings -->
+                        <div class="absolute inset-[-10px] sm:inset-[-20px] rounded-full border border-primary/30 border-t-primary/80 animate-[spin_4s_linear_infinite]"></div>
+                        <div class="absolute inset-[0px] rounded-full border border-cyan-400/20 border-b-cyan-400/80 animate-[spin_6s_linear_infinite_reverse]"></div>
+                        <div class="absolute inset-[10px] rounded-full border border-purple-500/20 border-r-purple-500/60 animate-[spin_8s_linear_infinite]"></div>
+                        
+                        <!-- Core Glow -->
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] h-[180%] bg-primary/20 blur-[40px] rounded-full animate-pulse-slow"></div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] bg-cyan-400/30 blur-[20px] rounded-full animate-pulse"></div>
 
-                <!-- Floating Data Cards Removed per request -->
+                        <!-- The Logo Container -->
+                        <div class="relative z-10 w-full h-full bg-zinc-950 border-2 border-primary/50 shadow-[0_0_35px_rgba(56,189,248,0.6)] rounded-full flex items-center justify-center overflow-hidden glass-card">
+                            <!-- White background helper for logo visibility -->
+                            <div class="absolute inset-0 bg-white/5 backdrop-blur-md"></div>
+                            <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="KognitixAI Core" class="relative z-10 w-[85%] h-[85%] object-contain rounded-full drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                        </div>
+                    </div>
+
+                    <!-- Cards -->
+                    <!-- Left Side Cards (Physical Left) -->
+                    <!-- WhatsApp -->
+                    <div class="absolute top-[5%] left-[0%] sm:left-[-5%] z-20 flex items-center gap-2 sm:gap-3 glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-all duration-300 group w-[130px] sm:w-[220px]">
+                        <div class="w-8 h-8 sm:w-11 sm:h-11 shrink-0 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center group-hover:bg-green-500/20 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 fill-current text-green-500" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-[10px] sm:text-sm text-white leading-tight">WhatsApp</div>
+                            <div class="text-[8px] sm:text-[10px] text-zinc-400 mt-1 leading-snug line-clamp-2">تواصل فوري وذكي مع عملائك</div>
+                        </div>
+                    </div>
+
+                    <!-- Website -->
+                    <div class="absolute top-[50%] -translate-y-1/2 left-[-5%] sm:left-[-15%] z-20 flex items-center gap-2 sm:gap-3 glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-all duration-300 group w-[130px] sm:w-[220px]">
+                        <div class="w-8 h-8 sm:w-11 sm:h-11 shrink-0 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/20 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 fill-none stroke-current text-blue-500" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-[10px] sm:text-sm text-white leading-tight">الموقع الإلكتروني</div>
+                            <div class="text-[8px] sm:text-[10px] text-zinc-400 mt-1 leading-snug line-clamp-2">واجهة احترافية تعكس علامتك</div>
+                        </div>
+                    </div>
+
+                    <!-- Properties -->
+                    <div class="absolute bottom-[5%] left-[0%] sm:left-[-5%] z-20 flex items-center gap-2 sm:gap-3 glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-all duration-300 group w-[130px] sm:w-[220px]">
+                        <div class="w-8 h-8 sm:w-11 sm:h-11 shrink-0 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center group-hover:bg-rose-500/20 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(244,63,94,0.3)] transition-all">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 fill-none stroke-current text-rose-500" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-[10px] sm:text-sm text-white leading-tight">العقارات</div>
+                            <div class="text-[8px] sm:text-[10px] text-zinc-400 mt-1 leading-snug line-clamp-2">إدارة وحداتك وعقاراتك بكفاءة</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Side Cards (Physical Right) -->
+                    <!-- Social Media -->
+                    <div class="absolute top-[5%] right-[0%] sm:right-[-5%] z-20 flex items-center gap-2 sm:gap-3 glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-all duration-300 group w-[130px] sm:w-[220px]">
+                        <div class="w-8 h-8 sm:w-11 sm:h-11 shrink-0 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center group-hover:bg-pink-500/20 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(236,72,153,0.3)] transition-all">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 fill-current text-pink-500" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm3.98-10.169a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-[10px] sm:text-sm text-white leading-tight">Social Media</div>
+                            <div class="text-[8px] sm:text-[10px] text-zinc-400 mt-1 leading-snug line-clamp-2">إدارة كل حساباتك من مكان واحد</div>
+                        </div>
+                    </div>
+
+                    <!-- ERP / PMS -->
+                    <div class="absolute top-[50%] -translate-y-1/2 right-[-5%] sm:right-[-15%] z-20 flex items-center gap-2 sm:gap-3 glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-all duration-300 group w-[130px] sm:w-[220px]">
+                        <div class="w-8 h-8 sm:w-11 sm:h-11 shrink-0 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 fill-none stroke-current text-purple-500" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-[10px] sm:text-sm text-white leading-tight">ERP / PMS</div>
+                            <div class="text-[8px] sm:text-[10px] text-zinc-400 mt-1 leading-snug line-clamp-2">ربط وتكامل مع أنظمة الإدارة</div>
+                        </div>
+                    </div>
+
+                    <!-- Payment -->
+                    <div class="absolute bottom-[5%] right-[0%] sm:right-[-5%] z-20 flex items-center gap-2 sm:gap-3 glass-card rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-all duration-300 group w-[130px] sm:w-[220px]">
+                        <div class="w-8 h-8 sm:w-11 sm:h-11 shrink-0 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center group-hover:bg-cyan-400/20 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 fill-none stroke-current text-cyan-400" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-[10px] sm:text-sm text-white leading-tight">الدفع</div>
+                            <div class="text-[8px] sm:text-[10px] text-zinc-400 mt-1 leading-snug line-clamp-2">عمليات دفع آمنة وسريعة</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -488,80 +580,184 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Hotel Card -->
-                <div class="glow-card group section-elem">
-                    <div class="h-48 bg-gradient-to-br from-surface to-background border-b border-border relative overflow-hidden flex items-center justify-center">
-                        <div class="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-100 transition-opacity duration-500" style="background-image: url('https://images.unsplash.com/photo-1542314831-c6a4d27ce6a2?q=80&w=800&auto=format&fit=crop');"></div>
-                        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
-                        <i data-lucide="building-2" class="w-16 h-16 text-white group-hover:text-primary transition-colors duration-500 relative z-10 drop-shadow-lg"></i>
+                <div class="glow-card group section-elem relative overflow-hidden rounded-2xl border border-white/5 bg-zinc-950/80 hover:border-primary/40 transition-all duration-500 hover:-translate-y-2 backdrop-blur-sm cursor-pointer shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(56,189,248,0.3)]">
+                    <!-- Premium Image Header with Parallax effect -->
+                    <div class="h-40 relative overflow-hidden rounded-t-2xl border-b border-white/5">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-80" style="background-image: url('https://images.unsplash.com/photo-1542314831-c6a4d27ce6a2?q=80&w=800&auto=format&fit=crop');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-zinc-950/10"></div>
+                        
+                        <!-- Floating Badges / UI Elements in Header -->
+                        <div class="absolute top-4 right-4 flex gap-2">
+                            <span class="bg-primary/20 text-primary border border-primary/30 text-[10px] px-3 py-1 rounded-full backdrop-blur-md flex items-center gap-1.5 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
+                                <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> يعمل 24/7
+                            </span>
+                        </div>
+                        
+                        <!-- Icon Circle positioned to overlap -->
+                        <div class="absolute bottom-[-24px] left-6 w-14 h-14 bg-zinc-900 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl group-hover:border-primary/50 group-hover:bg-primary/10 transition-colors duration-500 z-10 group-hover:-translate-y-2">
+                            <svg class="w-7 h-7 text-white group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        </div>
                     </div>
-                    <div class="p-8">
-                        <h4 class="text-xl font-bold mb-4 text-white">قطاع الضيافة والفنادق</h4>
-                        <ul class="space-y-3">
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-primary shrink-0"></i>
-                                <span>إدارة الحجوزات المعقدة آلياً</span>
-                            </li>
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-primary shrink-0"></i>
-                                <span>دعم النزلاء بلغات متعددة 24/7</span>
-                            </li>
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-primary shrink-0"></i>
-                                <span>إصدار الفواتير والعقود رقمياً</span>
-                            </li>
-                        </ul>
+                    
+                    <div class="p-6 pt-10 relative z-20">
+                        <h4 class="text-xl font-bold mb-2 text-white group-hover:text-primary transition-colors flex items-center gap-2">قطاع الضيافة والفنادق</h4>
+                        <p class="text-[13px] text-zinc-400 mb-6 font-light leading-relaxed">وكيل ذكاء اصطناعي متخصص لإدارة حجوزات الفندق، الرد على النزلاء بلغات متعددة، وتقديم تجربة إقامة استثنائية.</p>
+                        
+                        <!-- Interactive Mock UI Dashboard inside Card -->
+                        <div class="bg-black/40 border border-white/5 rounded-xl p-4 mb-6 group-hover:bg-primary/[0.03] transition-colors relative overflow-hidden">
+                            <!-- Background Glow -->
+                            <div class="absolute -top-10 -right-10 w-24 h-24 bg-primary/20 blur-[30px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+
+                            <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+                                <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">العمليات المباشرة</span>
+                                <span class="text-[10px] text-green-400 flex items-center gap-1.5"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> متصل</span>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <!-- Chat Simulation -->
+                                <div class="flex items-start gap-2.5">
+                                    <div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5 border border-primary/30">
+                                        <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <div class="bg-zinc-800/80 rounded-xl rounded-tr-sm p-2.5 text-[11px] text-zinc-300 w-full border border-white/5 group-hover:border-primary/20 transition-colors relative overflow-hidden shadow-inner">
+                                        <div class="absolute top-0 bottom-0 right-0 w-full bg-gradient-to-l from-transparent via-white/10 to-transparent translate-x-full group-hover:-translate-x-full transition-transform duration-[1500ms] ease-in-out delay-100"></div>
+                                        "تم تأكيد حجز الجناح الملكي للسيد أحمد، وإرسال رابط بوابة الدفع بنجاح."
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start gap-2.5 flex-row-reverse">
+                                    <div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                                        <svg class="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    </div>
+                                    <div class="bg-primary/10 text-primary border border-primary/20 rounded-xl rounded-tl-sm p-2.5 text-[11px] w-[85%] ml-auto shadow-sm">
+                                        "شكراً لك، هل يوجد خدمة استقبال ونقل من المطار؟"
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tags instead of bullets -->
+                        <div class="flex flex-wrap gap-2">
+                            <span class="text-[11px] bg-zinc-900 text-zinc-300 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-1.5 group-hover:border-primary/30 transition-colors shadow-sm"><svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> رد فوري ذكي</span>
+                            <span class="text-[11px] bg-zinc-900 text-zinc-300 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-1.5 group-hover:border-primary/30 transition-colors shadow-sm"><svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg> لغات متعددة</span>
+                            <span class="text-[11px] bg-zinc-900 text-zinc-300 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-1.5 group-hover:border-primary/30 transition-colors shadow-sm"><svg class="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> تأكيد الحجوزات</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Real Estate Card -->
-                <div class="glow-card group section-elem">
-                    <div class="h-48 bg-gradient-to-br from-surface to-background border-b border-border relative overflow-hidden flex items-center justify-center">
-                        <div class="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity duration-500" style="background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop');"></div>
-                        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
-                        <i data-lucide="home" class="w-16 h-16 text-white group-hover:text-secondary transition-colors duration-500 relative z-10 drop-shadow-lg"></i>
+                <div class="glow-card group section-elem relative overflow-hidden rounded-2xl border border-white/5 bg-zinc-950/80 hover:border-secondary/40 transition-all duration-500 hover:-translate-y-2 backdrop-blur-sm cursor-pointer shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(244,114,182,0.3)]">
+                    <div class="h-40 relative overflow-hidden rounded-t-2xl border-b border-white/5">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-80" style="background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-zinc-950/10"></div>
+                        
+                        <div class="absolute top-4 left-4 flex gap-2">
+                            <span class="bg-secondary/20 text-secondary border border-secondary/30 text-[10px] px-3 py-1 rounded-full backdrop-blur-md flex items-center gap-1.5 shadow-[0_0_10px_rgba(244,114,182,0.2)]">
+                                <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> إدارة آمنة
+                            </span>
+                        </div>
+                        
+                        <div class="absolute bottom-[-24px] right-6 w-14 h-14 bg-zinc-900 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl group-hover:border-secondary/50 group-hover:bg-secondary/10 transition-colors duration-500 z-10 group-hover:-translate-y-2">
+                            <svg class="w-7 h-7 text-white group-hover:text-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        </div>
                     </div>
-                    <div class="p-8">
-                        <h4 class="text-xl font-bold mb-4 text-white">العقارات والشقق المخدومة</h4>
-                        <ul class="space-y-3">
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-secondary shrink-0"></i>
-                                <span>جدولة مواعيد المعاينة الذكية</span>
-                            </li>
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-secondary shrink-0"></i>
-                                <span>تحصيل الإيجارات وإرسال التنبيهات</span>
-                            </li>
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-secondary shrink-0"></i>
-                                <span>متابعة بلاغات الصيانة آلياً</span>
-                            </li>
-                        </ul>
+                    
+                    <div class="p-6 pt-10 relative z-20">
+                        <h4 class="text-xl font-bold mb-2 text-white group-hover:text-secondary transition-colors flex items-center gap-2">العقارات والشقق</h4>
+                        <p class="text-[13px] text-zinc-400 mb-6 font-light leading-relaxed">إدارة ذكية للأملاك، جدولة المواعيد آلياً، تحصيل الإيجارات، ومتابعة بلاغات الصيانة على مدار الساعة.</p>
+                        
+                        <div class="bg-black/40 border border-white/5 rounded-xl p-4 mb-6 group-hover:bg-secondary/[0.03] transition-colors relative overflow-hidden">
+                            <div class="absolute -top-10 -right-10 w-24 h-24 bg-secondary/20 blur-[30px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+
+                            <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+                                <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">لوحة التنبيهات</span>
+                                <span class="text-[10px] text-green-400 flex items-center gap-1.5"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> نشط</span>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-2.5">
+                                    <div class="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center shrink-0 mt-0.5 border border-secondary/30">
+                                        <svg class="w-3 h-3 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <div class="bg-zinc-800/80 rounded-xl rounded-tr-sm p-2.5 text-[11px] text-zinc-300 w-full border border-white/5 group-hover:border-secondary/20 transition-colors relative overflow-hidden shadow-inner">
+                                        <div class="absolute top-0 bottom-0 right-0 w-full bg-gradient-to-l from-transparent via-white/10 to-transparent translate-x-full group-hover:-translate-x-full transition-transform duration-[1500ms] ease-in-out delay-100"></div>
+                                        "تم تأكيد موعد معاينة الشقة 402 اليوم الساعة 4 عصراً."
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start gap-2.5 flex-row-reverse">
+                                    <div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                                        <svg class="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div class="bg-secondary/10 text-secondary border border-secondary/20 rounded-xl rounded-tl-sm p-2.5 text-[11px] w-[85%] ml-auto shadow-sm">
+                                        "جاري تجهيز عقد الإيجار الإلكتروني وإرساله للمستأجر."
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <span class="text-[11px] bg-zinc-900 text-zinc-300 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-1.5 group-hover:border-secondary/30 transition-colors shadow-sm"><svg class="w-3.5 h-3.5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> جدولة ذكية</span>
+                            <span class="text-[11px] bg-zinc-900 text-zinc-300 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-1.5 group-hover:border-secondary/30 transition-colors shadow-sm"><svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> تحصيل الإيجار</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Restaurants Card -->
-                <div class="glow-card group section-elem">
-                    <div class="h-48 bg-gradient-to-br from-surface to-background border-b border-border relative overflow-hidden flex items-center justify-center">
-                        <div class="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity duration-500" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop');"></div>
-                        <div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
-                        <i data-lucide="utensils" class="w-16 h-16 text-white group-hover:text-primary transition-colors duration-500 relative z-10 drop-shadow-lg"></i>
+                <div class="glow-card group section-elem relative overflow-hidden rounded-2xl border border-white/5 bg-zinc-950/80 hover:border-white/40 transition-all duration-500 hover:-translate-y-2 backdrop-blur-sm cursor-pointer shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(255,255,255,0.2)]">
+                    <div class="h-40 relative overflow-hidden rounded-t-2xl border-b border-white/5">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-80" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-zinc-950/10"></div>
+                        
+                        <div class="absolute top-4 left-4 flex gap-2">
+                            <span class="bg-white/10 text-white border border-white/20 text-[10px] px-3 py-1 rounded-full backdrop-blur-md flex items-center gap-1.5 shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> سرعة فائقة
+                            </span>
+                        </div>
+                        
+                        <div class="absolute bottom-[-24px] right-6 w-14 h-14 bg-zinc-900 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl group-hover:border-white/50 group-hover:bg-white/10 transition-colors duration-500 z-10 group-hover:-translate-y-2">
+                            <svg class="w-7 h-7 text-white group-hover:text-zinc-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        </div>
                     </div>
-                    <div class="p-8">
-                        <h4 class="text-xl font-bold mb-4 text-white">المطاعم والمقاهي</h4>
-                        <ul class="space-y-3">
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-white shrink-0"></i>
-                                <span>استقبال الطلبات عبر واتساب</span>
-                            </li>
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-white shrink-0"></i>
-                                <span>إدارة حجوزات الطاولات</span>
-                            </li>
-                            <li class="flex items-start gap-3 text-sm text-zinc-400 font-light">
-                                <i data-lucide="check" class="w-5 h-5 text-white shrink-0"></i>
-                                <span>الإجابة على استفسارات المنيو</span>
-                            </li>
-                        </ul>
+                    
+                    <div class="p-6 pt-10 relative z-20">
+                        <h4 class="text-xl font-bold mb-2 text-white group-hover:text-zinc-300 transition-colors flex items-center gap-2">المطاعم والمقاهي</h4>
+                        <p class="text-[13px] text-zinc-400 mb-6 font-light leading-relaxed">استقبال طلبات التوصيل، الرد على استفسارات المنيو عبر واتساب، وإدارة ذكية لحجوزات الطاولات.</p>
+                        
+                        <div class="bg-black/40 border border-white/5 rounded-xl p-4 mb-6 group-hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+                            <div class="absolute -top-10 -right-10 w-24 h-24 bg-white/10 blur-[30px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+
+                            <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+                                <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">الطلبات النشطة</span>
+                                <span class="text-[10px] text-green-400 flex items-center gap-1.5"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> متصل</span>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-2.5">
+                                    <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5 border border-white/20">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    </div>
+                                    <div class="bg-zinc-800/80 rounded-xl rounded-tr-sm p-2.5 text-[11px] text-zinc-300 w-full border border-white/5 group-hover:border-white/20 transition-colors relative overflow-hidden shadow-inner">
+                                        <div class="absolute top-0 bottom-0 right-0 w-full bg-gradient-to-l from-transparent via-white/10 to-transparent translate-x-full group-hover:-translate-x-full transition-transform duration-[1500ms] ease-in-out delay-100"></div>
+                                        "تم استلام طلبك (2 قهوة V60، 1 حلى). وقت التجهيز المتوقع: 10 دقائق."
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start gap-2.5 flex-row-reverse">
+                                    <div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                                        <svg class="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div class="bg-white/5 text-white border border-white/10 rounded-xl rounded-tl-sm p-2.5 text-[11px] w-[85%] ml-auto shadow-sm">
+                                        "أريد تعديل الطلب لإضافة حليب نباتي للقهوة."
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <span class="text-[11px] bg-zinc-900 text-zinc-300 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-1.5 group-hover:border-white/30 transition-colors shadow-sm"><svg class="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> استقبال سريع</span>
+                            <span class="text-[11px] bg-zinc-900 text-zinc-300 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-1.5 group-hover:border-white/30 transition-colors shadow-sm"><svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> إدارة الطاولات</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -588,74 +784,168 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Agent 1 -->
-                <div class="bg-surface border border-border rounded-2xl p-6 md:p-8 hover:border-primary/50 transition duration-300 section-elem relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
-                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg border border-border flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden bg-background">
-                        <img src="{{ url_for('static', filename='images/sarah.png') }}" alt="سارة" class="w-full h-full object-cover">
-                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                        </span>
+                <div class="glow-card group relative overflow-hidden rounded-2xl border border-white/5 bg-zinc-950/80 p-6 md:p-8 hover:border-primary/40 transition-all duration-500 hover:-translate-y-2 backdrop-blur-sm shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(56,189,248,0.3)]">
+                    <!-- Tech background grid -->
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGRlZnM+PG1hc2sgaWQ9Im0iPjxyZWN0IHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0id2hpdGUiLz48L21hc2s+PC9kZWZzPjxwYXRoIGQ9Ik00MCAwaS00MHY0MGg0MHYtNDB6bS0xIDM5aC0zOHYtMzhoMzh2Mzh6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9zdmc+')] opacity-20"></div>
+                    
+                    <div class="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[50px] rounded-full group-hover:bg-primary/20 transition-colors duration-700"></div>
+
+                    <div class="relative z-10 flex justify-between items-start mb-6">
+                        <div class="relative">
+                            <!-- Avatar Ring -->
+                            <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-primary to-transparent opacity-50 blur-sm group-hover:opacity-100 group-hover:animate-spin transition-opacity duration-700"></div>
+                            <div class="w-16 h-16 rounded-full border-2 border-primary/30 flex items-center justify-center relative overflow-hidden bg-zinc-900 z-10">
+                                <img src="{{ url_for('static', filename='images/sarah.png') }}" alt="سارة" class="w-full h-full object-cover">
+                            </div>
+                            <!-- Status pulse -->
+                            <span class="absolute bottom-0 right-0 flex h-4 w-4 z-20">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-zinc-950 bg-green-500"></span>
+                            </span>
+                        </div>
+                        
+                        <div class="flex flex-col items-end">
+                            <span class="text-[10px] font-mono px-2 py-1 rounded bg-primary/10 border border-primary/20 text-primary mb-1 tracking-wider">AGENT.SARAH</span>
+                            <span class="text-[9px] font-mono text-zinc-500 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> ONLINE</span>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between mb-2">
-                        <h4 class="text-lg font-bold text-white">سارة - موظفة الاستقبال</h4>
-                        <span class="text-[10px] font-mono px-2 py-1 rounded bg-background border border-border text-zinc-400">v2.4.1</span>
-                    </div>
-                    <p class="text-sm text-zinc-400 font-light mb-6">تتحدث بعدة لغات، تتعامل مع كافة استفسارات العملاء الأولية، توجه الطلبات، وتدير الحجوزات بأسلوب احترافي يحاكي الموظف البشري.</p>
-                    <div class="w-full h-1 bg-background rounded-full overflow-hidden">
-                        <div class="h-full bg-primary w-[98%]"></div>
-                    </div>
-                    <div class="mt-2 text-[10px] font-mono text-zinc-500 flex justify-between">
-                        <span>معدل الدقة</span>
-                        <span class="text-primary">98.5%</span>
+                    
+                    <div class="relative z-10">
+                        <h4 class="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors">سارة</h4>
+                        <p class="text-sm text-primary/80 mb-4 font-mono text-[11px]">موظفة الاستقبال الافتراضية</p>
+                        
+                        <p class="text-xs text-zinc-400 font-light mb-6 leading-relaxed">تتحدث بعدة لغات، تتعامل مع كافة استفسارات العملاء الأولية، توجه الطلبات، وتدير الحجوزات بأسلوب احترافي يحاكي البشر.</p>
+                        
+                        <!-- Mini Console UI -->
+                        <div class="bg-black/60 rounded-lg p-3 font-mono text-[10px] border border-white/5 mb-5 relative overflow-hidden">
+                            <div class="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-transparent"></div>
+                            <div class="text-zinc-500 mb-2 border-b border-white/5 pb-1">Live Activity Stream:</div>
+                            <div class="space-y-1.5">
+                                <div class="text-zinc-300"><span class="text-primary">></span> <span class="text-zinc-500">[14:02:01]</span> Incoming: +9665XXXX...</div>
+                                <div class="text-zinc-300"><span class="text-primary">></span> <span class="text-zinc-500">[14:02:02]</span> Intent: <span class="text-cyan-400">Booking & Support</span></div>
+                                <div class="text-green-400"><span class="text-primary">></span> <span class="text-zinc-500">[14:02:03]</span> Voice Response: <span class="text-green-400">Generated</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Waveform animation simulating speaking -->
+                        <div class="flex items-center justify-start gap-1 h-3 mb-4 opacity-70 group-hover:opacity-100 transition-opacity">
+                            <div class="w-1 bg-primary rounded-full h-full animate-pulse"></div>
+                            <div class="w-1 bg-primary rounded-full h-2/3 animate-pulse" style="animation-delay: 150ms;"></div>
+                            <div class="w-1 bg-primary rounded-full h-1/2 animate-pulse" style="animation-delay: 300ms;"></div>
+                            <div class="w-1 bg-primary rounded-full h-full animate-pulse" style="animation-delay: 450ms;"></div>
+                            <div class="w-1 bg-primary rounded-full h-1/3 animate-pulse" style="animation-delay: 600ms;"></div>
+                            <div class="w-1 bg-primary rounded-full h-2/3 animate-pulse" style="animation-delay: 750ms;"></div>
+                            <span class="text-[9px] text-zinc-500 font-mono mr-2">Audio Synthesis Active</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Agent 2 -->
-                <div class="bg-surface border border-border rounded-2xl p-6 md:p-8 hover:border-secondary/50 transition duration-300 section-elem relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
-                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg border border-border flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden bg-background">
-                        <img src="{{ url_for('static', filename='images/khalid.png') }}" alt="خالد" class="w-full h-full object-cover">
-                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75" style="animation-delay: 0.5s"></span>
-                          <span class="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
-                        </span>
+                <div class="glow-card group relative overflow-hidden rounded-2xl border border-white/5 bg-zinc-950/80 p-6 md:p-8 hover:border-secondary/40 transition-all duration-500 hover:-translate-y-2 backdrop-blur-sm shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(244,114,182,0.3)]">
+                    <!-- Tech background grid -->
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGRlZnM+PG1hc2sgaWQ9Im0iPjxyZWN0IHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0id2hpdGUiLz48L21hc2s+PC9kZWZzPjxwYXRoIGQ9Ik00MCAwaS00MHY0MGg0MHYtNDB6bS0xIDM5aC0zOHYtMzhoMzh2Mzh6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9zdmc+')] opacity-20"></div>
+                    
+                    <div class="absolute top-0 right-0 w-48 h-48 bg-secondary/10 blur-[50px] rounded-full group-hover:bg-secondary/20 transition-colors duration-700"></div>
+
+                    <div class="relative z-10 flex justify-between items-start mb-6">
+                        <div class="relative">
+                            <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-secondary to-transparent opacity-50 blur-sm group-hover:opacity-100 group-hover:animate-spin transition-opacity duration-700"></div>
+                            <div class="w-16 h-16 rounded-full border-2 border-secondary/30 flex items-center justify-center relative overflow-hidden bg-zinc-900 z-10">
+                                <img src="{{ url_for('static', filename='images/khalid.png') }}" alt="خالد" class="w-full h-full object-cover">
+                            </div>
+                            <span class="absolute bottom-0 right-0 flex h-4 w-4 z-20">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-zinc-950 bg-green-500"></span>
+                            </span>
+                        </div>
+                        
+                        <div class="flex flex-col items-end">
+                            <span class="text-[10px] font-mono px-2 py-1 rounded bg-secondary/10 border border-secondary/20 text-secondary mb-1 tracking-wider">AGENT.KHALID</span>
+                            <span class="text-[9px] font-mono text-zinc-500 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> ONLINE</span>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between mb-2">
-                        <h4 class="text-lg font-bold text-white">خالد - وكيل التحصيل</h4>
-                        <span class="text-[10px] font-mono px-2 py-1 rounded bg-background border border-border text-zinc-400">v1.8.0</span>
-                    </div>
-                    <p class="text-sm text-zinc-400 font-light mb-6">يصدر الفواتير ويقوم بإنشاء العقود الإلكترونية. يتابع الفواتير المستحقة ويرسل روابط الدفع الآمنة بشكل تلقائي.</p>
-                    <div class="w-full h-1 bg-background rounded-full overflow-hidden">
-                        <div class="h-full bg-secondary w-[100%]"></div>
-                    </div>
-                    <div class="mt-2 text-[10px] font-mono text-zinc-500 flex justify-between">
-                        <span>التشغيل الآلي</span>
-                        <span class="text-secondary">100%</span>
+                    
+                    <div class="relative z-10">
+                        <h4 class="text-xl font-bold text-white mb-1 group-hover:text-secondary transition-colors">خالد</h4>
+                        <p class="text-sm text-secondary/80 mb-4 font-mono text-[11px]">وكيل التحصيل الرقمي</p>
+                        
+                        <p class="text-xs text-zinc-400 font-light mb-6 leading-relaxed">يصدر الفواتير ويقوم بإنشاء العقود الإلكترونية. يتابع الفواتير المستحقة ويرسل روابط الدفع الآمنة بشكل تلقائي وبدون أي تدخل بشري.</p>
+                        
+                        <div class="bg-black/60 rounded-lg p-3 font-mono text-[10px] border border-white/5 mb-5 relative overflow-hidden">
+                            <div class="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-secondary to-transparent"></div>
+                            <div class="text-zinc-500 mb-2 border-b border-white/5 pb-1">Billing Stream:</div>
+                            <div class="space-y-1.5">
+                                <div class="text-zinc-300"><span class="text-secondary">></span> <span class="text-zinc-500">[14:03:10]</span> Scanning overdue inv...</div>
+                                <div class="text-zinc-300"><span class="text-secondary">></span> <span class="text-zinc-500">[14:03:12]</span> INV-2034: <span class="text-yellow-400">Pending</span></div>
+                                <div class="text-green-400"><span class="text-secondary">></span> <span class="text-zinc-500">[14:03:15]</span> Payment Link: <span class="text-green-400">Sent via SMS</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Mini progress bar animation -->
+                        <div class="mt-4">
+                            <div class="flex justify-between text-[9px] font-mono text-zinc-500 mb-1">
+                                <span>Automation Ratio</span>
+                                <span class="text-secondary">100%</span>
+                            </div>
+                            <div class="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
+                                <div class="h-full bg-secondary w-full group-hover:bg-gradient-to-r from-secondary to-pink-500 transition-all duration-1000 relative">
+                                    <div class="absolute top-0 bottom-0 left-0 w-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Agent 3 -->
-                <div class="bg-surface border border-border rounded-2xl p-6 md:p-8 hover:border-white/30 transition duration-300 section-elem relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
-                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg border border-border flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden bg-background">
-                        <img src="{{ url_for('static', filename='images/tariq.png') }}" alt="طارق" class="w-full h-full object-cover">
-                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" style="animation-delay: 1s"></span>
-                          <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                        </span>
+                <div class="glow-card group relative overflow-hidden rounded-2xl border border-white/5 bg-zinc-950/80 p-6 md:p-8 hover:border-white/40 transition-all duration-500 hover:-translate-y-2 backdrop-blur-sm shadow-lg hover:shadow-[0_10px_40px_-10px_rgba(255,255,255,0.2)]">
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGRlZnM+PG1hc2sgaWQ9Im0iPjxyZWN0IHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0id2hpdGUiLz48L21hc2s+PC9kZWZzPjxwYXRoIGQ9Ik00MCAwaS00MHY0MGg0MHYtNDB6bS0xIDM5aC0zOHYtMzhoMzh2Mzh6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9zdmc+')] opacity-20"></div>
+                    
+                    <div class="absolute top-0 right-0 w-48 h-48 bg-white/5 blur-[50px] rounded-full group-hover:bg-white/10 transition-colors duration-700"></div>
+
+                    <div class="relative z-10 flex justify-between items-start mb-6">
+                        <div class="relative">
+                            <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-zinc-300 to-transparent opacity-50 blur-sm group-hover:opacity-100 group-hover:animate-spin transition-opacity duration-700"></div>
+                            <div class="w-16 h-16 rounded-full border-2 border-white/20 flex items-center justify-center relative overflow-hidden bg-zinc-900 z-10">
+                                <img src="{{ url_for('static', filename='images/tariq.png') }}" alt="طارق" class="w-full h-full object-cover">
+                            </div>
+                            <span class="absolute bottom-0 right-0 flex h-4 w-4 z-20">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-zinc-950 bg-green-500"></span>
+                            </span>
+                        </div>
+                        
+                        <div class="flex flex-col items-end">
+                            <span class="text-[10px] font-mono px-2 py-1 rounded bg-white/5 border border-white/10 text-white mb-1 tracking-wider">AGENT.TARIQ</span>
+                            <span class="text-[9px] font-mono text-zinc-500 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> ONLINE</span>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between mb-2">
-                        <h4 class="text-lg font-bold text-white">طارق - المستشار المالي</h4>
-                        <span class="text-[10px] font-mono px-2 py-1 rounded bg-background border border-border text-zinc-400">v3.0.beta</span>
-                    </div>
-                    <p class="text-sm text-zinc-400 font-light mb-6">يحلل البيانات المالية، يكتشف أنماط الإنفاق، ويصدر تقارير وتوصيات دقيقة لزيادة الربحية وتحسين الأداء.</p>
-                    <div class="w-full h-1 bg-background rounded-full overflow-hidden">
-                        <div class="h-full bg-white w-[92%]"></div>
-                    </div>
-                    <div class="mt-2 text-[10px] font-mono text-zinc-500 flex justify-between">
-                        <span>دقة التحليل</span>
-                        <span class="text-white">92.4%</span>
+                    
+                    <div class="relative z-10">
+                        <h4 class="text-xl font-bold text-white mb-1 group-hover:text-zinc-300 transition-colors">طارق</h4>
+                        <p class="text-sm text-zinc-300/80 mb-4 font-mono text-[11px]">المستشار المالي</p>
+                        
+                        <p class="text-xs text-zinc-400 font-light mb-6 leading-relaxed">يحلل البيانات المالية، يكتشف أنماط الإنفاق، ويصدر تقارير وتوصيات دقيقة لزيادة الربحية وتحسين الأداء.</p>
+                        
+                        <div class="bg-black/60 rounded-lg p-3 font-mono text-[10px] border border-white/5 mb-5 relative overflow-hidden">
+                            <div class="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-zinc-400 to-transparent"></div>
+                            <div class="text-zinc-500 mb-2 border-b border-white/5 pb-1">Analytics Engine:</div>
+                            <div class="space-y-1.5">
+                                <div class="text-zinc-300"><span class="text-zinc-400">></span> <span class="text-zinc-500">[14:04:22]</span> Deep diving Q3 metrics...</div>
+                                <div class="text-zinc-300"><span class="text-zinc-400">></span> <span class="text-zinc-500">[14:04:25]</span> Pattern: <span class="text-cyan-400">Cost Spike Detected</span></div>
+                                <div class="text-green-400"><span class="text-zinc-400">></span> <span class="text-zinc-500">[14:04:28]</span> Report: <span class="text-green-400">Generated (12 pages)</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Data Chart Simulation -->
+                        <div class="flex items-end gap-1 h-6 mt-4">
+                            <div class="w-full bg-white/20 rounded-t-sm h-1/3 group-hover:h-2/3 transition-all duration-500 delay-75"></div>
+                            <div class="w-full bg-white/20 rounded-t-sm h-1/2 group-hover:h-full transition-all duration-500 delay-100"></div>
+                            <div class="w-full bg-white/20 rounded-t-sm h-2/3 group-hover:h-1/2 transition-all duration-500 delay-150"></div>
+                            <div class="w-full bg-primary/60 rounded-t-sm h-1/3 group-hover:h-5/6 transition-all duration-500 delay-200"></div>
+                            <div class="w-full bg-secondary/60 rounded-t-sm h-full group-hover:h-full transition-all duration-500 delay-300"></div>
+                            <div class="w-full bg-white/20 rounded-t-sm h-1/2 group-hover:h-1/3 transition-all duration-500 delay-75"></div>
+                        </div>
+                        <div class="text-[9px] font-mono text-zinc-500 mt-1 text-center">Real-time Data Processing</div>
                     </div>
                 </div>
             </div>
@@ -787,65 +1077,65 @@
                 <p class="text-zinc-400 max-w-2xl mx-auto text-sm md:text-base font-light">مجموعة متكاملة من الأدوات لضمان أعلى مستويات الأداء</p>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 <!-- Feature 1 -->
-                <div class="flex flex-col items-center text-center group section-elem">
-                    <div class="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary/50 transition duration-300 relative">
-                        <div class="absolute inset-0 bg-primary/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                        <i data-lucide="zap" class="w-6 h-6 text-zinc-400 group-hover:text-primary transition-colors"></i>
+                <div class="glow-card group section-elem p-8 rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900/80 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative backdrop-blur-sm">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-[40px] group-hover:bg-primary/20 transition-all duration-500"></div>
+                    <div class="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center mb-6 relative z-10 group-hover:border-primary/50 transition-colors shadow-lg">
+                        <svg class="w-6 h-6 text-primary drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     </div>
-                    <h4 class="text-lg font-bold text-white mb-2">سرعة التنفيذ</h4>
-                    <p class="text-xs md:text-sm text-zinc-500 font-light">ربط أنظمتك وبدء العمل في دقائق، لا ساعات.</p>
+                    <h4 class="text-xl font-bold text-white mb-3 relative z-10">سرعة التنفيذ</h4>
+                    <p class="text-sm text-zinc-400 font-light leading-relaxed relative z-10">ربط سريع وموثوق مع كافة أنظمتك لبدء العمل والتحليل في غضون دقائق، وبدون تعقيدات برمجية.</p>
                 </div>
 
                 <!-- Feature 2 -->
-                <div class="flex flex-col items-center text-center group section-elem">
-                    <div class="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary/50 transition duration-300 relative">
-                        <div class="absolute inset-0 bg-primary/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                        <i data-lucide="shield-check" class="w-6 h-6 text-zinc-400 group-hover:text-primary transition-colors"></i>
+                <div class="glow-card group section-elem p-8 rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900/80 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative backdrop-blur-sm">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary/10 rounded-full blur-[40px] group-hover:bg-secondary/20 transition-all duration-500"></div>
+                    <div class="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center mb-6 relative z-10 group-hover:border-secondary/50 transition-colors shadow-lg">
+                        <svg class="w-6 h-6 text-secondary drop-shadow-[0_0_8px_rgba(244,114,182,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                     </div>
-                    <h4 class="text-lg font-bold text-white mb-2">أمان عالي</h4>
-                    <p class="text-xs md:text-sm text-zinc-500 font-light">تشفير من الدرجة العسكرية وامتثال كامل للمعايير.</p>
+                    <h4 class="text-xl font-bold text-white mb-3 relative z-10">أمان وحماية تامة</h4>
+                    <p class="text-sm text-zinc-400 font-light leading-relaxed relative z-10">تشفير متقدم من الدرجة العسكرية لجميع بياناتك ومعاملاتك مع امتثال كامل للمعايير الدولية للأمن.</p>
                 </div>
 
                 <!-- Feature 3 -->
-                <div class="flex flex-col items-center text-center group section-elem">
-                    <div class="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary/50 transition duration-300 relative">
-                        <div class="absolute inset-0 bg-primary/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                        <i data-lucide="expand" class="w-6 h-6 text-zinc-400 group-hover:text-primary transition-colors"></i>
+                <div class="glow-card group section-elem p-8 rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900/80 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative backdrop-blur-sm">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/10 rounded-full blur-[40px] group-hover:bg-blue-500/20 transition-all duration-500"></div>
+                    <div class="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center mb-6 relative z-10 group-hover:border-blue-500/50 transition-colors shadow-lg">
+                        <svg class="w-6 h-6 text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                     </div>
-                    <h4 class="text-lg font-bold text-white mb-2">قابل للتوسع</h4>
-                    <p class="text-xs md:text-sm text-zinc-500 font-light">ينمو مع نشاطك من الصغير إلى الكبير بسهولة.</p>
+                    <h4 class="text-xl font-bold text-white mb-3 relative z-10">قابل للتوسع</h4>
+                    <p class="text-sm text-zinc-400 font-light leading-relaxed relative z-10">بنية تحتية مرنة تنمو مع نشاطك وتستوعب مئات الآلاف من الطلبات والمحادثات في نفس اللحظة.</p>
                 </div>
 
                 <!-- Feature 4 -->
-                <div class="flex flex-col items-center text-center group section-elem">
-                    <div class="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary/50 transition duration-300 relative">
-                        <div class="absolute inset-0 bg-primary/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                        <i data-lucide="bar-chart-3" class="w-6 h-6 text-zinc-400 group-hover:text-primary transition-colors"></i>
+                <div class="glow-card group section-elem p-8 rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900/80 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative backdrop-blur-sm">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px] group-hover:bg-purple-500/20 transition-all duration-500"></div>
+                    <div class="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center mb-6 relative z-10 group-hover:border-purple-500/50 transition-colors shadow-lg">
+                        <svg class="w-6 h-6 text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     </div>
-                    <h4 class="text-lg font-bold text-white mb-2">تحليلات متقدمة</h4>
-                    <p class="text-xs md:text-sm text-zinc-500 font-light">لوحة تحكم شاملة مع تقارير فورية وإحصائيات.</p>
+                    <h4 class="text-xl font-bold text-white mb-3 relative z-10">تحليلات متقدمة</h4>
+                    <p class="text-sm text-zinc-400 font-light leading-relaxed relative z-10">لوحة تحكم ذكية تعرض تقارير إحصائية دقيقة لمتابعة الأداء واستخراج رؤى قابلة للتنفيذ.</p>
                 </div>
 
                 <!-- Feature 5 -->
-                <div class="flex flex-col items-center text-center group section-elem">
-                    <div class="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary/50 transition duration-300 relative">
-                        <div class="absolute inset-0 bg-primary/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                        <i data-lucide="headset" class="w-6 h-6 text-zinc-400 group-hover:text-primary transition-colors"></i>
+                <div class="glow-card group section-elem p-8 rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900/80 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative backdrop-blur-sm">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-green-500/10 rounded-full blur-[40px] group-hover:bg-green-500/20 transition-all duration-500"></div>
+                    <div class="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center mb-6 relative z-10 group-hover:border-green-500/50 transition-colors shadow-lg">
+                        <svg class="w-6 h-6 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     </div>
-                    <h4 class="text-lg font-bold text-white mb-2">دعم متخصص</h4>
-                    <p class="text-xs md:text-sm text-zinc-500 font-light">فريق دعم متاح 24/7 لمساعدتك في أي وقت.</p>
+                    <h4 class="text-xl font-bold text-white mb-3 relative z-10">دعم بشري متخصص</h4>
+                    <p class="text-sm text-zinc-400 font-light leading-relaxed relative z-10">على الرغم من أتمتة العمليات، فريقنا البشري متاح لدعمك تقنياً واستشارياً على مدار الساعة.</p>
                 </div>
 
                 <!-- Feature 6 -->
-                <div class="flex flex-col items-center text-center group section-elem">
-                    <div class="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary/50 transition duration-300 relative">
-                        <div class="absolute inset-0 bg-primary/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                        <i data-lucide="network" class="w-6 h-6 text-zinc-400 group-hover:text-primary transition-colors"></i>
+                <div class="glow-card group section-elem p-8 rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900/80 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative backdrop-blur-sm">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-orange-500/10 rounded-full blur-[40px] group-hover:bg-orange-500/20 transition-all duration-500"></div>
+                    <div class="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center mb-6 relative z-10 group-hover:border-orange-500/50 transition-colors shadow-lg">
+                        <svg class="w-6 h-6 text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
                     </div>
-                    <h4 class="text-lg font-bold text-white mb-2">تكاملات سلسة</h4>
-                    <p class="text-xs md:text-sm text-zinc-500 font-light">اتصل بسهولة مع أنظمتك الحالية والخدمات.</p>
+                    <h4 class="text-xl font-bold text-white mb-3 relative z-10">تكامل شامل (API)</h4>
+                    <p class="text-sm text-zinc-400 font-light leading-relaxed relative z-10">ربط سهل مع أكثر من 50 نظاماً مختلفاً للمبيعات والمحاسبة وخدمة العملاء من خلال API متطور.</p>
                 </div>
             </div>
         </div>
