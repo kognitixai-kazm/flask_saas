@@ -61,11 +61,29 @@ class AgentManager(BaseAgent):
             logger.error(f"[AgentManager] Error determining intent: {e}")
             return "reception"
 
+    def _validate_agents(self):
+        """التحقق الاستباقي من صحة خريطة الوكلاء (Fail-Fast Validation)"""
+        # التحقق من الوكيل الافتراضي
+        default_agent = FrontDeskAgent
+        if not default_agent or not issubclass(default_agent, BaseAgent):
+            raise TypeError("Default agent 'FrontDeskAgent' is not properly defined or does not inherit from BaseAgent.")
+            
+        # التحقق من خريطة الوكلاء
+        for intent, agent_cls in self.AGENT_MAP.items():
+            if not agent_cls:
+                raise ValueError(f"Agent class for intent '{intent}' is None.")
+            if not issubclass(agent_cls, BaseAgent):
+                raise TypeError(f"Agent class '{agent_cls.__name__}' for intent '{intent}' must inherit from BaseAgent.")
+
     def route_and_run(self, user_message: str, visitor_id: str = "", extra_context: dict = None) -> AgentResponse:
+        # تنفيذ التحقق الاستباقي قبل التشغيل
+        self._validate_agents()
+        
         intent = self._determine_intent_with_llm(user_message)
         logger.info(f"[AgentManager] Routed message to: {intent}")
         
-        agent_class = self.AGENT_MAP.get(intent, ReceptionAgent)
+        # الاعتماد على FrontDeskAgent كوكيل افتراضي بدلاً من ReceptionAgent المحذوف
+        agent_class = self.AGENT_MAP.get(intent, FrontDeskAgent)
         agent = agent_class(tenant_id=self.tenant_id, conversation_id=self.conversation_id, channel=self.channel)
         
         if extra_context is None:
@@ -73,3 +91,4 @@ class AgentManager(BaseAgent):
         extra_context["routed_intent"] = intent
         
         return agent.run(user_message, channel=self.channel, visitor_id=visitor_id, extra_context=extra_context)
+
