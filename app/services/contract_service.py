@@ -251,7 +251,7 @@ class ContractService:
         )
         body = ParagraphStyle(
             'Body', parent=styles['Normal'], fontName=font_name,
-            fontSize=11, leading=18, alignment=TA_RIGHT, wordWrap='RTL',
+            fontSize=11, leading=18, alignment=TA_RIGHT,
         )
         small = ParagraphStyle(
             'Small', parent=styles['Normal'], fontName=font_name,
@@ -629,7 +629,7 @@ class ContractService:
             arabic_style = ParagraphStyle(
                 'Arabic', parent=styles['Normal'],
                 fontName=font_name, fontSize=12, leading=18,
-                alignment=TA_RIGHT, wordWrap='RTL',
+                alignment=TA_RIGHT,
             )
         else:
             # fallback بدون خط عربي — قد لا يظهر العربي صحيح
@@ -735,9 +735,20 @@ class ContractService:
             send_as_document = True
 
         sent = False
+        
+        channel = 'unknown'
+        if contract.conversation:
+            channel = contract.conversation.channel
 
-        # Email — يُرسل افتراضياً إذا توفر البريد
+        # Email — يُرسل إذا كان الشات عبر الويب أو إذا لم يتوفر جوال
+        send_email = False
         if contract.customer_email:
+            if channel == 'web' or not contract.customer_phone:
+                send_email = True
+            elif channel == 'unknown':
+                send_email = True
+
+        if send_email:
             try:
                 from app.services.email_service import EmailService
                 EmailService._send(
@@ -758,8 +769,15 @@ class ContractService:
             except Exception as e:
                 current_app.logger.warning(f'[ContractService] email send error: {e}')
 
-        # WhatsApp — يُرسل افتراضياً إذا توفر الجوال
+        # WhatsApp — يُرسل إذا كان الشات عبر الواتساب أو إذا لم يتوفر إيميل
+        send_whatsapp = False
         if contract.customer_phone:
+            if channel == 'whatsapp' or not contract.customer_email:
+                send_whatsapp = True
+            elif channel == 'unknown' and not send_email:
+                send_whatsapp = True
+
+        if send_whatsapp:
             try:
                 from app.services.whatsapp_service import WhatsAppService
                 if send_as_document:
