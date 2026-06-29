@@ -80,39 +80,75 @@ def step2():
             hotel_mode = 'daily'  # الافتراضي يشمل الشهري
 
         try:
-            tenant = TenantService.request_subscription(
+            session['reg_activity_id'] = int(activity_id)
+            session['reg_hotel_mode'] = hotel_mode
+            
+            # Generate OTP
+            import random
+            otp = str(random.randint(100000, 999999))
+            session['reg_otp'] = otp
+            
+            # Send OTP
+            from app.services.email_service import EmailService
+            EmailService.send_registration_otp(session['reg_email'], otp)
+            
+            return redirect(url_for('registration.verify'))
+
+        except Exception as e:
+            current_app.logger.error(f'Registration OTP error: {e}')
+            flash('حدث خطأ أثناء إرسال رمز التحقق. حاول لاحقاً.', 'danger')
+
+    return render_template('registration/step2.html', activities=activities)
+
+
+# ========================
+# خطوة 3: التحقق من البريد (OTP)
+# ========================
+@bp.route('/verify', methods=['GET', 'POST'])
+def verify():
+    if 'reg_email' not in session or 'reg_otp' not in session:
+        flash('يرجى إكمال البيانات أولاً', 'warning')
+        return redirect(url_for('registration.step1'))
+        
+    if request.method == 'POST':
+        user_code = request.form.get('code', '').strip()
+        if user_code == session['reg_otp']:
+            # OTP verified, create tenant directly
+            from app.services.tenant_service import _resolve_default_plan, TenantService
+            plan = _resolve_default_plan()
+            if not plan:
+                flash('لا توجد باقة فعالة للتسجيل. تواصل مع الإدارة.', 'danger')
+                return redirect(url_for('registration.step1'))
+                
+            tenant, setup_url, _ = TenantService.create_tenant(
                 business_name=session['reg_business_name'],
                 owner_full_name=session['reg_full_name'],
                 owner_email=session['reg_email'],
                 owner_phone=session['reg_phone'],
-                activity_id=int(activity_id),
+                activity_id=session['reg_activity_id'],
+                plan_id=plan.id
             )
-
-            # احفظ نمط الفندق إن كان النشاط hotel
-            try:
-                if tenant and tenant.activity and (tenant.activity.code or '').lower() == 'hotel':
-                    ad = dict(tenant.activity_data or {})
-                    ad['hotel_mode'] = hotel_mode
-                    tenant.activity_data = ad
-                    from app.extensions import db as _db
-                    _db.session.commit()
-            except Exception as _e:
-                current_app.logger.warning(f'set hotel_mode at registration failed: {_e}')
-
+            
+            # Set hotel_mode if needed
+            hotel_mode = session.get('reg_hotel_mode')
+            if hotel_mode and tenant.activity and (tenant.activity.code or '').lower() == 'hotel':
+                ad = dict(tenant.activity_data or {})
+                ad['hotel_mode'] = hotel_mode
+                tenant.activity_data = ad
+                from app.extensions import db as _db
+                _db.session.commit()
+                
+            # Clear session
             for key in list(session.keys()):
                 if key.startswith('reg_'):
                     session.pop(key)
-
-            session['request_business_name'] = tenant.business_name
-            session['request_owner_email'] = tenant.owner_email
-
-            return redirect(url_for('registration.success'))
-
-        except Exception as e:
-            current_app.logger.error(f'Registration request error: {e}')
-            flash('حدث خطأ غير متوقع. حاول لاحقاً أو راسلنا.', 'danger')
-
-    return render_template('registration/step2.html', activities=activities)
+                    
+            return redirect(setup_url)
+            
+        else:
+            flash('الرمز غير صحيح، يرجى المحاولة مرة أخرى.', 'danger')
+            
+    return render_template('registration/verify.html', email=session['reg_email'])
 
 
 # ========================

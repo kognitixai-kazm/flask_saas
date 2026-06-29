@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.tools import BaseTool
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langgraph.prebuilt import create_react_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from app.extensions import db
@@ -246,41 +246,29 @@ class BaseAgent:
         try:
             # 5. تشغيل الوكيل
             if tools:
-                # وكيل مع أدوات
-                llm_with_tools = llm.bind_tools(tools)
-
-                prompt = ChatPromptTemplate.from_messages([
-                    ("system", system_prompt),
-                    MessagesPlaceholder(variable_name="chat_history"),
-                    ("human", "{input}"),
-                    MessagesPlaceholder(variable_name="agent_scratchpad"),
-                ])
-
-                agent = create_tool_calling_agent(llm, tools, prompt)
-                executor = AgentExecutor(
-                    agent=agent,
-                    tools=tools,
-                    max_iterations=self.MAX_ITERATIONS,
-                    verbose=False,
-                    return_intermediate_steps=True,
-                    handle_parsing_errors=True,
-                )
-
-                result = executor.invoke({
-                    "input": user_message,
-                    "chat_history": history,
-                })
-                response_text = result.get('output', '')
+                # وكيل مع أدوات باستخدام LangGraph
+                agent = create_react_agent(llm, tools, state_modifier=system_prompt)
+                
+                # إعداد المدخلات
+                inputs = {"messages": history + [HumanMessage(content=user_message)]}
+                
+                # التنفيذ (مع تحديد حد التكرار إذا لزم الأمر)
+                config = {"recursion_limit": self.MAX_ITERATIONS}
+                result = agent.invoke(inputs, config)
+                
+                # استخراج الرد
+                response_msg = result["messages"][-1]
+                response_text = response_msg.content
                 tool_calls_info = []
 
-                # استخراج معلومات الأدوات المستدعاة من الخطوات الوسيطة
-                for step in result.get('intermediate_steps', []):
-                    if len(step) >= 2:
-                        action = step[0]
-                        tool_calls_info.append({
-                            'tool': getattr(action, 'tool', 'unknown'),
-                            'input': str(getattr(action, 'tool_input', ''))[:200],
-                        })
+                # استخراج معلومات الأدوات المستدعاة لمعرفة ما تم تنفيذه
+                for msg in result["messages"][len(inputs["messages"]):]:
+                    if getattr(msg, "tool_calls", None):
+                        for tc in msg.tool_calls:
+                            tool_calls_info.append({
+                                'tool': tc.get('name', 'unknown'),
+                                'input': str(tc.get('args', ''))[:200],
+                            })
 
             else:
                 # محادثة بسيطة بدون أدوات

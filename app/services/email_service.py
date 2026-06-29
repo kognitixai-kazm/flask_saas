@@ -11,6 +11,26 @@ from flask import current_app
 
 
 class EmailService:
+    @staticmethod
+    def send_registration_otp(to_email: str, code: str) -> bool:
+        """إرسال رمز التحقق (OTP) للبريد الإلكتروني أثناء التسجيل."""
+        subject = 'رمز التحقق لتسجيل حسابك - KOGNITIX'
+        body_html = f"""
+        <div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;padding:20px;background:#f8f9fa;">
+            <h2 style="color:#0d6efd;">تأكيد البريد الإلكتروني</h2>
+            <p>مرحباً، لقد طلبت إنشاء حساب جديد. يرجى استخدام الرمز التالي لإكمال عملية التسجيل:</p>
+            <div style="background:#ffffff;padding:15px;border-radius:10px;text-align:center;margin:20px 0;border:1px solid #dee2e6;">
+                <p style="font-size:28px;letter-spacing:6px;font-weight:bold;margin:0;color:#198754;">{code}</p>
+            </div>
+            <p style="color:#6b7280;font-size:13px;">الرمز صالح لمدة قصيرة. لا تشاركه مع أحد.</p>
+        </div>
+        """
+        ok = EmailService._send(to_email, subject, body_html)
+        if ok and not current_app.config.get('MAIL_ENABLED', False):
+            current_app.logger.info(f'[register] MAIL_ENABLED=false — OTP (dev): {code} for {to_email}')
+        return ok
+
+
 
     @staticmethod
     def send_inquiry_notification(
