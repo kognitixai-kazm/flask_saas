@@ -7,6 +7,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from flask import Flask, render_template
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import get_config
 from .extensions import db, migrate, csrf, limiter, sess
@@ -23,6 +24,9 @@ def create_app(config_name='development'):
     app.config.from_object(config_class)
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     Path(app.config.get('SESSION_FILE_DIR', app.instance_path)).mkdir(parents=True, exist_ok=True)
+    
+    # تطبيق ProxyFix لدعم Nginx/Reverse Proxies وتوليد روابط HTTPS الصحيحة
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     # ✅ فحص الأمان للإنتاج (ثغرة #4)
     _security_check(app, config_name)

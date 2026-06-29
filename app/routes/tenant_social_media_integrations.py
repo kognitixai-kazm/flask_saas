@@ -203,12 +203,14 @@ def social_media_setup(service_type):
             current_app.logger.error(f'[Social Media] setup error: {e}')
             flash(f'❌ حدث خطأ: {str(e)}', 'error')
     
+    webhook_url = f"{request.host_url.rstrip('/')}/api/v1/webhooks/{service_type}"
     return render_template(
         'tenant/integrations/social_media_setup.html',
         service_type=service_type,
         service_name=service_names.get(service_type, service_type),
         service_icon=service_icons.get(service_type, ''),
-        integration=integration
+        integration=integration,
+        webhook_url=webhook_url
     )
 
 
@@ -235,21 +237,7 @@ def social_media_deactivate(service_type):
     return redirect(url_for('tenant_social_media_integrations.social_media'))
 
 
-@bp.route('/webhook/<service_type>', methods=['POST'])
-def webhook_handler(service_type):
-    """معالج Webhook لاستقبال الأحداث من منصات التواصل الاجتماعي.
 
-    ⚠️ معطّل مؤقتاً حتى يتم تنفيذ التحقق من التوقيع لكل منصة.
-    """
-    # TODO: تنفيذ التحقق من التوقيع لكل منصة (Facebook, Instagram, etc.)
-    # قبل تفعيل هذا الـ endpoint
-    current_app.logger.warning(
-        f'[Social Media] Webhook call to /{service_type} rejected — '
-        f'signature verification not implemented yet'
-    )
-    return jsonify({
-        'error': 'Webhook endpoint is disabled until signature verification is implemented'
-    }), 503
 
 
 @bp.route('/test/<service_type>', methods=['POST'])

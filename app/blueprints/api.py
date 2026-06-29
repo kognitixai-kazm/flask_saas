@@ -47,12 +47,11 @@ def whatsapp_webhook():
         if mode == 'subscribe' and token:
             # البحث عن أي tenant عنده هذا الـ verify token
             vrows = []
-            active_whatsapp = Integration.query.filter_by(
-                service_type='whatsapp',
-                is_active=True,
+            all_whatsapp = Integration.query.filter_by(
+                service_type='whatsapp'
             ).order_by(Integration.id).all()
             
-            for integ in active_whatsapp:
+            for integ in all_whatsapp:
                 if integ.webhook_verify_token_decrypted == token:
                     vrows.append(integ)
 
@@ -67,12 +66,12 @@ def whatsapp_webhook():
 
             if config:
                 current_app.logger.info(f'WhatsApp webhook verified for tenant={config.tenant_id}')
-                return challenge, 200
+                return Response(challenge, mimetype='text/plain'), 200
 
             # fallback للـ verify token العام في .env
             general_token = current_app.config.get('WHATSAPP_VERIFY_TOKEN', '')
             if general_token and token == general_token:
-                return challenge, 200
+                return Response(challenge, mimetype='text/plain'), 200
 
         return 'Forbidden', 403
 
