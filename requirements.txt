@@ -50,6 +50,8 @@ langchain-community==0.3.27
 langchain-openai==0.3.28
 langchain-anthropic==0.3.20
 langchain-google-genai==2.1.12
+langgraph==0.2.76
+langgraph-checkpoint==2.1.2
 
 # ============================================
 # WhatsApp & HTTP
