@@ -1,0 +1,179 @@
+{% extends "tenant/_base_panel.html" %}
+{% block title %}مركز التواصل الشامل — KOGNITIX{% endblock %}
+{% block panel_content %}
+
+<div class="mb-6 flex items-center justify-between">
+    <div>
+        <h1 class="text-3xl font-extrabold text-gray-900">🌐 مركز التواصل الموحد</h1>
+        <p class="text-gray-500 mt-1 text-sm">أدر رسائلك، منشوراتك، وإعلاناتك لجميع المنصات من مكان واحد.</p>
+    </div>
+    <a href="{{ url_for('tenant_social_media_integrations.social_media') }}" class="text-blue-600 hover:text-blue-700 text-sm font-bold flex items-center gap-1">
+        <span>العودة لإعدادات التكامل</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="transform rotate-180"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </a>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="mb-6 border-b border-gray-200">
+    <nav class="-mb-px flex gap-6" aria-label="Tabs">
+        <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm border-blue-600 text-blue-600">
+            💬 صندوق الوارد الموحد
+        </button>
+        <button onclick="switchTab('publisher')" id="tab-publisher" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            📝 نشر المحتوى (Publisher)
+        </button>
+        <button onclick="switchTab('ads')" id="tab-ads" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            📈 إدارة الإعلانات (Ads)
+        </button>
+    </nav>
+</div>
+
+<!-- Tab Content: Inbox -->
+<div id="content-inbox" class="tab-content block">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex overflow-hidden h-[600px]">
+        <!-- قائمة المحادثات -->
+        <div class="w-1/3 border-l border-gray-100 flex flex-col bg-gray-50/50">
+            <div class="p-4 border-b border-gray-100">
+                <input type="text" placeholder="ابحث في الرسائل..." class="w-full bg-white px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                {% if conversations %}
+                    {% for conv in conversations %}
+                    <div class="p-4 border-b border-gray-100 hover:bg-white cursor-pointer transition flex gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
+                            {{ (conv.visitor_name or 'ع')[:1] }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1">
+                                <h4 class="font-bold text-gray-900 text-sm truncate">{{ conv.visitor_name or 'عميل' }}</h4>
+                                <span class="text-xs text-gray-400" dir="ltr">{{ conv.updated_at.strftime('%H:%M') }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ conv.channel }}</span>
+                                <p class="text-xs text-gray-500 truncate">{{ conv.last_message.content if conv.last_message else 'محادثة جديدة' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-10 text-gray-500 text-sm">
+                        لا توجد محادثات حتى الآن.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- واجهة الدردشة -->
+        <div class="w-2/3 flex flex-col bg-white">
+            <div class="flex-1 flex items-center justify-center text-gray-400 flex-col gap-3">
+                <div class="text-5xl">💬</div>
+                <p>اختر محادثة من القائمة للبدء بالرد</p>
+            </div>
+            <!-- صندوق الإدخال (معطل افتراضياً حتى يختار التاجر محادثة) -->
+            <div class="p-4 border-t border-gray-100 bg-gray-50">
+                <div class="flex gap-2 opacity-50 pointer-events-none">
+                    <input type="text" placeholder="اكتب رسالتك هنا..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">إرسال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab Content: Publisher -->
+<div id="content-publisher" class="tab-content hidden">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <span>📝</span> إنشاء منشور جديد
+        </h2>
+        
+        <form class="space-y-6" onsubmit="event.preventDefault(); alert('جاري النشر... (سيتم تفعيل هذه الميزة قريباً بعد اعتماد التطبيق من المنصات)');">
+            <!-- اختيار المنصات -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-3">اختر المنصات التي تريد النشر عليها:</label>
+                <div class="flex flex-wrap gap-4">
+                    {% if platforms %}
+                        {% for platform in platforms %}
+                        <label class="flex items-center gap-2 cursor-pointer bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-xl border border-gray-200 transition">
+                            <input type="checkbox" name="platforms" value="{{ platform }}" class="rounded text-blue-600 focus:ring-blue-500" checked>
+                            <span class="font-medium text-gray-800 capitalize">{{ platform }}</span>
+                        </label>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-red-500 text-sm">لم تقم بربط أي منصات بعد. <a href="{{ url_for('tenant_social_media_integrations.social_media') }}" class="underline">اربط المنصات من هنا.</a></div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- إضافة الميديا -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">إرفاق صورة أو فيديو</label>
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition cursor-pointer">
+                    <div class="text-3xl mb-2">📸</div>
+                    <p class="text-sm text-gray-500 font-medium">اضغط لرفع ملف أو اسحبه هنا</p>
+                    <p class="text-xs text-gray-400 mt-1">يدعم JPG, PNG, MP4</p>
+                </div>
+            </div>
+
+            <!-- محتوى النص -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">نص المنشور</label>
+                <textarea rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 resize-none" placeholder="اكتب ما يدور في ذهنك وعبر عن منتجك..."></textarea>
+                <div class="flex justify-between items-center mt-2">
+                    <button type="button" class="text-xs text-purple-600 font-bold bg-purple-50 px-3 py-1.5 rounded-lg hover:bg-purple-100 flex items-center gap-1 transition">
+                        ✨ تحسين النص بالذكاء الاصطناعي
+                    </button>
+                    <span class="text-xs text-gray-400">0 / 2200 حرف</span>
+                </div>
+            </div>
+            
+            <!-- أزرار الإجراء -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <button type="button" class="px-6 py-2.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition">حفظ كمسودة</button>
+                <button type="submit" class="px-8 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/30 transition transform hover:-translate-y-0.5">
+                    🚀 نشر الآن
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tab Content: Ads -->
+<div id="content-ads" class="tab-content hidden">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center h-[500px] flex flex-col justify-center items-center">
+        <div class="text-6xl mb-4">📈</div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">إدارة الحملات الإعلانية</h2>
+        <p class="text-gray-500 max-w-md mx-auto mb-6">
+            اربط حساباتك الإعلانية (Facebook Ads Manager, Snapchat Ads) لتتمكن من إطلاق الحملات الإعلانية ومتابعة أدائها والميزانية المصروفة مباشرة من هنا.
+        </p>
+        <a href="{{ url_for('tenant_social_media_integrations.social_media') }}" class="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-lg">
+            إعداد الحسابات الإعلانية
+        </a>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabId) {
+        // Hide all contents
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.add('hidden');
+            el.classList.remove('block');
+        });
+        
+        // Reset all tabs
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('border-blue-600', 'text-blue-600', 'font-bold');
+            el.classList.add('border-transparent', 'text-gray-500', 'font-medium');
+        });
+        
+        // Show target content
+        document.getElementById('content-' + tabId).classList.remove('hidden');
+        document.getElementById('content-' + tabId).classList.add('block');
+        
+        // Highlight target tab
+        document.getElementById('tab-' + tabId).classList.remove('border-transparent', 'text-gray-500', 'font-medium');
+        document.getElementById('tab-' + tabId).classList.add('border-blue-600', 'text-blue-600', 'font-bold');
+    }
+</script>
+
+{% endblock %}

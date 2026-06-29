@@ -9,6 +9,7 @@ from app.extensions import db
 from app.models.tenant import Tenant
 from app.models.integration import Integration
 from app.models.tenant_user import TenantUser
+from app.models.conversation import Conversation, Message
 from app.services.social_media_integration_service import SocialMediaIntegrationService
 
 bp = Blueprint('tenant_social_media_integrations', __name__, url_prefix='/tenant/integrations/social-media')
@@ -47,68 +48,31 @@ def social_media():
     )
 
 
-@bp.route('/ai-studio', methods=['GET'])
+@bp.route('/social-center', methods=['GET'])
 @tenant_required
-def ai_studio():
-    """ستوديو الذكاء الاصطناعي لصناعة المحتوى."""
+def social_center():
+    """المركز الشامل للتواصل الاجتماعي (رسائل، نشر، إعلانات)."""
     tenant = get_tenant()
     if not tenant:
         return redirect(url_for('auth.login'))
     
+    # جلب المحادثات الخاصة بالتاجر
+    conversations = Conversation.query.filter_by(tenant_id=tenant.id).order_by(Conversation.updated_at.desc()).all()
+    
+    # الحصول على التكاملات النشطة لمعرفة المنصات المتاحة للنشر والإعلانات
+    active_integrations = Integration.query.filter_by(
+        tenant_id=tenant.id, 
+        is_active=True
+    ).all()
+    
+    platforms = [i.service_type for i in active_integrations]
+    
     return render_template(
-        'tenant/integrations/ai_studio.html',
-        tenant=tenant
+        'tenant/integrations/social_center.html',
+        tenant=tenant,
+        conversations=conversations,
+        platforms=platforms
     )
-
-
-@bp.route('/api/ai-studio/generate', methods=['POST'])
-@tenant_required
-def generate_ai_content():
-    """توليد محتوى وتصميم باستخدام الذكاء الاصطناعي."""
-    tenant = get_tenant()
-    if not tenant:
-        return jsonify({'error': 'غير مصرح'}), 401
-        
-    try:
-        data = request.get_json()
-        prompt = data.get('prompt', '')
-        platform = data.get('platform', 'general')
-        tone = data.get('tone', 'professional')
-        
-        if not prompt:
-            return jsonify({'error': 'الرجاء إدخال وصف مبدئي'}), 400
-            
-        # محاكاة توليد محتوى بالذكاء الاصطناعي
-        # في بيئة الإنتاج الفعلية، سيتم استدعاء OpenAI API أو نموذج آخر
-        import time
-        time.sleep(1.5) # محاكاة التأخير
-        
-        # بعض القوالب الوهمية المؤقتة حتى يتم ربط الـ AI
-        generated_text = f"✨ اكتشف روعة خدماتنا مع عروضنا الحصرية!\n\nنقدم لكم أفضل تجربة ممكنة في مجالنا.\n\nلماذا تختارنا؟\n✅ جودة عالية\n✅ خدمة عملاء على مدار الساعة\n✅ أسعار تنافسية\n\nتواصل معنا الآن للحجز والاستفسار!\n\n#تسويق #عروض #تخفيضات #أفضل_الأسعار"
-        
-        # تعديل النص قليلاً بناء على المنصة
-        if platform == 'instagram':
-            generated_text = f"🌟 جديدنا اليوم!\n\nهل تبحث عن الأفضل؟ وصلنا للتو تشكيلة جديدة ومميزة تليق بكم 💖\n\n✨ مميزات لا تفوت:\n✔️ جودة لا يعلى عليها\n✔️ تفاصيل دقيقة\n✔️ تصاميم عصرية\n\nاطلب الآن عبر الرابط في البايو 🔗\n\n#انستغرام #جديد #عروض #أناقة #لايف_ستايل #السعودية"
-        elif platform == 'twitter':
-            generated_text = f"🚀 لا تفوت الفرصة!\nاستمتع بأفضل العروض الحصرية لدينا اليوم.\n\nتواصل معنا الآن لتحصل على خصم خاص 🎁\n\n#عروض #خصومات #السعودية #ترند"
-        elif platform == 'snapchat':
-            generated_text = f"🔥 حصرياً لمتابعين السناب!\n\nارفع الشاشة الآن لاكتشاف العرض الخيالي 👆\n\n#سناب #حصري #عروض_خاصة"
-            
-        # رابط صورة وهمية (في الواقع سيتم توليدها عبر DALL-E أو Midjourney)
-        image_url = "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-        if tenant.activity and tenant.activity.code == 'restaurant':
-            image_url = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-        elif tenant.activity and tenant.activity.code == 'hotel':
-            image_url = "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-            
-        return jsonify({
-            'status': 'success',
-            'generated_text': generated_text,
-            'image_url': image_url
-        })
-    except Exception as e:
-        current_app.logger.error(f'[AI Studio] Error: {e}')
-        return jsonify({'error': 'حدث خطأ أثناء التوليد'}), 500
 
 
 

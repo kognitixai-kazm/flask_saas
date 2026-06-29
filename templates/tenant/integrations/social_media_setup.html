@@ -217,15 +217,69 @@
 <form id="deactivate-form" method="POST" action="{{ url_for('tenant_social_media_integrations.social_media_deactivate', service_type=service_type) }}" style="display: none;"></form>
 {% endif %}
 
-<!-- معلومات إضافية -->
-<div class="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-900">
-    <strong>كيفية الحصول على بيانات الاتصال:</strong>
-    <ol class="list-decimal list-inside mt-2 space-y-2">
-        <li>توجه إلى إعدادات التطبيق في {{ service_name }}</li>
-        <li>ابحث عن قسم "Developers" أو "API"</li>
-        <li>أنشئ تطبيقاً جديداً وانسخ مفاتيح الـ API</li>
-        <li>الصقها هنا وحفظ الإعدادات</li>
+<!-- معلومات إضافية لكل منصة -->
+<div class="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-6 text-sm text-blue-900 shadow-sm">
+    <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+        <span>ℹ️</span> كيفية استخراج مفاتيح الـ API لتفعيل {{ service_name }}:
+    </h3>
+    
+    {% if service_type == 'facebook' or service_type == 'instagram' %}
+    <ol class="list-decimal list-inside space-y-3 leading-relaxed">
+        <li>قم بالدخول إلى <a href="https://developers.facebook.com" target="_blank" class="font-bold text-blue-700 underline">Facebook Developers</a> وسجل دخولك.</li>
+        <li>اضغط على <strong>"My Apps"</strong> ثم <strong>"Create App"</strong> لإنشاء تطبيق جديد.</li>
+        <li>اختر نوع التطبيق "Business" ثم أكمل البيانات.</li>
+        <li>في لوحة تحكم التطبيق، ابحث عن منتج "Messenger" (لفيسبوك) أو "Instagram Graph API" (لانستغرام) واضغط Set Up.</li>
+        <li>في قسم Access Tokens، قم بربط صفحتك ثم انسخ <strong>Access Token</strong> والصقه في الحقل أعلاه.</li>
+        <li>بالنسبة لـ Page ID، يمكنك العثور عليه في صفحتك على فيسبوك من خلال "About" ثم "Page Transparency".</li>
+        <li>للاشتراك في الـ Webhooks لكي نستقبل الرسائل، استخدم رابط الـ Webhook التالي:
+            <code class="block bg-white p-2 border border-blue-200 rounded mt-1 text-left" dir="ltr">{{ webhook_url }}</code>
+            وضع نفس "رمز التحقق من Webhook" الذي اخترته في الحقل أعلاه.
+        </li>
     </ol>
+    
+    {% elif service_type == 'tiktok' %}
+    <ol class="list-decimal list-inside space-y-3 leading-relaxed">
+        <li>قم بالدخول إلى <a href="https://ads.tiktok.com/marketing_api/" target="_blank" class="font-bold text-blue-700 underline">TikTok for Developers</a>.</li>
+        <li>أنشئ تطبيقاً جديداً من نوع "TikTok Marketing API".</li>
+        <li>اطلب الصلاحيات الخاصة بإدارة الإعلانات والمحادثات (إن وجدت).</li>
+        <li>بعد الموافقة على التطبيق، ستحصل على <strong>App ID (API Key)</strong> و <strong>Access Token</strong> من لوحة تحكم التطبيق.</li>
+    </ol>
+    
+    {% elif service_type == 'snapchat' %}
+    <ol class="list-decimal list-inside space-y-3 leading-relaxed">
+        <li>ادخل إلى <a href="https://business.snapchat.com/" target="_blank" class="font-bold text-blue-700 underline">Snapchat Business Manager</a>.</li>
+        <li>اذهب إلى إعدادات المؤسسة (Organization Settings) ثم قسم "OAuth Apps".</li>
+        <li>أنشئ تطبيقاً جديداً (Create App).</li>
+        <li>بعد الإنشاء، سيظهر لك <strong>Client ID (كمفتاح API)</strong> و <strong>Client Secret</strong> (للحصول على Access Token).</li>
+        <li>معرّف الحساب الإعلاني (Ad Account ID) يمكنك العثور عليه في لوحة تحكم الإعلانات الخاصة بك (يتكون من أحرف وأرقام).</li>
+    </ol>
+    
+    {% elif service_type == 'linkedin' %}
+    <ol class="list-decimal list-inside space-y-3 leading-relaxed">
+        <li>قم بزيارة <a href="https://developer.linkedin.com/" target="_blank" class="font-bold text-blue-700 underline">LinkedIn Developers</a>.</li>
+        <li>اضغط على "Create App" وأدخل تفاصيل التطبيق واربطه بصفحة شركتك (LinkedIn Page).</li>
+        <li>اذهب إلى تبويب "Auth" للحصول على <strong>Access Token</strong> عبر أداة (OAuth 2.0 tools).</li>
+        <li>تأكد من تفعيل منتج "Marketing Developer Platform" من تبويب Products.</li>
+        <li>معرّف المنظمة (Organization ID) موجود في رابط صفحتك على لينكدإن (الأرقام في رابط URL).</li>
+    </ol>
+    
+    {% elif service_type == 'google_maps' %}
+    <ol class="list-decimal list-inside space-y-3 leading-relaxed">
+        <li>اذهب إلى <a href="https://console.cloud.google.com/" target="_blank" class="font-bold text-blue-700 underline">Google Cloud Console</a>.</li>
+        <li>أنشئ مشروعاً جديداً ثم اذهب إلى "APIs & Services".</li>
+        <li>ابحث عن <strong>Google My Business API</strong> و <strong>Business Profile Performance API</strong> وقم بتفعيلهما.</li>
+        <li>اذهب إلى "Credentials" وأنشئ OAuth 2.0 Client ID لتوليد <strong>Access Token</strong>.</li>
+        <li>معرّف الموقع (Location ID) موجود في إعدادات ملف نشاطك التجاري على جوجل.</li>
+    </ol>
+    
+    {% else %}
+    <ol class="list-decimal list-inside space-y-3 leading-relaxed">
+        <li>توجه إلى إعدادات التطبيق في منصة {{ service_name }}.</li>
+        <li>ابحث عن قسم المطورين (Developers) أو إعدادات الـ API.</li>
+        <li>أنشئ تطبيقاً أو مفتاحاً جديداً.</li>
+        <li>انسخ المفاتيح والصقها في الحقول أعلاه واضغط حفظ.</li>
+    </ol>
+    {% endif %}
 </div>
 
 {% endblock %}
