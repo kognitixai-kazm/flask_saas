@@ -68,6 +68,10 @@ def search_available_rooms(
         if u.amenities:
             amenities_text = f' | المرافق: {u.amenities[:100]}'
 
+        tour_text = ''
+        if u.image_360_link:
+            tour_text = f' | جولة 360: {u.image_360_link}'
+
         results.append(
             f'• {u.type_label} رقم {u.unit_number}'
             f'{" - " + u.title if u.title else ""}'
@@ -76,7 +80,7 @@ def search_available_rooms(
             f'{" | يومي: " + str(u.daily_price) + " ر.س" if float(u.daily_price or 0) > 0 else ""}'
             f' | الطاقة: {u.max_guests} أشخاص'
             f'{" | فرع: " + branch_name if branch_name else ""}'
-            f'{amenities_text}{images_text}'
+            f'{amenities_text}{images_text}{tour_text}'
             f' [unit_id={u.id}]'
         )
 
